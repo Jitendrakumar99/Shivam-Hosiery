@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Custom container max-width for better content alignment */
+@layer utilities {
+  .container {
+    max-width: 1280px;
+  }
+}
