@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { contactService } from '../services/contactService';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,9 @@ const Contact = () => {
     inquiryType: '',
     message: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,10 +21,29 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    setLoading(true);
+    setSuccessMessage('');
+    setErrorMessage('');
+
+    try {
+      await contactService.submitContact(formData);
+      setSuccessMessage('Thank you! Your message has been sent successfully. We will get back to you soon.');
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        inquiryType: '',
+        message: ''
+      });
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || 'Failed to send message. Please try again.');
+      console.error('Error sending contact form:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const faqs = [
@@ -90,6 +113,16 @@ const Contact = () => {
             {/* Contact Form */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+              {successMessage && (
+                <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                  {successMessage}
+                </div>
+              )}
+              {errorMessage && (
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                  {errorMessage}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
@@ -167,9 +200,10 @@ const Contact = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                  disabled={loading}
+                  className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send Message
+                  {loading ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             </div>

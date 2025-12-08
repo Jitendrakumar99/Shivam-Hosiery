@@ -11,27 +11,59 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Helper function to normalize contact data
+const normalizeContactData = (data) => {
+  const normalized = { ...data };
+  
+  // If name is provided (Shivam form), set it as fullName
+  if (data.name && !data.fullName) {
+    normalized.fullName = data.name;
+  }
+  
+  // Determine source if not provided
+  if (!normalized.source) {
+    normalized.source = data.inquiryType ? 'tarana' : 'shivam';
+  }
+  
+  return normalized;
+};
+
+// Helper function to generate email HTML
+const generateEmailHTML = (contact) => {
+  const isTarana = contact.source === 'tarana';
+  
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <p><strong>Website:</strong> ${isTarana ? 'Tarana' : 'Shivam Hosiery'}</p>
+      <p><strong>Name:</strong> ${contact.fullName || contact.name || 'N/A'}</p>
+      <p><strong>Email:</strong> ${contact.email}</p>
+      <p><strong>Phone:</strong> ${contact.phone || 'N/A'}</p>
+      ${contact.company ? `<p><strong>Company:</strong> ${contact.company}</p>` : ''}
+      ${contact.inquiryType ? `<p><strong>Inquiry Type:</strong> ${contact.inquiryType}</p>` : ''}
+      <p><strong>Message:</strong></p>
+      <p style="white-space: pre-wrap; background-color: #f5f5f5; padding: 10px; border-radius: 5px;">${contact.message}</p>
+      <hr style="margin-top: 20px; border: none; border-top: 1px solid #ddd;">
+      <p style="font-size: 12px; color: #666;">Submitted on: ${new Date(contact.createdAt).toLocaleString()}</p>
+    </div>
+  `;
+};
+
 // @desc    Create contact inquiry
 // @route   POST /api/contact
 // @access  Public
 exports.createContact = async (req, res, next) => {
   try {
-    const contact = await Contact.create(req.body);
+    // Normalize the incoming data to support both Shivam and Tarana formats
+    const normalizedData = normalizeContactData(req.body);
+    const contact = await Contact.create(normalizedData);
 
     // Send email notification
     try {
       await transporter.sendMail({
         from: process.env.EMAIL,
         to: process.env.EMAIL,
-        subject: `New Contact Inquiry - ${contact.inquiryType}`,
-        html: `
-          <h3>New Contact Form Submission</h3>
-          <p><strong>Name:</strong> ${contact.fullName}</p>
-          <p><strong>Email:</strong> ${contact.email}</p>
-          <p><strong>Phone:</strong> ${contact.phone || 'N/A'}</p>
-          <p><strong>Inquiry Type:</strong> ${contact.inquiryType}</p>
-          <p><strong>Message:</strong> ${contact.message}</p>
-        `
+        subject: `New Contact Inquiry - ${contact.source.toUpperCase()} (${contact.inquiryType || contact.company || 'General'})`,
+        html: generateEmailHTML(contact)
       });
     } catch (emailError) {
       console.error('Email sending error:', emailError);
