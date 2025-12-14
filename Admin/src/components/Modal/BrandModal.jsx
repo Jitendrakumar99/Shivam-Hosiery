@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { useDispatch } from 'react-redux';
-import { addBrand, updateBrand } from '../../store/slices/brandSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { createBrand, updateBrand } from '../../store/slices/brandSlice';
 
-const BrandModal = ({ isOpen, onClose, brand = null, mode = 'add' }) => {
+const BrandModal = ({ isOpen, onClose, brand = null, mode = 'add', onSuccess }) => {
   const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.brands);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
     slogan: '',
     description: '',
-    fullDescription: '',
-    logo: 'https://images.unsplash.com/p',
-    image: 'https://images.unsplash.com/p',
-    websitePath: '/trana',
-    features: 'Feature 1\nFeature 2\nFeature 3',
+    image: '',
+    websiteUrl: '',
+    status: 'active',
   });
 
   useEffect(() => {
@@ -24,11 +23,9 @@ const BrandModal = ({ isOpen, onClose, brand = null, mode = 'add' }) => {
         category: brand.category || '',
         slogan: brand.slogan || '',
         description: brand.description || '',
-        fullDescription: brand.fullDescription || '',
-        logo: brand.logo || 'https://images.unsplash.com/p',
-        image: brand.image || 'https://images.unsplash.com/p',
-        websitePath: brand.websitePath || '/trana',
-        features: Array.isArray(brand.features) ? brand.features.join('\n') : (brand.features || 'Feature 1\nFeature 2\nFeature 3'),
+        image: brand.image || '',
+        websiteUrl: brand.websiteUrl || '',
+        status: brand.status || 'active',
       });
     } else {
       setFormData({
@@ -36,34 +33,42 @@ const BrandModal = ({ isOpen, onClose, brand = null, mode = 'add' }) => {
         category: '',
         slogan: '',
         description: '',
-        fullDescription: '',
-        logo: 'https://images.unsplash.com/p',
-        image: 'https://images.unsplash.com/p',
-        websitePath: '/trana',
-        features: 'Feature 1\nFeature 2\nFeature 3',
+        image: '',
+        websiteUrl: '',
+        status: 'active',
       });
     }
   }, [brand, mode, isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const brandData = {
-      ...formData,
-      features: formData.features.split('\n').filter(f => f.trim()),
+      name: formData.name,
+      category: formData.category,
+      slogan: formData.slogan,
+      description: formData.description,
+      image: formData.image,
+      websiteUrl: formData.websiteUrl,
+      status: formData.status,
     };
 
-    if (mode === 'edit' && brand) {
-      dispatch(updateBrand({
-        id: brand.id,
-        ...brandData,
-      }));
-    } else {
-      dispatch(addBrand({
-        id: Date.now(),
-        ...brandData,
-      }));
+    try {
+      if (mode === 'edit' && brand) {
+        await dispatch(updateBrand({
+          id: brand._id || brand.id,
+          brandData,
+        })).unwrap();
+      } else {
+        await dispatch(createBrand(brandData)).unwrap();
+      }
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      alert(error || 'Failed to save brand');
     }
-    onClose();
   };
 
   return (
@@ -134,82 +139,38 @@ const BrandModal = ({ isOpen, onClose, brand = null, mode = 'add' }) => {
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Full Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            required
-            value={formData.fullDescription}
-            onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] resize-none"
-            placeholder="Enter full description of the brand"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Logo URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              required
-              value={formData.logo}
-              onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Image URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              required
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-              placeholder="https://..."
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Website Path <span className="text-red-500">*</span>
+            Image URL <span className="text-red-500">*</span>
           </label>
           <input
-            type="text"
+            type="url"
             required
-            value={formData.websitePath}
-            onChange={(e) => setFormData({ ...formData, websitePath: e.target.value })}
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-            placeholder="/trana"
+            placeholder="https://..."
           />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Features (one per line) <span className="text-red-500">*</span>
+            Website URL
           </label>
-          <textarea
-            required
-            value={formData.features}
-            onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] resize-none font-mono text-sm"
-            placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+          <input
+            type="url"
+            value={formData.websiteUrl}
+            onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            placeholder="https://..."
           />
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           <button
             type="submit"
-            className="flex-1 px-4 py-3 bg-[#1a1a2e] hover:bg-[#16213e] text-white rounded-lg font-semibold transition"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-[#1a1a2e] hover:bg-[#16213e] text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mode === 'edit' ? 'Update Brand' : 'Add Brand'}
+            {loading ? 'Saving...' : mode === 'edit' ? 'Update Brand' : 'Add Brand'}
           </button>
           <button
             type="button"

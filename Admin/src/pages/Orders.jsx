@@ -1,27 +1,36 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { updateOrderStatus } from '../store/slices/orderSlice';
-import { useState } from 'react';
+import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
+import { useState, useEffect } from 'react';
 import OrderDetailsModal from '../components/Modal/OrderDetailsModal';
 
 const Orders = () => {
-  const { orders } = useSelector((state) => state.orders);
+  const { orders, loading } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    dispatch(fetchOrders());
+  }, [dispatch]);
+
   const filteredOrders = orders.filter(order => {
+    const orderId = (order._id || order.id || '').toString();
+    const customerName = (order.user?.name || order.customer || '').toLowerCase();
+    const email = (order.user?.email || order.email || '').toLowerCase();
     const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchTerm.toLowerCase());
+      orderId.includes(searchTerm.toLowerCase()) ||
+      customerName.includes(searchTerm.toLowerCase()) ||
+      email.includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || order.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
   const handleStatusChange = (orderId, newStatus) => {
-    dispatch(updateOrderStatus({ id: orderId, status: newStatus }));
+    dispatch(updateOrderStatus({ id: orderId, status: newStatus })).then(() => {
+      dispatch(fetchOrders());
+    });
   };
 
   const handleViewOrder = (order) => {
@@ -77,13 +86,25 @@ const Orders = () => {
         </select>
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      )}
+
+      {!loading && filteredOrders.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No orders found.</p>
+        </div>
+      )}
+
       <div className="space-y-3 sm:space-y-4">
         {filteredOrders.map((order) => (
-          <div key={order.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div key={order._id || order.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">{order.id}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">{(order._id || order.id)?.slice(-8) || 'N/A'}</h3>
                   <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
                     {order.status}
                   </span>
@@ -94,39 +115,40 @@ const Orders = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-600 mb-0.5">Customer</p>
-                    <p className="font-semibold text-gray-800 truncate">{order.customer}</p>
-                    <p className="text-gray-500 text-xs truncate">{order.email}</p>
+                    <p className="font-semibold text-gray-800 truncate">{order.user?.name || order.customer || 'N/A'}</p>
+                    <p className="text-gray-500 text-xs truncate">{order.user?.email || order.email || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-gray-600 mb-0.5">Items</p>
-                    <p className="font-semibold text-gray-800">{order.items} products</p>
+                    <p className="font-semibold text-gray-800">{order.items?.length || order.items || 0} products</p>
                   </div>
                   <div>
                     <p className="text-gray-600 mb-0.5">Order Date</p>
-                    <p className="font-semibold text-gray-800">{order.date}</p>
+                    <p className="font-semibold text-gray-800">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : order.date || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-gray-600 mb-0.5">Payment Method</p>
-                    <p className="font-semibold text-gray-800 truncate">{order.paymentMethod}</p>
+                    <p className="font-semibold text-gray-800 truncate">{order.paymentMethod || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
-                  <p className="text-base sm:text-lg font-bold text-green-600">₹{order.total.toLocaleString()}</p>
-                  {order.deliveryAgent && (
-                    <p className="text-xs sm:text-sm text-gray-600">Delivery Agent: <span className="font-semibold">{order.deliveryAgent}</span></p>
+                  <p className="text-base sm:text-lg font-bold text-green-600">₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</p>
+                  {order.trackingNumber && (
+                    <p className="text-xs sm:text-sm text-gray-600">Tracking: <span className="font-semibold">{order.trackingNumber}</span></p>
                   )}
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:ml-6">
                 <select
                   value={order.status}
-                  onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                  onChange={(e) => handleStatusChange(order._id || order.id, e.target.value)}
                   className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] text-xs sm:text-sm"
                 >
                   <option value="pending">Pending</option>
-                  <option value="packed">Packed</option>
+                  <option value="processing">Processing</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
                 <button
                   onClick={() => handleViewOrder(order)}

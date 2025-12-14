@@ -1,18 +1,24 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { deleteClient } from '../store/slices/clientSlice';
+import { useState, useEffect } from 'react';
+import { fetchClients, deleteClient } from '../store/slices/clientSlice';
 import ClientModal from '../components/Modal/ClientModal';
 
 const Clients = () => {
-  const { clients } = useSelector((state) => state.clients);
+  const { clients, loading } = useSelector((state) => state.clients);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [modalMode, setModalMode] = useState('add');
 
+  useEffect(() => {
+    dispatch(fetchClients());
+  }, [dispatch]);
+
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
-      dispatch(deleteClient(id));
+      dispatch(deleteClient(id)).then(() => {
+        dispatch(fetchClients());
+      });
     }
   };
 
@@ -52,13 +58,29 @@ const Clients = () => {
         </button>
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading clients...</p>
+        </div>
+      )}
+
+      {!loading && clients.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No clients found. Add your first client!</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {clients.map((client) => (
-          <div key={client.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-            <div className="h-40 sm:h-48 bg-gray-100 flex items-center justify-center">
-              <svg className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+          <div key={client._id || client.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+            <div className="h-40 sm:h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+              {client.logo ? (
+                <img src={client.logo} alt={client.name} className="w-full h-full max-w-full max-h-full object-contain object-center" />
+              ) : (
+                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              )}
             </div>
             <div className="p-3 sm:p-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1 truncate">{client.name}</h3>
@@ -74,7 +96,7 @@ const Clients = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(client.id)}
+                  onClick={() => handleDelete(client._id || client.id)}
                   className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,6 +114,10 @@ const Clients = () => {
         onClose={handleCloseModal}
         client={selectedClient}
         mode={modalMode}
+        onSuccess={() => {
+          dispatch(fetchClients());
+          handleCloseModal();
+        }}
       />
     </div>
   );

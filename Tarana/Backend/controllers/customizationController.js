@@ -1,5 +1,6 @@
 const Customization = require('../models/Customization');
 const { clearCache } = require('../middlewares/cache');
+const { generateImageFromPrompt, buildCustomizationPrompt } = require('../services/imageGenerationService');
 
 // @desc    Create customization request
 // @route   POST /api/customizations
@@ -124,4 +125,71 @@ exports.updateCustomizationStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Generate customized image preview
+// @route   POST /api/customizations/generate-preview
+// @access  Public (or Private if you want to restrict it)
+exports.generateImagePreview = async (req, res, next) => {
+  try {
+    const { customizationData, productImage, baseImageDescription } = req.body;
+
+    if (!customizationData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customization data is required'
+      });
+    }
+
+    // Build the prompt from customization data
+    const prompt = buildCustomizationPrompt(customizationData, baseImageDescription);
+
+    // Generate image using Google Gemini
+    const generatedImage = await generateImageFromPrompt(prompt, productImage);
+
+    // Return the generated image as base64
+    res.json({
+      success: true,
+      data: {
+        imageBase64: generatedImage.imageBase64,
+        mimeType: generatedImage.mimeType,
+        prompt: prompt
+      }
+    });
+  } catch (error) {
+    console.error('Image generation error:', error);
+
+    // If the error indicates quota/rate limits, surface a 429 with Retry-After
+    const retryAfter = error.retryAfterSeconds || (error.raw && (() => {
+      try {
+        if (error.raw && Array.isArray(error.raw.details)) {
+          for (const d of error.raw.details) {
+            if (d['@type'] && d['@type'].includes('RetryInfo') && d.retryDelay) {
+              const m = String(d.retryDelay).match(/(\d+)(s|S)?/);
+              if (m) return parseInt(m[1], 10);
+            }
+          }
+        }
+      } catch (e) {}
+      return null;
+    })()) || null;
+
+    if (error.statusCode === 429 || retryAfter) {
+      if (retryAfter) {
+        res.set('Retry-After', String(retryAfter));
+      }
+      return res.status(429).json({
+        success: false,
+        message: error.message || 'Quota exceeded - please try again later',
+        retryAfter: retryAfter || undefined,
+        details: error.raw || null
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to generate image preview'
+    });
+  }
+};
+
 

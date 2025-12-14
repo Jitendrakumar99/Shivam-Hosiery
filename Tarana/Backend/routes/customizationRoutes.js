@@ -4,7 +4,8 @@ const {
   createCustomization,
   getCustomizations,
   getCustomization,
-  updateCustomizationStatus
+  updateCustomizationStatus,
+  generateImagePreview
 } = require('../controllers/customizationController');
 const { protect, authorize } = require('../middlewares/auth');
 const { paginate } = require('../middlewares/pagination');
@@ -13,6 +14,9 @@ const Customization = require('../models/Customization');
 
 // All routes require authentication
 router.use(protect);
+
+// Image generation endpoint - no cache
+router.post('/generate-preview', generateImagePreview);
 
 router.post('/', createCustomization);
 router.get('/', paginate(Customization), cache(300), getCustomizations);

@@ -1,14 +1,27 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchProducts } from '../store/slices/productSlice';
+import { fetchOrders } from '../store/slices/orderSlice';
+import { fetchCustomers } from '../store/slices/customerSlice';
+import { fetchStats } from '../store/slices/reportSlice';
 
 const Dashboard = () => {
-  const { products } = useSelector((state) => state.products);
-  const { orders } = useSelector((state) => state.orders);
-  const { customers } = useSelector((state) => state.customers);
-  const { metrics, revenueTrend, orderStatusDistribution } = useSelector((state) => state.reports);
+  const dispatch = useDispatch();
+  const { products, loading: productsLoading } = useSelector((state) => state.products);
+  const { orders, loading: ordersLoading } = useSelector((state) => state.orders);
+  const { customers, loading: customersLoading } = useSelector((state) => state.customers);
+  const { metrics, revenueTrend, orderStatusDistribution, loading: statsLoading } = useSelector((state) => state.reports);
 
-  const lowStockProducts = products.filter(p => p.stock < p.minStock);
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+  useEffect(() => {
+    dispatch(fetchStats());
+    dispatch(fetchProducts());
+    dispatch(fetchOrders());
+    dispatch(fetchCustomers());
+  }, [dispatch]);
+
+  const lowStockProducts = products.filter(p => p.stock && p.stock < 10);
+  const totalRevenue = metrics.totalRevenue || 0;
+  const avgOrderValue = metrics.avgOrderValue || 0;
 
   return (
     <div className="space-y-6">
@@ -22,7 +35,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">₹{totalRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">₹{totalRevenue.toLocaleString('en-IN')}</p>
               <div className="flex items-center gap-1 mt-2 text-green-600 text-sm">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -42,7 +55,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{orders.length}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{metrics.totalOrders || orders.length}</p>
               <div className="flex items-center gap-1 mt-2 text-green-600 text-sm">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -62,7 +75,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{customers.length}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{metrics.totalCustomers || customers.length}</p>
               <div className="flex items-center gap-1 mt-2 text-green-600 text-sm">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -82,7 +95,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Products</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{products.length}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{metrics.totalProducts || products.length}</p>
               {lowStockProducts.length > 0 && (
                 <p className="text-red-600 text-sm mt-2">{lowStockProducts.length} low stock</p>
               )}
@@ -145,21 +158,21 @@ const Dashboard = () => {
           <p className="text-sm text-gray-600 mb-4">Latest customer orders</p>
           <div className="space-y-3">
             {orders.slice(0, 4).map((order) => (
-              <div key={order.id} className="flex items-center justify-between pb-3 border-b last:border-0">
+              <div key={order._id || order.id} className="flex items-center justify-between pb-3 border-b last:border-0">
                 <div>
-                  <p className="font-semibold text-gray-800">{order.id}</p>
-                  <p className="text-sm text-gray-600">{order.customer}</p>
+                  <p className="font-semibold text-gray-800">{order._id?.slice(-8) || order.id}</p>
+                  <p className="text-sm text-gray-600">{order.user?.name || order.customer || 'N/A'}</p>
                 </div>
                 <div className="text-right">
                   <span className={`px-2 py-1 rounded text-xs ${
                     order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                     order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'packed' ? 'bg-purple-100 text-purple-800' :
+                    order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
                     'bg-yellow-100 text-yellow-800'
                   }`}>
                     {order.status}
                   </span>
-                  <p className="text-sm text-gray-600 mt-1">₹{order.total.toLocaleString()}</p>
+                  <p className="text-sm text-gray-600 mt-1">₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</p>
                 </div>
               </div>
             ))}
@@ -171,11 +184,11 @@ const Dashboard = () => {
           <p className="text-sm text-gray-600 mb-4">Products running low on inventory</p>
           <div className="space-y-3">
             {lowStockProducts.map((product) => (
-              <div key={product.id} className="pb-3 border-b last:border-0">
+              <div key={product._id || product.id} className="pb-3 border-b last:border-0">
                 <p className="font-semibold text-gray-800">{product.name}</p>
                 <p className="text-sm text-gray-600">{product.category}</p>
                 <p className="text-sm text-red-600 mt-1">
-                  {product.stock} units <span className="text-gray-500">Min: {product.minStock}</span>
+                  {product.stock} units
                 </p>
               </div>
             ))}
@@ -185,7 +198,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-3xl font-bold text-gray-800">{orders.filter(o => o.status === 'pending').length}</p>
+          <p className="text-3xl font-bold text-gray-800">{metrics.pendingOrders || orders.filter(o => o.status === 'pending').length}</p>
           <p className="text-gray-600 mt-2">Pending Orders</p>
           <p className="text-sm text-gray-500">Requires attention</p>
         </div>
@@ -195,7 +208,7 @@ const Dashboard = () => {
           <p className="text-sm text-gray-500">Total registered</p>
         </div>
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-3xl font-bold text-gray-800">₹{Math.round(avgOrderValue).toLocaleString()}</p>
+          <p className="text-3xl font-bold text-gray-800">₹{Math.round(avgOrderValue).toLocaleString('en-IN')}</p>
           <p className="text-gray-600 mt-2">Average Order Value</p>
           <p className="text-sm text-gray-500">Per order</p>
         </div>
