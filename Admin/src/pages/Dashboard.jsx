@@ -19,7 +19,7 @@ const Dashboard = () => {
     dispatch(fetchCustomers());
   }, [dispatch]);
 
-  const lowStockProducts = products.filter(p => p.stock && p.stock < 10);
+  const lowStockProducts = products.filter(p => typeof p.stock === 'number' && p.stock <= 5);
   const totalRevenue = metrics.totalRevenue || 0;
   const avgOrderValue = metrics.avgOrderValue || 0;
 

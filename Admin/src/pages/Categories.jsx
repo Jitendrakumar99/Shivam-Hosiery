@@ -55,11 +55,6 @@ const Categories = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-            <img
-              src={category.image}
-              alt={category.name}
-              className="w-full h-40 sm:h-48 object-cover"
-            />
             <div className="p-3 sm:p-4">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-1.5 sm:mb-2">{category.name}</h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">{category.description}</p>

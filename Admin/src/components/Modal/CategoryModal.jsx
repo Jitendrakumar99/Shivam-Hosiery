@@ -8,7 +8,6 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: 'https://images.unsplash.com/photo-1640236889867-2bf2c34f7d8f?w=',
     status: 'active',
   });
 
@@ -17,14 +16,12 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
       setFormData({
         name: category.name || '',
         description: category.description || '',
-        image: category.image || 'https://images.unsplash.com/photo-1640236889867-2bf2c34f7d8f?w=',
         status: category.status || 'active',
       });
     } else {
       setFormData({
         name: '',
         description: '',
-        image: 'https://images.unsplash.com/photo-1640236889867-2bf2c34f7d8f?w=',
         status: 'active',
       });
     }
@@ -79,20 +76,6 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
             rows={4}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] resize-none"
             placeholder="Enter category description"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Image URL <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="url"
-            required
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-            placeholder="https://..."
           />
         </div>
 
