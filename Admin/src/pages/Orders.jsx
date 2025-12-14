@@ -49,6 +49,8 @@ const Orders = () => {
       case 'shipped': return 'bg-blue-100 text-blue-800';
       case 'packed': return 'bg-purple-100 text-purple-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'processing': return 'bg-indigo-100 text-indigo-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -80,9 +82,11 @@ const Orders = () => {
         >
           <option value="all">All Orders</option>
           <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
           <option value="packed">Packed</option>
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -101,7 +105,7 @@ const Orders = () => {
       <div className="space-y-3 sm:space-y-4">
         {filteredOrders.map((order) => (
           <div key={order._id || order.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800">{(order._id || order.id)?.slice(-8) || 'N/A'}</h3>
@@ -112,59 +116,65 @@ const Orders = () => {
                     completed
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-600 mb-0.5">Customer</p>
                     <p className="font-semibold text-gray-800 truncate">{order.user?.name || order.customer || 'N/A'}</p>
                     <p className="text-gray-500 text-xs truncate">{order.user?.email || order.email || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 mb-0.5">Items</p>
-                    <p className="font-semibold text-gray-800">{order.items?.length || order.items || 0} products</p>
-                  </div>
-                  <div>
                     <p className="text-gray-600 mb-0.5">Order Date</p>
                     <p className="font-semibold text-gray-800">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : order.date || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 mb-0.5">Total Amount</p>
+                    <p className="font-semibold text-green-600">₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 mb-0.5">Items</p>
+                    <p className="font-semibold text-gray-800">{order.items?.length || order.items || 0} products</p>
                   </div>
                   <div>
                     <p className="text-gray-600 mb-0.5">Payment Method</p>
                     <p className="font-semibold text-gray-800 truncate">{order.paymentMethod || 'N/A'}</p>
                   </div>
-                </div>
-                <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
-                  <p className="text-base sm:text-lg font-bold text-green-600">₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</p>
-                  {order.trackingNumber && (
-                    <p className="text-xs sm:text-sm text-gray-600">Tracking: <span className="font-semibold">{order.trackingNumber}</span></p>
-                  )}
+                  <div>
+                    <p className="text-gray-600 mb-0.5">Delivery Agent</p>
+                    <p className="font-semibold text-gray-800 truncate">{order.deliveryAgent || 'N/A'}</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:ml-6">
+              <div className="flex flex-col items-stretch gap-2 lg:ml-6 w-full sm:w-auto sm:min-w-[200px] lg:min-w-[220px]">
                 <select
                   value={order.status}
                   onChange={(e) => handleStatusChange(order._id || order.id, e.target.value)}
-                  className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] text-xs sm:text-sm"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] text-sm"
                 >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
+                  <option value="packed">Packed</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
-                <button
-                  onClick={() => handleViewOrder(order)}
-                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition text-xs sm:text-sm"
-                >
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  View
-                </button>
-                <button className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleViewOrder(order)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View
+                  </button>
+                  <button type="button" className="p-2 text-gray-600 hover:bg-gray-100 border border-gray-300 rounded-lg transition" aria-label="Print">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

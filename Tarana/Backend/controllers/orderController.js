@@ -164,7 +164,13 @@ exports.createOrder = async (req, res, next) => {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: -item.quantity }
       });
+      // Clear product cache for this product
+      try {
+        clearCache(`/api/products/${item.product}`);
+      } catch (_) {}
     }
+    // Clear products list cache
+    clearCache('/api/products');
 
     // Create notification
     try {
@@ -206,6 +212,29 @@ exports.updateOrderStatus = async (req, res, next) => {
         success: false,
         message: 'Order not found'
       });
+    }
+
+    const prevStatus = order.status;
+
+    // Handle stock adjustments based on status transitions
+    if (prevStatus !== 'cancelled' && status === 'cancelled') {
+      // Order is being cancelled now: restore stock
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: item.quantity }
+        });
+        try { clearCache(`/api/products/${item.product}`); } catch (_) {}
+      }
+      clearCache('/api/products');
+    } else if (prevStatus === 'cancelled' && status !== 'cancelled') {
+      // Order was cancelled before, now being re-activated: decrease stock again
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: -item.quantity }
+        });
+        try { clearCache(`/api/products/${item.product}`); } catch (_) {}
+      }
+      clearCache('/api/products');
     }
 
     order.status = status;
@@ -268,7 +297,13 @@ exports.cancelOrder = async (req, res, next) => {
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: item.quantity }
       });
+      // Clear product cache for this product
+      try {
+        clearCache(`/api/products/${item.product}`);
+      } catch (_) {}
     }
+    // Clear products list cache
+    clearCache('/api/products');
 
     order.status = 'cancelled';
     await order.save();

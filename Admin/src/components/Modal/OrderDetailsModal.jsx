@@ -16,25 +16,32 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
     window.print();
   };
 
+  const displayId = (order._id || order.id || '').toString();
+  const totalAmount = Number(order.totalAmount ?? order.total ?? 0);
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Order Details - ${order.id}`} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Order Details - ${displayId}`} size="lg">
       <div className="space-y-6">
         {/* Customer Information */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800">Customer Information</h3>
-          <div className="space-y-2">
+          <div className="space-y-2 bg-gray-50 rounded-lg p-4">
             <div>
               <span className="text-gray-600">Name:</span>
-              <p className="text-gray-800 font-medium">{order.customer}</p>
+              <p className="text-gray-800 font-medium">{order.user?.name || order.shippingAddress?.name || 'N/A'}</p>
             </div>
             <div>
               <span className="text-gray-600">Email:</span>
-              <p className="text-gray-800 font-medium">{order.email}</p>
+              <p className="text-gray-800 font-medium">{order.user?.email || 'N/A'}</p>
             </div>
             <div>
               <span className="text-gray-600">Delivery Address:</span>
               <p className="text-gray-800 font-medium">
-                Industrial Area, Raipur, CG - 492001
+                {[
+                  order.shippingAddress?.address,
+                  order.shippingAddress?.city,
+                  order.shippingAddress?.state,
+                  order.shippingAddress?.pincode,
+                ].filter(Boolean).join(', ') || 'N/A'}
               </p>
             </div>
           </div>
@@ -44,23 +51,32 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800">High Visibility Safety Vest</p>
-                <p className="text-sm text-gray-600 mt-1">Variant: XL, Orange</p>
-                <p className="text-sm text-gray-600">Quantity: 50</p>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-600 text-sm">Price per item</p>
-                <p className="font-semibold text-gray-800">₹450</p>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-gray-200">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="font-semibold text-gray-800">₹22,500</span>
-              </div>
-            </div>
+            {(order.items || []).map((it, idx) => {
+              const name = it.product?.name || 'Item';
+              const qty = Number(it.quantity || 0);
+              const price = Number(it.price || it.product?.price || 0);
+              const itemSubtotal = price * qty;
+              return (
+                <div key={idx} className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800">{name}</p>
+                      <p className="text-sm text-gray-600">Quantity: {qty}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-600 text-sm">Price per item</p>
+                      <p className="font-semibold text-gray-800">₹{price.toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-semibold text-gray-800">₹{itemSubtotal.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -70,7 +86,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
-              <span className="font-semibold text-gray-800">₹{order.total.toLocaleString()}</span>
+              <span className="font-semibold text-gray-800">₹{totalAmount.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Delivery Charges:</span>
@@ -78,7 +94,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-200">
               <span className="text-lg font-semibold text-gray-800">Total:</span>
-              <span className="text-lg font-bold text-green-600">₹{order.total.toLocaleString()}</span>
+              <span className="text-lg font-bold text-green-600">₹{totalAmount.toLocaleString('en-IN')}</span>
             </div>
           </div>
         </div>

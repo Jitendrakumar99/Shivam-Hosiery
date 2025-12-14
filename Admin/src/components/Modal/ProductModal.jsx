@@ -11,7 +11,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     name: '',
     category: '',
     price: '',
-    images: '',
+    images: [''],
     description: '',
     features: '',
     stock: '0',
@@ -23,7 +23,9 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         name: product.name || '',
         category: product.category || '',
         price: product.price?.toString() || '',
-        images: product.images?.[0] || product.image || '',
+        images: Array.isArray(product.images) && product.images.length > 0
+          ? product.images
+          : (product.image ? [product.image] : ['']),
         description: product.description || '',
         features: product.features?.join('\n') || '',
         stock: product.stock?.toString() || '0',
@@ -33,7 +35,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         name: '',
         category: '',
         price: '0',
-        images: '',
+        images: [''],
         description: '',
         features: 'Feature 1\nFeature 2\nFeature 3',
         stock: '0',
@@ -50,7 +52,9 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       description: formData.description,
       features: formData.features.split('\n').filter(f => f.trim()),
       stock: parseInt(formData.stock) || 0,
-      images: formData.images ? [formData.images] : [],
+      images: Array.isArray(formData.images)
+        ? formData.images.map(i => i.trim()).filter(Boolean)
+        : [],
       status: 'active',
     };
 
@@ -149,15 +153,43 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Image URL
+              Image URLs
             </label>
-            <input
-              type="url"
-              value={formData.images}
-              onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="https://..."
-            />
+            <div className="space-y-2">
+              {formData.images.map((img, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={img}
+                    onChange={(e) => {
+                      const next = [...formData.images];
+                      next[idx] = e.target.value;
+                      setFormData({ ...formData, images: next });
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = formData.images.filter((_, i) => i !== idx);
+                      setFormData({ ...formData, images: next.length ? next : [''] });
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                    aria-label="Remove image"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, images: [...formData.images, ''] })}
+                className="mt-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+              >
+                + Add another image
+              </button>
+            </div>
           </div>
         </div>
 
