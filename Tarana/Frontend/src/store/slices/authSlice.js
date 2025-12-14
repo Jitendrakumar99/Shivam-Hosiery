@@ -80,6 +80,62 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async (passwordData, { rejectWithValue }) => {
+    try {
+      const data = await authService.changePassword(passwordData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to change password'
+      );
+    }
+  }
+);
+
+export const addAddress = createAsyncThunk(
+  'auth/addAddress',
+  async (addressData, { rejectWithValue }) => {
+    try {
+      const data = await authService.addAddress(addressData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to add address'
+      );
+    }
+  }
+);
+
+export const updateAddress = createAsyncThunk(
+  'auth/updateAddress',
+  async ({ addressId, addressData }, { rejectWithValue }) => {
+    try {
+      const data = await authService.updateAddress(addressId, addressData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to update address'
+      );
+    }
+  }
+);
+
+export const deleteAddress = createAsyncThunk(
+  'auth/deleteAddress',
+  async (addressId, { rejectWithValue }) => {
+    try {
+      const data = await authService.deleteAddress(addressId);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to delete address'
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -151,6 +207,30 @@ const authSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Add Address
+      .addCase(addAddress.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+      })
+      // Update Address
+      .addCase(updateAddress.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+      })
+      // Delete Address
+      .addCase(deleteAddress.fulfilled, (state, action) => {
+        state.user = action.payload.user;
       });
   },
 });

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchOrder, cancelOrder } from '../store/slices/orderSlice';
+import { addToCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 
 const OrderDetail = () => {
@@ -19,16 +20,53 @@ const OrderDetail = () => {
 
   const handleCancelOrder = async () => {
     if (!order) return;
-    const confirmed = window.confirm('Are you sure you want to cancel this order?');
-    if (confirmed) {
-      const result = await dispatch(cancelOrder(order._id || order.id));
-      if (cancelOrder.fulfilled.match(result)) {
-        toast.success('Order cancelled successfully');
-        dispatch(fetchOrder(id));
-      } else {
-        toast.error('Failed to cancel order');
-      }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold">Are you sure you want to cancel this order?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const result = await dispatch(cancelOrder(order._id || order.id));
+              if (cancelOrder.fulfilled.match(result)) {
+                toast.success('Order cancelled successfully');
+                dispatch(fetchOrder(id));
+              } else {
+                toast.error('Failed to cancel order');
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Yes, Cancel
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 10000,
+    });
+  };
+
+  const handleReorder = () => {
+    if (!order || !order.items || order.items.length === 0) {
+      toast.error('No items to reorder');
+      return;
     }
+    
+    order.items.forEach((item) => {
+      const product = item.product;
+      if (product) {
+        dispatch(addToCart({ product, quantity: item.quantity }));
+      }
+    });
+    
+    toast.success('All items added to cart!');
+    navigate('/cart');
   };
 
   const getStatusColor = (status) => {
@@ -370,7 +408,10 @@ const OrderDetail = () => {
                   </button>
                 )}
                 {order.status === 'delivered' && (
-                  <button className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-300 transition">
+                  <button
+                    onClick={handleReorder}
+                    className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-300 transition"
+                  >
                     Reorder
                   </button>
                 )}

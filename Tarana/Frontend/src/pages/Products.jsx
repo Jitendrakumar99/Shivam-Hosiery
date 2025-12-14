@@ -20,11 +20,11 @@ const Products = () => {
 
   useEffect(() => {
     const params = {};
-    if (selectedCategory !== 'all') {
+    if (selectedCategory && selectedCategory !== 'all') {
       params.category = selectedCategory;
     }
-    if (searchQuery) {
-      params.search = searchQuery;
+    if (searchQuery && searchQuery.trim()) {
+      params.search = searchQuery.trim();
     }
     dispatch(fetchProducts(params));
   }, [dispatch, selectedCategory, searchQuery]);
@@ -37,14 +37,12 @@ const Products = () => {
   }, [dispatch, isAuthenticated]);
 
   const handleCategoryChange = (category) => {
-    const categoryValue = category.toLowerCase().replace(' ', '-');
+    const categoryValue = category === 'All' ? 'all' : category;
     setSelectedCategory(categoryValue);
     if (categoryValue === 'all') {
       setSearchParams({});
-      // No need to dispatch fetchProducts here, useEffect will handle it
     } else {
       setSearchParams({ category: categoryValue });
-      // No need to dispatch fetchProducts here, useEffect will handle it
     }
   };
 
@@ -108,7 +106,7 @@ const Products = () => {
                   onClick={() => handleCategoryChange(category)}
                   className={`px-4 py-2 rounded-lg transition ${
                     (selectedCategory === 'all' && category === 'All') ||
-                    category.toLowerCase().replace(' ', '-') === selectedCategory
+                    category === selectedCategory
                       ? 'bg-trana-orange text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
                   }`}
@@ -148,40 +146,35 @@ const Products = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <div key={product._id || product.id} className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                    <Link to={`/products/${product._id || product.id}`}>
-                      <div className="h-64 bg-gray-200 flex items-center justify-center cursor-pointer relative">
+                    <div className="h-72 bg-gray-200 flex items-center justify-center relative group">
+                      <Link to={`/products/${product._id || product.id}`} className="absolute inset-0 z-0 ">
                         {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-fit hover:scale-105  transition-transform duration-300" />
                         ) : (
                           <span className="text-gray-500">{product.name} Image</span>
                         )}
-                        {/* Customize Icon */}
-                        <Link
-                          to={'/customize'}
-                          state={{ productImage: product.images && product.images.length > 0 ? product.images[0] : null }}
-                          className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform duration-200"
-                          title="Customize this product"
-                        >
-                          <svg className="w-5 h-5 text-trana-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </Link>
-                      </div>
-                    </Link>
+                      </Link>
+                      {/* Customize Icon - using button with navigate to avoid nested links */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate('/customize', { state: { productImage: product.images && product.images.length > 0 ? product.images[0] : null } });
+                        }}
+                        className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform duration-200 z-10"
+                        title="Customize this product"
+                      >
+                        <svg className="w-5 h-5 text-trana-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </div>
                     <div className="p-6">
                       <p className="text-sm text-gray-500 mb-1">{product.category}</p>
                       <Link to={`/products/${product._id || product.id}`}>
                         <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition cursor-pointer">{product.name}</h3>
                       </Link>
                       <p className="text-gray-600 mb-4 text-sm">{product.description}</p>
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold mb-2">Key Features:</p>
-                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                          {product.features?.slice(0, 3).map((feature, idx) => (
-                            <li key={idx}>{feature}</li>
-                          ))}
-                        </ul>
-                      </div>
                       <div className="flex justify-between items-center mb-4">
                         <p className="text-lg font-bold text-trana-orange">Starting from ₹{product.price}</p>
                         <p className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -190,15 +183,12 @@ const Products = () => {
                       </div>
                       <div className="flex gap-2">
                         {isInCart(product) ? (
-                          <button
-                            onClick={() => {
-                              dispatch(removeFromCart(product._id || product.id));
-                              toast.success(`${product.name} removed from cart!`);
-                            }}
-                            className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
+                          <Link
+                            to="/cart"
+                            className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition text-center"
                           >
-                            Remove from Cart
-                          </button>
+                            View Cart
+                          </Link>
                         ) : (
                           <button
                             onClick={() => {

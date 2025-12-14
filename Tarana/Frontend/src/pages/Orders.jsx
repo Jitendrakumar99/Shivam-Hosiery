@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchOrders, cancelOrder } from '../store/slices/orderSlice';
+import { addToCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
 
 const Orders = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { orders, loading, error } = useAppSelector((state) => state.orders);
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [filter, setFilter] = useState('all');
@@ -17,17 +19,36 @@ const Orders = () => {
   }, [dispatch, isAuthenticated]);
 
   const handleCancelOrder = async (orderId) => {
-    const confirmed = window.confirm('Are you sure you want to cancel this order?');
-    if (confirmed) {
-      const result = await dispatch(cancelOrder(orderId));
-      if (cancelOrder.fulfilled.match(result)) {
-        toast.success('Order cancelled successfully');
-        // Refresh orders list
-        dispatch(fetchOrders());
-      } else {
-        toast.error('Failed to cancel order');
-      }
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold">Are you sure you want to cancel this order?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const result = await dispatch(cancelOrder(orderId));
+              if (cancelOrder.fulfilled.match(result)) {
+                toast.success('Order cancelled successfully');
+                dispatch(fetchOrders());
+              } else {
+                toast.error('Failed to cancel order');
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Yes, Cancel
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 10000,
+    });
   };
 
   const handleRefresh = () => {
@@ -153,15 +174,38 @@ const Orders = () => {
                     </div>
 
                     <div className="border-t border-gray-200 pt-4 mt-4">
-                      <div className="space-y-2 mb-4">
-                        {order.items?.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center">
-                            <span className="text-gray-700">
-                              {item.product?.name || item.name} x {item.quantity}
-                            </span>
-                            <span className="font-semibold">₹{(item.price || item.product?.price || 0) * item.quantity}</span>
-                          </div>
-                        ))}
+                      <div className="space-y-4 mb-4">
+                        {order.items?.map((item, idx) => {
+                          const product = item.product || {};
+                          return (
+                            <div key={idx} className="flex gap-4 items-center">
+                              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                                {product.images && product.images.length > 0 ? (
+                                  <img
+                                    src={product.images[0]}
+                                    alt={product.name || 'Product'}
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                ) : (
+                                  <span className="text-gray-400 text-xs">No Image</span>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{product.name || item.name || 'Product'}</h4>
+                                {product.category && (
+                                  <p className="text-sm text-gray-500">{product.category}</p>
+                                )}
+                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-trana-orange">
+                                  ₹{(item.price || product.price || 0) * item.quantity}
+                                </p>
+                                <p className="text-xs text-gray-500">₹{item.price || product.price || 0} each</p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                         <span className="text-lg font-bold">Total Amount</span>
@@ -177,7 +221,23 @@ const Orders = () => {
                         View Details
                       </Link>
                       {order.status === 'delivered' && (
-                        <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        <button
+                          onClick={() => {
+                            if (order.items && order.items.length > 0) {
+                              order.items.forEach((item) => {
+                                const product = item.product;
+                                if (product) {
+                                  dispatch(addToCart({ product, quantity: item.quantity }));
+                                }
+                              });
+                              toast.success('All items added to cart!');
+                              navigate('/cart');
+                            } else {
+                              toast.error('No items to reorder');
+                            }
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                        >
                           Reorder
                         </button>
                       )}
