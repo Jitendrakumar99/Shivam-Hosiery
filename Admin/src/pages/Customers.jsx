@@ -1,18 +1,27 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { fetchCustomers } from '../store/slices/customerSlice';
 import CustomerDetailsModal from '../components/Modal/CustomerDetailsModal';
 
 const Customers = () => {
-  const { customers } = useSelector((state) => state.customers);
+  const { customers, loading } = useSelector((state) => state.customers);
+  const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm)
-  );
+  useEffect(() => {
+    dispatch(fetchCustomers());
+  }, [dispatch]);
+
+  const filteredCustomers = customers.filter(customer => {
+    const name = (customer.name || '').toLowerCase();
+    const email = (customer.email || '').toLowerCase();
+    const phone = (customer.phone || '').toString();
+    return name.includes(searchTerm.toLowerCase()) ||
+      email.includes(searchTerm.toLowerCase()) ||
+      phone.includes(searchTerm);
+  });
 
   const handleViewCustomer = (customer) => {
     setSelectedCustomer(customer);
@@ -44,13 +53,27 @@ const Customers = () => {
         />
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading customers...</p>
+        </div>
+      )}
+
+      {!loading && filteredCustomers.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No customers found.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredCustomers.map((customer) => (
-          <div key={customer.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div key={customer._id || customer.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 truncate pr-2">{customer.name}</h3>
-              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold flex-shrink-0">
-                {customer.status}
+              <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+                customer.isActive !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {customer.isActive !== false ? 'Active' : 'Inactive'}
               </span>
             </div>
             <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
@@ -61,17 +84,17 @@ const Customers = () => {
                 <span className="font-semibold">Phone:</span> {customer.phone}
               </p>
               <p className="text-gray-600">
-                <span className="font-semibold">Joined:</span> {customer.joined}
+                <span className="font-semibold">Joined:</span> {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : customer.joined || 'N/A'}
               </p>
               <div className="flex items-center justify-between pt-2 border-t">
                 <div>
-                  <p className="text-gray-600 text-xs">Total Orders</p>
-                  <p className="font-semibold text-gray-800">{customer.totalOrders}</p>
+                  <p className="text-gray-600 text-xs">Role</p>
+                  <p className="font-semibold text-gray-800 capitalize">{customer.role || 'user'}</p>
                 </div>
-                {customer.totalSpent > 0 && (
+                {customer.company && (
                   <div className="text-right">
-                    <p className="text-gray-600 text-xs">Total Spent</p>
-                    <p className="font-semibold text-green-600 text-sm">₹{customer.totalSpent.toLocaleString()}</p>
+                    <p className="text-gray-600 text-xs">Company</p>
+                    <p className="font-semibold text-gray-800 text-sm truncate">{customer.company}</p>
                   </div>
                 )}
               </div>

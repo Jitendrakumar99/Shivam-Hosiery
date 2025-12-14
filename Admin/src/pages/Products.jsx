@@ -1,14 +1,18 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { deleteProduct } from '../store/slices/productSlice';
+import { useState, useEffect } from 'react';
+import { fetchProducts, deleteProduct } from '../store/slices/productSlice';
 import ProductModal from '../components/Modal/ProductModal';
 
 const Products = () => {
-  const { products } = useSelector((state) => state.products);
+  const { products, loading } = useSelector((state) => state.products);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalMode, setModalMode] = useState('add');
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
@@ -52,15 +56,27 @@ const Products = () => {
         </button>
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      )}
+
+      {!loading && products.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No products found. Add your first product!</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden flex flex-col">
+          <div key={product._id || product.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden flex flex-col">
             {/* Top section: Image and product details */}
             <div className="p-3 sm:p-4 flex gap-3 sm:gap-4">
               {/* Small square image with rounded corners */}
               <div className="w-20 h-20 sm:w-24 sm:h-24 min-w-[80px] sm:min-w-[96px] shrink-0">
                 <img
-                  src={product.image}
+                  src={product.images?.[0] || product.image || 'https://via.placeholder.com/150'}
                   alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
@@ -76,7 +92,7 @@ const Products = () => {
                 
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 line-clamp-2">{product.name}</h3>
                 
-                <p className="text-lg sm:text-xl font-bold text-orange-500">${product.price.toFixed(2)}</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-500">₹{product.price?.toFixed(2) || '0.00'}</p>
               </div>
             </div>
             
@@ -95,7 +111,7 @@ const Products = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() => handleDelete(product._id || product.id)}
                   className="p-1.5 sm:p-2 border border-gray-300 text-red-600 hover:bg-red-50 rounded-lg transition"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,6 +129,10 @@ const Products = () => {
         onClose={handleCloseModal}
         product={selectedProduct}
         mode={modalMode}
+        onSuccess={() => {
+          dispatch(fetchProducts());
+          handleCloseModal();
+        }}
       />
     </div>
   );

@@ -27,10 +27,11 @@ const About = () => {
                 Today, we specialize in manufacturing a wide range of garments, with a particular focus on safety garments under our flagship brand "Trana." Our products are trusted by industries across construction, manufacturing, energy, and infrastructure sectors.
               </p>
             </div>
-            <div className="rounded-lg h-64 md:h-96 overflow-hidden bg-gray-200 flex items-center justify-center">
-              {/* Replace this div with: <img src="YOUR_IMAGE_URL" alt="Manufacturing facility" className="w-full h-full object-cover" /> */}
-              <span className="text-gray-400">Manufacturing Facility Image</span>
-            </div>
+            <img 
+                src="https://images.unsplash.com/photo-1675176785803-bffbbb0cd2f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+                alt="Manufacturing facility"
+                className="w-full h-full object-cover"
+              />
           </div>
         </div>
       </section>

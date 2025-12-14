@@ -1,18 +1,24 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { deleteBrand } from '../store/slices/brandSlice';
+import { useState, useEffect } from 'react';
+import { fetchBrands, deleteBrand } from '../store/slices/brandSlice';
 import BrandModal from '../components/Modal/BrandModal';
 
 const Brands = () => {
-  const { brands } = useSelector((state) => state.brands);
+  const { brands, loading } = useSelector((state) => state.brands);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [modalMode, setModalMode] = useState('add');
 
+  useEffect(() => {
+    dispatch(fetchBrands());
+  }, [dispatch]);
+
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this brand?')) {
-      dispatch(deleteBrand(id));
+      dispatch(deleteBrand(id)).then(() => {
+        dispatch(fetchBrands());
+      });
     }
   };
 
@@ -57,9 +63,21 @@ const Brands = () => {
         </button>
       </div>
 
+      {loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading brands...</p>
+        </div>
+      )}
+
+      {!loading && brands.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No brands found. Add your first brand!</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {brands.map((brand) => (
-          <div key={brand.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden flex flex-col">
+          <div key={brand._id || brand.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden flex flex-col">
             {/* Top section: Image and brand details */}
             <div className="p-3 sm:p-4 flex gap-3 sm:gap-4">
               {/* Small square image with rounded corners */}
@@ -109,7 +127,7 @@ const Brands = () => {
                   View
                 </button>
                 <button
-                  onClick={() => handleDelete(brand.id)}
+                  onClick={() => handleDelete(brand._id || brand.id)}
                   className="p-1.5 sm:p-2 border border-gray-300 text-red-600 hover:bg-red-50 rounded-lg transition"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,6 +145,10 @@ const Brands = () => {
         onClose={handleCloseModal}
         brand={selectedBrand}
         mode={modalMode}
+        onSuccess={() => {
+          dispatch(fetchBrands());
+          handleCloseModal();
+        }}
       />
     </div>
   );

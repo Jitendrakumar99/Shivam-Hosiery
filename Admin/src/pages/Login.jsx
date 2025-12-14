@@ -1,25 +1,59 @@
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginStart, loginSuccess, loginFailure } from '../store/slices/authSlice';
+import { login } from '../store/slices/authSlice';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isAuthenticated, loading, error: authError } = useSelector((state) => state.auth);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    dispatch(loginStart());
-    
-    // Simulate login
-    if (username === 'admin' && password === 'admin123') {
-      dispatch(loginSuccess({ username, role: 'admin' }));
+  useEffect(() => {
+    if (isAuthenticated) {
       navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
     } else {
-      dispatch(loginFailure());
-      alert('Invalid credentials');
+      setError('');
+    }
+  }, [authError]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    dispatch({ type: 'auth/clearError' });
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      const result = await dispatch(login({ email, password }));
+      
+      if (login.fulfilled.match(result)) {
+        // Check if user is admin
+        if (result.payload && result.payload.user && result.payload.user.role === 'admin') {
+          navigate('/dashboard');
+        } else {
+          setError('Access denied. Admin privileges required.');
+          dispatch({ type: 'auth/logout' });
+        }
+      } else if (login.rejected.match(result)) {
+        // Handle rejected login (invalid credentials, etc.)
+        const errorMsg = result.payload || 'Login failed. Please check your credentials.';
+        setError(errorMsg);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Login failed. Please check your credentials and try again.');
     }
   };
 
@@ -37,13 +71,19 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Username</label>
+            <label className="block text-gray-700 font-medium mb-2">Email</label>
             <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
               required
             />
@@ -63,21 +103,21 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#16213e] transition"
+            disabled={loading}
+            className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-semibold hover:bg-[#16213e] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</p>
-          <p className="text-sm text-gray-600">Username: admin</p>
-          <p className="text-sm text-gray-600">Password: admin123</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">Admin Login:</p>
+          <p className="text-sm text-gray-600">Use the same email and password as Trana website</p>
+          <p className="text-xs text-gray-500 mt-1">Only users with admin role can access this panel</p>
+          <p className="text-xs text-gray-400 mt-2 italic">
+            Make sure the backend server is running on http://localhost:3000
+          </p>
         </div>
-
-        <button className="w-full mt-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition">
-          Back to Website
-        </button>
       </div>
     </div>
   );

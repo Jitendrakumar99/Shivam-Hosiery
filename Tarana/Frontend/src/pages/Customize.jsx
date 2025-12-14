@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { customizationService } from '../services/customizationService';
 
 const Customize = () => {
   const location = useLocation();
@@ -17,6 +18,9 @@ const Customize = () => {
   });
 
   const [previewGenerated, setPreviewGenerated] = useState(false);
+  const [generatedImageBase64, setGeneratedImageBase64] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -26,8 +30,47 @@ const Customize = () => {
     }));
   };
 
-  const handleGeneratePreview = () => {
+  const handleGeneratePreview = async () => {
+    setError(null);
+    
+    // Validate required fields
+    if (!formData.productType) {
+      toast.error('Please select a product type');
+      return;
+    }
+    
+    if (!productImage) {
+      toast.error('Please select a product image first');
+      return;
+    }
+
+    setLoading(true);
     setPreviewGenerated(true);
+
+    try {
+      const response = await customizationService.generateImagePreview(
+        formData,
+        productImage,
+        formData.productType
+      );
+
+      if (response.success && response.data.imageBase64) {
+        // Convert base64 to image URL
+        const imageUrl = `data:${response.data.mimeType};base64,${response.data.imageBase64}`;
+        setGeneratedImageBase64(imageUrl);
+        toast.success('AI preview generated successfully!');
+      } else {
+        throw new Error('Failed to generate preview image');
+      }
+    } catch (err) {
+      console.error('Error generating preview:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to generate AI preview. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+      setPreviewGenerated(false);
+    }
   };
 
   return (
@@ -199,7 +242,9 @@ const Customize = () => {
               <h2 className="text-2xl font-bold mb-6">Preview</h2>
               
               <div className="border-2 border-dashed border-gray-300 rounded-lg h-96 mb-6 flex items-center justify-center bg-gray-50 relative overflow-hidden">
-                {productImage ? (
+                {generatedImageBase64 ? (
+                  <img src={generatedImageBase64} alt="Generated Preview" className="w-full h-full object-contain p-4" />
+                ) : productImage ? (
                   <img src={productImage} alt="Product Preview" className="w-full h-full object-contain p-4" />
                 ) : (
                   <div className="text-center">
@@ -208,15 +253,24 @@ const Customize = () => {
                     <p className="text-sm text-gray-500 mt-2">Please select a product from the products page to customize.</p>
                   </div>
                 )}
-                {previewGenerated && (
+                {loading && (
                   <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
-                      <p className="text-gray-600">Generating AI preview...</p>
+                      <p className="text-gray-600 font-semibold">Generating AI preview...</p>
+                      <p className="text-sm text-gray-500 mt-2">This may take a moment</p>
                     </div>
                   </div>
                 )}
               </div>
+
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    <span className="font-semibold">Error:</span> {error}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center">
@@ -239,7 +293,7 @@ const Customize = () => {
                   <div>
                     <p className="text-sm font-semibold mb-1">Powered by AI Preview Technology</p>
                     <p className="text-xs text-gray-600">
-                      Our AI system generates realistic previews of your customized garments using advanced image generation technology (Banana AI API integration).
+                      Our AI system generates realistic previews of your customized garments using advanced image generation technology (Google Gemini 2.5 Flash).
                     </p>
                   </div>
                 </div>

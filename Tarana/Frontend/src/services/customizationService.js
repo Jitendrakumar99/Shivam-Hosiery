@@ -18,5 +18,15 @@ export const customizationService = {
     const response = await api.get(`/customizations/${id}`);
     return response.data;
   },
+
+  // Generate image preview
+  generateImagePreview: async (customizationData, productImage, baseImageDescription) => {
+    const response = await api.post('/customizations/generate-preview', {
+      customizationData,
+      productImage,
+      baseImageDescription
+    });
+    return response.data;
+  }
 };
 

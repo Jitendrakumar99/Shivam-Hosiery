@@ -1,90 +1,181 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { productService } from '../../services/productService';
 
 const initialState = {
-  products: [
-    {
-      id: 1,
-      name: 'High Visibility Safety Vest - Class 2',
-      price: 450.00,
-      category: 'Safety Vests',
-      description: 'Premium quality high-visibility safety vest with reflective strips, designed for maximum visibility in low-light conditions.',
-      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-      stock: 50,
-      minStock: 50,
-    },
-    {
-      id: 2,
-      name: 'Safety Jacket with Hood',
-      price: 1200.00,
-      category: 'Safety Jackets',
-      description: 'Weather-resistant safety jacket with detachable hood and high-visibility reflective tape.',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
-      stock: 8,
-      minStock: 25,
-    },
-    {
-      id: 3,
-      name: 'Industrial Coverall - Full Body',
-      price: 1800.00,
-      category: 'Coveralls',
-      description: 'Heavy-duty full-body coverall with reflective strips for industrial and construction work.',
-      image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400',
-      stock: 30,
-      minStock: 20,
-    },
-    {
-      id: 4,
-      name: 'Reflective Safety Vest - Mesh',
-      price: 350.00,
-      category: 'Safety Vests',
-      description: 'Lightweight mesh safety vest ideal for hot weather conditions with excellent breathability.',
-      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-      stock: 15,
-      minStock: 50,
-    },
-    {
-      id: 5,
-      name: 'Winter Safety Parka',
-      price: 2500.00,
-      category: 'Safety Jackets',
-      description: 'Insulated winter parka with high-visibility features for cold weather operations.',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400',
-      stock: 25,
-      minStock: 20,
-    },
-    {
-      id: 6,
-      name: 'Flame Resistant Coverall',
-      price: 3200.00,
-      category: 'Coveralls',
-      description: 'FR-rated coverall for high-risk environments requiring flame protection.',
-      image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400',
-      stock: 18,
-      minStock: 15,
-    },
-  ],
+  products: [],
+  product: null,
   loading: false,
+  error: null,
+  pagination: null,
 };
+
+// Async thunks
+export const fetchProducts = createAsyncThunk(
+  'products/fetchProducts',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const data = await productService.getProducts(params);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch products'
+      );
+    }
+  }
+);
+
+export const fetchProduct = createAsyncThunk(
+  'products/fetchProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      const data = await productService.getProduct(id);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch product'
+      );
+    }
+  }
+);
+
+export const createProduct = createAsyncThunk(
+  'products/createProduct',
+  async (productData, { rejectWithValue }) => {
+    try {
+      const data = await productService.createProduct(productData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to create product'
+      );
+    }
+  }
+);
+
+export const updateProduct = createAsyncThunk(
+  'products/updateProduct',
+  async ({ id, productData }, { rejectWithValue }) => {
+    try {
+      const data = await productService.updateProduct(id, productData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to update product'
+      );
+    }
+  }
+);
+
+export const deleteProduct = createAsyncThunk(
+  'products/deleteProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      await productService.deleteProduct(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to delete product'
+      );
+    }
+  }
+);
 
 const productSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    addProduct: (state, action) => {
-      state.products.push(action.payload);
+    clearProduct: (state) => {
+      state.product = null;
     },
-    updateProduct: (state, action) => {
-      const index = state.products.findIndex(p => p.id === action.payload.id);
-      if (index !== -1) {
-        state.products[index] = action.payload;
-      }
+    clearError: (state) => {
+      state.error = null;
     },
-    deleteProduct: (state, action) => {
-      state.products = state.products.filter(p => p.id !== action.payload);
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Products
+      .addCase(fetchProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.data || [];
+        state.pagination = action.payload.pagination;
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch Product
+      .addCase(fetchProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.product = action.payload.data;
+      })
+      .addCase(fetchProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create Product
+      .addCase(createProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.data) {
+          state.products.unshift(action.payload.data);
+        }
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Update Product
+      .addCase(updateProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.data) {
+          const index = state.products.findIndex(
+            (p) => p._id === action.payload.data._id
+          );
+          if (index !== -1) {
+            state.products[index] = action.payload.data;
+          }
+          if (state.product && state.product._id === action.payload.data._id) {
+            state.product = action.payload.data;
+          }
+        }
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Delete Product
+      .addCase(deleteProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = state.products.filter(
+          (p) => p._id !== action.payload
+        );
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { addProduct, updateProduct, deleteProduct } = productSlice.actions;
+export const { clearProduct, clearError } = productSlice.actions;
 export default productSlice.reducer;
 

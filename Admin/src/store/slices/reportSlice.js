@@ -1,14 +1,18 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { adminService } from '../../services/adminService';
 
 const initialState = {
   metrics: {
-    totalRevenue: 827500,
-    revenueGrowth: 24.5,
-    totalOrders: 26,
-    ordersGrowth: 18.2,
-    totalCustomers: 4,
-    customersGrowth: 32.7,
-    avgOrderValue: 31827,
+    totalRevenue: 0,
+    revenueGrowth: 0,
+    totalOrders: 0,
+    ordersGrowth: 0,
+    totalCustomers: 0,
+    customersGrowth: 0,
+    avgOrderValue: 0,
+    totalProducts: 0,
+    pendingOrders: 0,
+    newContacts: 0,
   },
   revenueTrend: [
     { month: 'Jul', revenue: 45000 },
@@ -19,10 +23,11 @@ const initialState = {
     { month: 'Dec', revenue: 92000 },
   ],
   orderStatusDistribution: {
-    pending: 1,
-    packed: 1,
-    shipped: 1,
-    delivered: 1,
+    pending: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
   },
   categoryDistribution: {
     'Safety Vests': 33,
@@ -35,7 +40,23 @@ const initialState = {
     { code: 'SAFETY15', description: 'Special discount on safety products', used: 87, total: 200 },
   ],
   loading: false,
+  error: null,
 };
+
+// Async thunks
+export const fetchStats = createAsyncThunk(
+  'reports/fetchStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await adminService.getStats();
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch stats'
+      );
+    }
+  }
+);
 
 const reportSlice = createSlice({
   name: 'reports',
@@ -44,9 +65,42 @@ const reportSlice = createSlice({
     updateMetrics: (state, action) => {
       state.metrics = { ...state.metrics, ...action.payload };
     },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Stats
+      .addCase(fetchStats.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchStats.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.data) {
+          const stats = action.payload.data;
+          state.metrics = {
+            totalRevenue: stats.totalRevenue || 0,
+            revenueGrowth: 0, // Calculate from previous data if needed
+            totalOrders: stats.totalOrders || 0,
+            ordersGrowth: 0,
+            totalCustomers: stats.totalUsers || 0,
+            customersGrowth: 0,
+            avgOrderValue: stats.totalOrders > 0 ? (stats.totalRevenue / stats.totalOrders) : 0,
+            totalProducts: stats.totalProducts || 0,
+            pendingOrders: stats.pendingOrders || 0,
+            newContacts: stats.newContacts || 0,
+          };
+        }
+      })
+      .addCase(fetchStats.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
-export const { updateMetrics } = reportSlice.actions;
+export const { updateMetrics, clearError } = reportSlice.actions;
 export default reportSlice.reducer;
 

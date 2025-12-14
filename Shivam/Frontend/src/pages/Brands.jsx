@@ -1,13 +1,30 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { brandService } from '../services/brandService';
+import { clientService } from '../services/clientService';
 
 const Brands = () => {
-  // Brand website URLs - Replace with actual URLs
-  const brandUrls = {
-    trana: 'https://trana.example.com', // Replace with actual Trana website URL
-    comfortWear: 'https://comfortwear.example.com', // Replace with actual ComfortWear website URL
-    activeSports: 'https://activesports.example.com', // Replace with actual ActiveSports website URL
-    corporatePro: 'https://corporatepro.example.com', // Replace with actual CorporatePro website URL
-  };
+  const [brands, setBrands] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [brandsData, clientsData] = await Promise.all([
+          brandService.getBrands({ status: 'active' }),
+          clientService.getClients({ status: 'active' })
+        ]);
+        setBrands(brandsData.data || []);
+        setClients(clientsData.data || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   
   return (
     <div className="min-h-screen">
@@ -22,11 +39,11 @@ const Brands = () => {
             </p>
             <div className="grid grid-cols-3 gap-6 max-w-2xl">
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">4+</div>
+                <div className="text-3xl md:text-4xl font-bold mb-2">{brands.length}+</div>
                 <div className="text-gray-300 text-sm md:text-base">Brands</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">500+</div>
+                <div className="text-3xl md:text-4xl font-bold mb-2">{clients.length}+</div>
                 <div className="text-gray-300 text-sm md:text-base">Clients</div>
               </div>
               <div>
@@ -42,109 +59,53 @@ const Brands = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">
-            Our Brands
+            Our Brand
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Each brand represents our commitment to quality, innovation, and customer satisfaction in its respective category.
+            Our brand represents our commitment to quality, innovation, and customer satisfaction in its respective category.
           </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Trana */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-              <div className="h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
-                {/* Replace this div with: <img src="YOUR_IMAGE_URL" alt="Brand image" className="w-full h-full object-cover" /> */}
-                <span className="text-gray-400">Safety Image</span>
-              </div>
-              <div className="p-6">
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">Safety Garments</span>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Trana</h3>
-                <p className="text-sm text-gray-600 mb-1">सुरक्षा हमारी प्राथमिकता</p>
-                <p className="text-gray-600 mb-4 text-sm">Premium safety garments designed for industrial protection.</p>
-                <a 
-                  href={brandUrls.trana}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                >
-                  Visit Website
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Loading brands...</p>
             </div>
-
-            {/* ComfortWear */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-              <div className="bg-gray-200 h-48 flex items-center justify-center">
-                <span className="text-gray-400">Casual Image</span>
-              </div>
-              <div className="p-6">
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">Casual Wear</span>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">ComfortWear</h3>
-                <p className="text-sm text-gray-600 mb-1">Style Meets Comfort</p>
-                <p className="text-gray-600 mb-4 text-sm">Everyday casual clothing with quality and comfort.</p>
-                <a 
-                  href={brandUrls.comfortWear}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                >
-                  Visit Website
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
+          ) : brands.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {brands.map((brand) => (
+                <div key={brand._id || brand.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                  <div className="h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
+                    {brand.image ? (
+                      <img src={brand.image} alt={brand.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-gray-400">Brand Image</span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">{brand.category}</span>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{brand.name}</h3>
+                    {brand.slogan && <p className="text-sm text-gray-600 mb-1">{brand.slogan}</p>}
+                    <p className="text-gray-600 mb-4 text-sm">{brand.description}</p>
+                    {brand.websiteUrl && (
+                      <a 
+                        href={brand.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
+                      >
+                        Visit Website
+                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* ActiveSports */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-              <div className="bg-gray-200 h-48 flex items-center justify-center">
-                <span className="text-gray-400">Sports Image</span>
-              </div>
-              <div className="p-6">
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">Sports Apparel</span>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">ActiveSports</h3>
-                <p className="text-sm text-gray-600 mb-1">Performance Redefined</p>
-                <p className="text-gray-600 mb-4 text-sm">Performance-focused sportswear for active lifestyles.</p>
-                <a 
-                  href={brandUrls.activeSports}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                >
-                  Visit Website
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No brands available</p>
             </div>
-
-            {/* CorporatePro */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-              <div className="bg-gray-200 h-48 flex items-center justify-center">
-                <span className="text-gray-400">Corporate Image</span>
-              </div>
-              <div className="p-6">
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">Corporate Uniforms</span>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">CorporatePro</h3>
-                <p className="text-sm text-gray-600 mb-1">Professional Excellence</p>
-                <p className="text-gray-600 mb-4 text-sm">Professional uniforms for businesses and organizations.</p>
-                <a 
-                  href={brandUrls.corporatePro}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                >
-                  Visit Website
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -161,7 +122,7 @@ const Brands = () => {
               Our Brand Philosophy
             </h2>
             <p className="text-gray-600 text-center leading-relaxed">
-              Every brand under the Shivam Hosiery umbrella shares our core values of quality, innovation, and customer satisfaction. We believe in creating products that not only meet but exceed expectations, ensuring that each brand maintains its unique identity while upholding our company's reputation for excellence.
+              Our brand under the Shivam Hosiery umbrella shares our core values of quality, innovation, and customer satisfaction. We believe in creating products that not only meet but exceed expectations, ensuring that each brand maintains its unique identity while upholding our company's reputation for excellence.
             </p>
           </div>
         </div>
@@ -211,7 +172,7 @@ const Brands = () => {
         </div>
       </section>
 
-      {/* Industries We Serve Section */}
+      {/* Industries We Serve Section (static) */}
       <section className="py-16 bg-slate-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">
@@ -221,7 +182,14 @@ const Brands = () => {
             Providing specialized garment solutions across diverse sectors.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
-            {['Construction', 'Manufacturing', 'Transportation', 'Energy', 'Mining', 'Infrastructure'].map((industry) => (
+            {[
+              'Construction',
+              'Manufacturing',
+              'Transportation',
+              'Energy',
+              'Mining',
+              'Infrastructure',
+            ].map((industry) => (
               <button
                 key={industry}
                 className="border-2 border-white px-4 py-3 rounded-lg hover:bg-white hover:text-[#1e3a5f] transition-colors font-semibold"
@@ -242,26 +210,57 @@ const Brands = () => {
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             We are proud to serve a diverse range of clients, from small businesses to large corporations. Our commitment to quality and service has helped us build long-lasting relationships.
           </p>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { name: 'National Construction Corp', industry: 'Construction' },
-              { name: 'Industrial Safety Solutions', industry: 'Manufacturing' },
-              { name: 'Metro Rail Services', industry: 'Transportation' },
-              { name: 'Power Grid Corporation', industry: 'Energy' },
-              { name: 'Highway Development Authority', industry: 'Infrastructure' },
-              { name: 'Mining Corporation Ltd', industry: 'Mining' },
-            ].map((client) => (
-              <div key={client.name} className="bg-white border border-gray-200 p-6 rounded-lg shadow-md text-center">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-gray-800 mb-2">{client.name}</h3>
-                <p className="text-sm text-gray-600">{client.industry}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Loading clients...</p>
+            </div>
+          ) : clients.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {clients.map((client) => (
+                <a
+                  key={client._id || client.id}
+                  href={client.websiteUrl || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white border border-gray-200 p-6 rounded-lg shadow-md text-center block"
+                >
+                  <div className="w-full relative mb-4" style={{ paddingTop: '100%' }}>
+                    {/* This is to create a square aspect ratio container */}
+                    <div className="absolute inset-0 overflow-hidden rounded-lg">
+                      {client.logo ? (
+                        <img
+                          src={client.logo}
+                          alt={client.name}
+                          className="w-full h-full object-contain rounded-lg"
+                        />
+                      ) : (
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-gray-800 mb-2">{client.name}</h3>
+                  <p className="text-sm text-gray-600">{client.category}</p>
+                </a>
+              ))}
+            </div>
+
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No clients available</p>
+            </div>
+          )}
         </div>
       </section>
 

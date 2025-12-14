@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { addProduct, updateProduct } from '../../store/slices/productSlice';
+import { createProduct, updateProduct } from '../../store/slices/productSlice';
 
-const ProductModal = ({ isOpen, onClose, product = null, mode = 'add' }) => {
+const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess }) => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.categories);
+  const { loading } = useSelector((state) => state.products);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
     price: '',
-    image: 'https://images.unsplash.com/ph',
+    images: '',
     description: '',
     features: '',
-    sizes: 'S, M, L, XL, XXL',
-    colors: 'Orange, Yellow, Green',
+    stock: '0',
   });
 
   useEffect(() => {
@@ -23,50 +23,54 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add' }) => {
         name: product.name || '',
         category: product.category || '',
         price: product.price?.toString() || '',
-        image: product.image || 'https://images.unsplash.com/ph',
+        images: product.images?.[0] || product.image || '',
         description: product.description || '',
         features: product.features?.join('\n') || '',
-        sizes: product.sizes?.join(', ') || 'S, M, L, XL, XXL',
-        colors: product.colors?.join(', ') || 'Orange, Yellow, Green',
+        stock: product.stock?.toString() || '0',
       });
     } else {
       setFormData({
         name: '',
         category: '',
         price: '0',
-        image: 'https://images.unsplash.com/ph',
+        images: '',
         description: '',
         features: 'Feature 1\nFeature 2\nFeature 3',
-        sizes: 'S, M, L, XL, XXL',
-        colors: 'Orange, Yellow, Green',
+        stock: '0',
       });
     }
   }, [product, mode, isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const productData = {
-      ...formData,
+      name: formData.name,
+      category: formData.category,
       price: parseFloat(formData.price),
+      description: formData.description,
       features: formData.features.split('\n').filter(f => f.trim()),
-      sizes: formData.sizes.split(',').map(s => s.trim()),
-      colors: formData.colors.split(',').map(c => c.trim()),
-      stock: product?.stock || 0,
-      minStock: product?.minStock || 0,
+      stock: parseInt(formData.stock) || 0,
+      images: formData.images ? [formData.images] : [],
+      status: 'active',
     };
 
-    if (mode === 'edit' && product) {
-      dispatch(updateProduct({
-        id: product.id,
-        ...productData,
-      }));
-    } else {
-      dispatch(addProduct({
-        id: Date.now(),
-        ...productData,
-      }));
+    try {
+      if (mode === 'edit' && product) {
+        await dispatch(updateProduct({
+          id: product._id || product.id,
+          productData,
+        })).unwrap();
+      } else {
+        await dispatch(createProduct(productData)).unwrap();
+      }
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      alert(error || 'Failed to save product');
     }
-    onClose();
   };
 
   return (
@@ -130,13 +134,27 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add' }) => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Image URL <span className="text-red-500">*</span>
+              Stock <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              required
+              min="0"
+              value={formData.stock}
+              onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Image URL
             </label>
             <input
               type="url"
-              required
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              value={formData.images}
+              onChange={(e) => setFormData({ ...formData, images: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="https://..."
             />
@@ -171,42 +189,14 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add' }) => {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Sizes (comma separated) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.sizes}
-              onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="S, M, L, XL, XXL"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Colors (comma separated) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.colors}
-              onChange={(e) => setFormData({ ...formData, colors: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="Orange, Yellow, Green"
-            />
-          </div>
-        </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           <button
             type="submit"
-            className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mode === 'edit' ? 'Update Product' : 'Add Product'}
+            {loading ? 'Saving...' : mode === 'edit' ? 'Update Product' : 'Add Product'}
           </button>
           <button
             type="button"

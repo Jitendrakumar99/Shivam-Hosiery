@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { useDispatch } from 'react-redux';
-import { addClient, updateClient } from '../../store/slices/clientSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { createClient, updateClient } from '../../store/slices/clientSlice';
 
-const ClientModal = ({ isOpen, onClose, client = null, mode = 'add' }) => {
+const ClientModal = ({ isOpen, onClose, client = null, mode = 'add', onSuccess }) => {
   const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.clients);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    logo: '',
+    websiteUrl: '',
+    status: 'active',
   });
 
   useEffect(() => {
@@ -15,31 +19,48 @@ const ClientModal = ({ isOpen, onClose, client = null, mode = 'add' }) => {
       setFormData({
         name: client.name || '',
         category: client.category || '',
+        logo: client.logo || '',
+        websiteUrl: client.websiteUrl || '',
+        status: client.status || 'active',
       });
     } else {
       setFormData({
         name: '',
         category: '',
+        logo: '',
+        websiteUrl: '',
+        status: 'active',
       });
     }
   }, [client, mode, isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (mode === 'edit' && client) {
-      dispatch(updateClient({
-        id: client.id,
-        ...formData,
-        logo: client.logo || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
-      }));
-    } else {
-      dispatch(addClient({
-        id: Date.now(),
-        ...formData,
-        logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400',
-      }));
+    const clientData = {
+      name: formData.name,
+      category: formData.category,
+      logo: formData.logo,
+      websiteUrl: formData.websiteUrl,
+      status: formData.status,
+    };
+
+    try {
+      if (mode === 'edit' && client) {
+        await dispatch(updateClient({
+          id: client._id || client.id,
+          clientData,
+        })).unwrap();
+      } else {
+        await dispatch(createClient(clientData)).unwrap();
+      }
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
+    } catch (error) {
+      alert(error || 'Failed to save client');
     }
-    onClose();
   };
 
   return (
@@ -87,12 +108,39 @@ const ClientModal = ({ isOpen, onClose, client = null, mode = 'add' }) => {
           </datalist>
         </div>
 
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Logo URL
+          </label>
+          <input
+            type="url"
+            value={formData.logo}
+            onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Website URL
+          </label>
+          <input
+            type="url"
+            value={formData.websiteUrl}
+            onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            placeholder="https://..."
+          />
+        </div>
+
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           <button
             type="submit"
-            className="flex-1 px-4 py-3 bg-[#1a1a2e] hover:bg-[#16213e] text-white rounded-lg font-semibold transition"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-[#1a1a2e] hover:bg-[#16213e] text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mode === 'edit' ? 'Update Client' : 'Add Client'}
+            {loading ? 'Saving...' : mode === 'edit' ? 'Update Client' : 'Add Client'}
           </button>
           <button
             type="button"
