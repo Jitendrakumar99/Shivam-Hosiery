@@ -36,6 +36,39 @@ export const authService = {
     return response.data;
   },
 
+  // Change password
+  changePassword: async (passwordData) => {
+    const response = await api.put('/auth/change-password', passwordData);
+    return response.data;
+  },
+
+  // Add address
+  addAddress: async (addressData) => {
+    const response = await api.post('/auth/addresses', addressData);
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  // Update address
+  updateAddress: async (addressId, addressData) => {
+    const response = await api.put(`/auth/addresses/${addressId}`, addressData);
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  // Delete address
+  deleteAddress: async (addressId) => {
+    const response = await api.delete(`/auth/addresses/${addressId}`);
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
   // Logout
   logout: () => {
     localStorage.removeItem('token');

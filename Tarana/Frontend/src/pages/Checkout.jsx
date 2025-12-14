@@ -3,7 +3,53 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createOrder, fetchOrder } from '../store/slices/orderSlice';
 import { clearCart } from '../store/slices/cartSlice';
+import { getMe } from '../store/slices/authSlice';
+import { fetchProducts } from '../store/slices/productSlice';
 import toast from 'react-hot-toast';
+
+// Related Products Component
+const RelatedProductsSection = ({ orderedItems }) => {
+  const { products } = useAppSelector((state) => state.products);
+  const orderedProductIds = orderedItems.map(item => item.product._id || item.product.id);
+  
+  // Filter out products that were already ordered and get related products
+  const relatedProducts = products
+    .filter(product => !orderedProductIds.includes(product._id || product.id))
+    .slice(0, 8);
+
+  if (relatedProducts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+      <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {relatedProducts.map((product) => (
+          <Link
+            key={product._id || product.id}
+            to={`/products/${product._id || product.id}`}
+            className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition"
+          >
+            {product.images && product.images.length > 0 ? (
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="w-full h-32 object-cover rounded mb-3"
+              />
+            ) : (
+              <div className="w-full h-32 bg-gray-200 rounded mb-3 flex items-center justify-center">
+                <span className="text-gray-400 text-sm">No Image</span>
+              </div>
+            )}
+            <h3 className="font-semibold text-sm mb-2">{product.name}</h3>
+            <p className="text-trana-orange font-bold">₹{product.price}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -13,6 +59,10 @@ const Checkout = () => {
   const { loading, order } = useAppSelector((state) => state.orders);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [trackingId, setTrackingId] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [formInitialized, setFormInitialized] = useState(false);
+  const [orderedItems, setOrderedItems] = useState([]);
+  const [orderTotal, setOrderTotal] = useState(0);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -37,8 +87,54 @@ const Checkout = () => {
       return;
     }
 
-    // Pre-fill form with user data
-    if (user) {
+    // Fetch user data to get addresses only if user is not loaded or addresses are missing
+    if (isAuthenticated && (!user || (user && !user.addresses))) {
+      dispatch(getMe());
+    }
+  }, [dispatch, isAuthenticated, items.length, navigate, orderPlaced, user]);
+
+  useEffect(() => {
+    // Pre-fill form with user data or selected address (only once)
+    if (user && !formInitialized) {
+      if (selectedAddressId && user.addresses) {
+        const selectedAddress = user.addresses.find(addr => addr._id === selectedAddressId);
+        if (selectedAddress) {
+          setFormData({
+            name: selectedAddress.name || '',
+            phone: selectedAddress.phone || '',
+            address: selectedAddress.address || '',
+            city: selectedAddress.city || '',
+            state: selectedAddress.state || '',
+            pincode: selectedAddress.pincode || '',
+            email: user.email || '',
+            paymentMethod: 'Cash on Delivery',
+          });
+          setFormInitialized(true);
+          return;
+        }
+      }
+      
+      // Use default address if available
+      if (user.addresses && user.addresses.length > 0) {
+        const defaultAddress = user.addresses.find(addr => addr.isDefault) || user.addresses[0];
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress._id);
+          setFormData({
+            name: defaultAddress.name || '',
+            phone: defaultAddress.phone || '',
+            address: defaultAddress.address || '',
+            city: defaultAddress.city || '',
+            state: defaultAddress.state || '',
+            pincode: defaultAddress.pincode || '',
+            email: user.email || '',
+            paymentMethod: 'Cash on Delivery',
+          });
+          setFormInitialized(true);
+          return;
+        }
+      }
+
+      // Fallback to user basic info
       setFormData(prev => ({
         ...prev,
         name: user.name || '',
@@ -46,8 +142,27 @@ const Checkout = () => {
         email: user.email || '',
         address: user.address || '',
       }));
+      setFormInitialized(true);
     }
-  }, [isAuthenticated, user, items.length, navigate, orderPlaced]);
+  }, [user, selectedAddressId, formInitialized]);
+
+  // Update form when address selection changes (after initial load)
+  useEffect(() => {
+    if (user && formInitialized && selectedAddressId && user.addresses) {
+      const selectedAddress = user.addresses.find(addr => addr._id === selectedAddressId);
+      if (selectedAddress) {
+        setFormData(prev => ({
+          ...prev,
+          name: selectedAddress.name || '',
+          phone: selectedAddress.phone || '',
+          address: selectedAddress.address || '',
+          city: selectedAddress.city || '',
+          state: selectedAddress.state || '',
+          pincode: selectedAddress.pincode || '',
+        }));
+      }
+    }
+  }, [selectedAddressId, user, formInitialized]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,28 +213,48 @@ const Checkout = () => {
     if (createOrder.fulfilled.match(result)) {
       const createdOrder = result.payload.data;
       setTrackingId(createdOrder.trackingNumber || createdOrder._id?.slice(-12).toUpperCase());
-      setOrderPlaced(true);
-      dispatch(clearCart());
-      toast.success('Order placed successfully!');
+      
+      // Store ordered items and total before clearing cart
+      setOrderedItems([...items]);
+      setOrderTotal(total);
       
       // Fetch the full order details
       if (createdOrder._id) {
         await dispatch(fetchOrder(createdOrder._id));
       }
+      
+      // Fetch related products based on ordered items
+      if (items.length > 0) {
+        const firstProductCategory = items[0].product?.category;
+        if (firstProductCategory) {
+          dispatch(fetchProducts({ category: firstProductCategory, limit: 8 }));
+        } else {
+          dispatch(fetchProducts({ limit: 8 }));
+        }
+      }
+      
+      dispatch(clearCart());
+      setOrderPlaced(true);
+      toast.success('Order placed successfully!');
     } else {
       toast.error(result.payload || 'Failed to place order. Please try again.');
     }
   };
 
-  if (!isAuthenticated || items.length === 0) {
+  if (!isAuthenticated) {
+    return null; // Will redirect
+  }
+
+  if (!orderPlaced && items.length === 0) {
     return null; // Will redirect
   }
 
   if (orderPlaced) {
+    const orderId = order?._id || null;
     return (
       <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-4xl mx-auto px-4 md:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 md:p-12 text-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="bg-white rounded-lg shadow-lg p-8 md:p-12 text-center mb-8">
             <div className="mb-6">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,26 +277,52 @@ const Checkout = () => {
 
             <div className="border-t border-gray-200 pt-6 mb-6">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-              <div className="space-y-2 text-left max-w-md mx-auto">
-                {items.map((item) => (
-                  <div key={item.product._id || item.product.id} className="flex justify-between">
-                    <span className="text-gray-700">
-                      {item.product.name} x {item.quantity}
-                    </span>
-                    <span className="font-semibold">₹{item.price * item.quantity}</span>
+              <div className="space-y-4 text-left max-w-2xl mx-auto">
+                {orderedItems.map((item) => (
+                  <div key={item.product._id || item.product.id} className="flex gap-4 items-center border-b border-gray-200 pb-4 last:border-0">
+                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                      {item.product.images && item.product.images.length > 0 ? (
+                        <img
+                          src={item.product.images[0]}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-xs">No Image</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1">{item.product.name}</h3>
+                      {item.product.category && (
+                        <p className="text-sm text-gray-500 mb-1">{item.product.category}</p>
+                      )}
+                      <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-trana-orange">₹{item.price * item.quantity}</p>
+                      <p className="text-xs text-gray-500">₹{item.price} each</p>
+                    </div>
                   </div>
                 ))}
-                <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between font-bold text-lg">
+                <div className="border-t border-gray-200 pt-4 mt-4 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">₹{total.toLocaleString()}</span>
+                  <span className="text-trana-orange">₹{orderTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {orderId && (
+                <Link
+                  to={`/orders/${orderId}`}
+                  className="inline-block bg-trana-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                >
+                  View Order
+                </Link>
+              )}
               <Link
                 to="/orders"
-                className="inline-block bg-trana-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                className="inline-block bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
               >
                 View My Orders
               </Link>
@@ -171,6 +332,37 @@ const Checkout = () => {
               >
                 Continue Shopping
               </Link>
+            </div>
+          </div>
+
+          {/* Related Products Section */}
+          <RelatedProductsSection orderedItems={orderedItems} />
+
+          {/* Recommendations & Ads Section */}
+          <div className="bg-gradient-to-r from-trana-orange to-orange-600 rounded-lg shadow-md p-8 text-white mb-8">
+            <h2 className="text-2xl font-bold mb-6">Special Offers & Recommendations</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm hover:bg-white/20 transition">
+                <h3 className="font-bold text-lg mb-2">🎁 Free Shipping</h3>
+                <p className="text-sm">On all orders above ₹5000</p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm hover:bg-white/20 transition">
+                <h3 className="font-bold text-lg mb-2">💰 Bulk Discount</h3>
+                <p className="text-sm">Get up to 20% off on bulk orders</p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm hover:bg-white/20 transition">
+                <h3 className="font-bold text-lg mb-2">⭐ Loyalty Points</h3>
+                <p className="text-sm">Earn points on every purchase</p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
+              <h3 className="font-bold text-xl mb-3">💡 Why Choose Us?</h3>
+              <ul className="text-sm space-y-2 text-left">
+                <li>✓ Premium Quality Safety Garments</li>
+                <li>✓ Customization Available</li>
+                <li>✓ Fast & Reliable Delivery</li>
+                <li>✓ Expert Customer Support</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -188,6 +380,46 @@ const Checkout = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
               <h2 className="text-2xl font-bold mb-6">Shipping Information</h2>
+              
+              {/* Saved Addresses Selection */}
+              {user?.addresses && user.addresses.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4">Select Delivery Address</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {user.addresses.map((address) => (
+                      <div
+                        key={address._id}
+                        onClick={() => setSelectedAddressId(address._id)}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+                          selectedAddressId === address._id
+                            ? 'border-trana-orange bg-orange-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        {address.isDefault && (
+                          <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mb-2">
+                            DEFAULT
+                          </span>
+                        )}
+                        <p className="font-semibold">{address.name}</p>
+                        <p className="text-sm text-gray-600">{address.phone}</p>
+                        <p className="text-sm text-gray-600">{address.address}</p>
+                        <p className="text-sm text-gray-600">
+                          {address.city}, {address.state} - {address.pincode}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    to="/profile"
+                    className="text-trana-orange hover:underline text-sm"
+                  >
+                    Manage Addresses →
+                  </Link>
+                  <div className="border-t border-gray-200 my-6"></div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

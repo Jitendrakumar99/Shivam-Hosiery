@@ -1,12 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
+import { getMe } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 
 const Cart = () => {
   const dispatch = useAppDispatch();
   const { items, total } = useAppSelector((state) => state.cart);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      dispatch(getMe());
+    }
+  }, [dispatch, isAuthenticated, user]);
 
   const handleRemove = (productId) => {
     dispatch(removeFromCart(productId));
@@ -97,7 +105,47 @@ const Cart = () => {
             </div>
 
             {/* Order Summary */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-4">
+              {/* Saved Addresses */}
+              {user?.addresses && user.addresses.length > 0 && (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
+                  <div className="space-y-3">
+                    {user.addresses.filter(addr => addr.isDefault).map((address) => (
+                      <div key={address._id} className="border border-gray-200 rounded-lg p-4">
+                        {address.isDefault && (
+                          <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mb-2">
+                            DEFAULT
+                          </span>
+                        )}
+                        <p className="font-semibold">{address.name}</p>
+                        <p className="text-sm text-gray-600">{address.phone}</p>
+                        <p className="text-sm text-gray-600">{address.address}</p>
+                        <p className="text-sm text-gray-600">
+                          {address.city}, {address.state} - {address.pincode}
+                        </p>
+                      </div>
+                    ))}
+                    {user.addresses.filter(addr => !addr.isDefault).slice(0, 1).map((address) => (
+                      <div key={address._id} className="border border-gray-200 rounded-lg p-4">
+                        <p className="font-semibold">{address.name}</p>
+                        <p className="text-sm text-gray-600">{address.phone}</p>
+                        <p className="text-sm text-gray-600">{address.address}</p>
+                        <p className="text-sm text-gray-600">
+                          {address.city}, {address.state} - {address.pincode}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    to="/profile"
+                    className="block text-center mt-4 text-trana-orange hover:underline text-sm"
+                  >
+                    Manage Addresses
+                  </Link>
+                </div>
+              )}
+
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
                 <h2 className="text-xl font-bold mb-4">Order Summary</h2>
                 <div className="space-y-2 mb-4">

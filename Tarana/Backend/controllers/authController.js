@@ -149,3 +149,170 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
+// @desc    Change password
+// @route   PUT /api/auth/change-password
+// @access  Private
+exports.changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide current and new password'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+
+    if (!(await user.comparePassword(currentPassword))) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    clearCache(`/api/auth/me`);
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Add address
+// @route   POST /api/auth/addresses
+// @access  Private
+exports.addAddress = async (req, res, next) => {
+  try {
+    const { name, phone, address, city, state, pincode, isDefault } = req.body;
+
+    if (!name || !phone || !address || !city || !state || !pincode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all address fields'
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    const newAddress = {
+      name,
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      isDefault: isDefault || false
+    };
+
+    // If this is set as default, unset other defaults
+    if (isDefault) {
+      user.addresses.forEach(addr => {
+        addr.isDefault = false;
+      });
+    }
+
+    user.addresses.push(newAddress);
+    await user.save();
+
+    clearCache(`/api/auth/me`);
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update address
+// @route   PUT /api/auth/addresses/:addressId
+// @access  Private
+exports.updateAddress = async (req, res, next) => {
+  try {
+    const { addressId } = req.params;
+    const { name, phone, address, city, state, pincode, isDefault } = req.body;
+
+    const user = await User.findById(req.user.id);
+    const addressIndex = user.addresses.findIndex(
+      addr => addr._id.toString() === addressId
+    );
+
+    if (addressIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Address not found'
+      });
+    }
+
+    // Update address fields
+    if (name) user.addresses[addressIndex].name = name;
+    if (phone) user.addresses[addressIndex].phone = phone;
+    if (address) user.addresses[addressIndex].address = address;
+    if (city) user.addresses[addressIndex].city = city;
+    if (state) user.addresses[addressIndex].state = state;
+    if (pincode) user.addresses[addressIndex].pincode = pincode;
+    if (isDefault !== undefined) {
+      // If setting as default, unset other defaults
+      if (isDefault) {
+        user.addresses.forEach((addr, idx) => {
+          if (idx !== addressIndex) {
+            addr.isDefault = false;
+          }
+        });
+      }
+      user.addresses[addressIndex].isDefault = isDefault;
+    }
+
+    await user.save();
+
+    clearCache(`/api/auth/me`);
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete address
+// @route   DELETE /api/auth/addresses/:addressId
+// @access  Private
+exports.deleteAddress = async (req, res, next) => {
+  try {
+    const { addressId } = req.params;
+
+    const user = await User.findById(req.user.id);
+    user.addresses = user.addresses.filter(
+      addr => addr._id.toString() !== addressId
+    );
+
+    await user.save();
+
+    clearCache(`/api/auth/me`);
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};

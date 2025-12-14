@@ -28,6 +28,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  addresses: [{
+    name: String,
+    phone: String,
+    address: String,
+    city: String,
+    state: String,
+    pincode: String,
+    isDefault: {
+      type: Boolean,
+      default: false
+    }
+  }],
   company: {
     type: String,
     trim: true
