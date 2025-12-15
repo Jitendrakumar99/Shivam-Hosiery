@@ -1,6 +1,42 @@
 const Product = require('../models/Product');
 const { clearCache } = require('../middlewares/cache');
 
+// Helper function to normalize category name
+const normalizeCategory = (category) => {
+  if (!category) return null;
+  
+  // Convert URL format to database format
+  const categoryMap = {
+    'safety-vests': 'Safety Vests',
+    'safety-jackets': 'Safety Jackets',
+    'coveralls': 'Coveralls',
+    'safety vests': 'Safety Vests',
+    'safety jackets': 'Safety Jackets'
+  };
+  
+  // Check if it's already in the correct format
+  const validCategories = ['Safety Vests', 'Safety Jackets', 'Coveralls'];
+  if (validCategories.includes(category)) {
+    return category;
+  }
+  
+  // Try to match from categoryMap (case-insensitive)
+  const lowerCategory = category.toLowerCase().replace(/\+/g, ' ').replace(/-/g, ' ');
+  for (const [key, value] of Object.entries(categoryMap)) {
+    if (key.toLowerCase() === lowerCategory || value.toLowerCase() === lowerCategory) {
+      return value;
+    }
+  }
+  
+  // If no match, try direct case-insensitive match
+  const matched = validCategories.find(cat => 
+    cat.toLowerCase() === lowerCategory || 
+    cat.toLowerCase().replace(/\s+/g, '-') === category.toLowerCase().replace(/\s+/g, '-')
+  );
+  
+  return matched || category; // Return original if no match found
+};
+
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
@@ -12,10 +48,17 @@ exports.getProducts = async (req, res, next) => {
     // Build query
     const query = { status };
     if (category) {
-      query.category = category;
+      const normalizedCategory = normalizeCategory(category);
+      query.category = normalizedCategory;
     }
     if (search) {
-      query.$text = { $search: search };
+      // Use regex for case-insensitive partial matching instead of text search
+      // Escape special regex characters
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.$or = [
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } }
+      ];
     }
 
     const products = await Product.find(query)
