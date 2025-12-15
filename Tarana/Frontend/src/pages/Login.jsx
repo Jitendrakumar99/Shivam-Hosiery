@@ -116,17 +116,23 @@ const Login = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <div className="text-4xl mb-4">📦</div>
+              <svg className="w-12 h-12 mx-auto mb-4 text-trana-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
               <h3 className="text-xl font-bold mb-2">Track Orders</h3>
               <p className="text-gray-600">Manage and track all your orders</p>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <div className="text-4xl mb-4">❤️</div>
+              <svg className="w-12 h-12 mx-auto mb-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
               <h3 className="text-xl font-bold mb-2">Save Wishlist</h3>
               <p className="text-gray-600">Save your favorite products</p>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <div className="text-4xl mb-4">🔔</div>
+              <svg className="w-12 h-12 mx-auto mb-4 text-trana-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
               <h3 className="text-xl font-bold mb-2">Get Notifications</h3>
               <p className="text-gray-600">Stay updated with latest offers</p>
             </div>
@@ -171,7 +177,9 @@ const Login = () => {
             {/* Lock Icon */}
             <div className="text-center mb-6">
               <div className="w-20 h-20 mx-auto bg-trana-orange rounded-full flex items-center justify-center">
-                <span className="text-white text-4xl">🔒</span>
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
               </div>
             </div>
 

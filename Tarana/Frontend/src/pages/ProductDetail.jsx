@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchProduct } from '../store/slices/productSlice';
+import { fetchProduct, fetchProducts } from '../store/slices/productSlice';
 import { addToWishlist, fetchWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, removeFromCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
@@ -16,6 +16,8 @@ const ProductDetail = () => {
   const { wishlist } = useAppSelector((state) => state.wishlist);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -28,6 +30,26 @@ const ProductDetail = () => {
       dispatch(fetchWishlist());
     }
   }, [dispatch, isAuthenticated]);
+
+  // Fetch related products when product is loaded
+  useEffect(() => {
+    if (product && product.category) {
+      setLoadingRelated(true);
+      dispatch(fetchProducts({ category: product.category, limit: 4 }))
+        .then((result) => {
+          if (fetchProducts.fulfilled.match(result)) {
+            // Filter out the current product from related products
+            const related = result.payload.data.filter(
+              (p) => (p._id || p.id) !== (product._id || product.id)
+            );
+            setRelatedProducts(related.slice(0, 4));
+          }
+        })
+        .finally(() => {
+          setLoadingRelated(false);
+        });
+    }
+  }, [dispatch, product]);
 
   // Check if product is in cart
   const isInCart = (product) => {
@@ -106,7 +128,9 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="text-6xl mb-4">😕</div>
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
             <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist.'}</p>
             <Link
@@ -213,7 +237,9 @@ const ProductDetail = () => {
                       </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <span className="text-6xl">📦</span>
+                        <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
                       </div>
                     )}
                   </div>
@@ -293,7 +319,9 @@ const ProductDetail = () => {
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {product.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start">
-                          <span className="text-trana-orange mr-2">✓</span>
+                          <svg className="w-5 h-5 text-trana-orange mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                          </svg>
                           <span className="text-gray-700">{feature}</span>
                         </li>
                       ))}
@@ -342,7 +370,9 @@ const ProductDetail = () => {
                     onClick={handleAddToCart}
                     className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2"
                   >
-                    <span>🗑️</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                     Remove from Cart
                   </button>
                 ) : (
@@ -351,7 +381,9 @@ const ProductDetail = () => {
                     disabled={product.stock <= 0}
                     className="flex-1 bg-trana-orange text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    <span>🛒</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                     Add to Cart
                   </button>
                 )}
@@ -363,7 +395,15 @@ const ProductDetail = () => {
                       : 'border-trana-orange text-trana-orange hover:bg-orange-50'
                   }`}
                 >
-                  <span>{inWishlist ? '✓' : '❤️'}</span>
+                  {inWishlist ? (
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  )}
                   {inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
                 </button>
               </div>
@@ -394,18 +434,59 @@ const ProductDetail = () => {
         </div>
 
         {/* Related Products Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">You may also like</h2>
-          <div className="text-center py-8 bg-white rounded-lg shadow-md">
-            <p className="text-gray-600 mb-4">Browse more products in this category</p>
-            <Link
-              to="/products"
-              className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
-            >
-              View All Products
-            </Link>
+        {relatedProducts.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6">You may also like</h2>
+            {loadingRelated ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading related products...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {relatedProducts.map((relatedProduct) => (
+                  <Link
+                    key={relatedProduct._id || relatedProduct.id}
+                    to={`/products/${relatedProduct._id || relatedProduct.id}`}
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+                  >
+                    <div className="h-48 bg-gray-200 flex items-center justify-center">
+                      {relatedProduct.images && relatedProduct.images.length > 0 ? (
+                        <img
+                          src={relatedProduct.images[0]}
+                          alt={relatedProduct.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-500 text-sm">No Image</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <p className="text-xs text-gray-500 mb-1">{relatedProduct.category}</p>
+                      <h3 className="font-semibold text-sm mb-2 line-clamp-2">{relatedProduct.name}</h3>
+                      <div className="flex justify-between items-center">
+                        <p className="text-trana-orange font-bold">₹{relatedProduct.price}</p>
+                        {relatedProduct.stock > 0 ? (
+                          <span className="text-xs text-green-600">In Stock</span>
+                        ) : (
+                          <span className="text-xs text-red-600">Out of Stock</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <div className="text-center mt-6">
+              <Link
+                to={`/products?category=${encodeURIComponent(product.category)}`}
+                className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+              >
+                View All Products in {product.category}
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

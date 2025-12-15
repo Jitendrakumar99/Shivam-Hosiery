@@ -9,7 +9,40 @@ import toast from 'react-hot-toast';
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  
+  // Normalize category from URL
+  const normalizeCategoryFromURL = (categoryParam) => {
+    if (!categoryParam || categoryParam === 'all') return 'all';
+    
+    // Convert URL format to display format
+    const categoryMap = {
+      'safety-vests': 'Safety Vests',
+      'safety-jackets': 'Safety Jackets',
+      'coveralls': 'Coveralls'
+    };
+    
+    // Handle URL encoded spaces (+)
+    const decoded = decodeURIComponent(categoryParam).replace(/\+/g, ' ');
+    
+    // Check if it's already in correct format
+    if (['Safety Vests', 'Safety Jackets', 'Coveralls'].includes(decoded)) {
+      return decoded;
+    }
+    
+    // Try to match from categoryMap (case-insensitive)
+    const lowerDecoded = decoded.toLowerCase().replace(/-/g, '-');
+    for (const [key, value] of Object.entries(categoryMap)) {
+      if (key === lowerDecoded || value.toLowerCase() === decoded.toLowerCase()) {
+        return value;
+      }
+    }
+    
+    return decoded; // Return as-is if no match
+  };
+  
+  const [selectedCategory, setSelectedCategory] = useState(
+    normalizeCategoryFromURL(searchParams.get('category')) || 'all'
+  );
   const navigate = useNavigate();
   
   const dispatch = useAppDispatch();
@@ -29,6 +62,21 @@ const Products = () => {
     dispatch(fetchProducts(params));
   }, [dispatch, selectedCategory, searchQuery]);
 
+  // Sync URL with selected category on mount/URL change
+  useEffect(() => {
+    const urlCategory = searchParams.get('category');
+    if (urlCategory) {
+      const normalizedURL = normalizeCategoryFromURL(urlCategory);
+      if (normalizedURL !== selectedCategory) {
+        setSelectedCategory(normalizedURL);
+      }
+    } else if (selectedCategory !== 'all') {
+      // If no category in URL but we have one selected, reset to all
+      setSelectedCategory('all');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // Fetch wishlist when authenticated to check which products are in wishlist
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,7 +90,9 @@ const Products = () => {
     if (categoryValue === 'all') {
       setSearchParams({});
     } else {
-      setSearchParams({ category: categoryValue });
+      // Convert to URL-friendly format (lowercase with hyphens)
+      const urlCategory = categoryValue.toLowerCase().replace(/\s+/g, '-');
+      setSearchParams({ category: urlCategory });
     }
   };
 
@@ -96,7 +146,9 @@ const Products = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
                 />
-                <span className="absolute left-3 top-2.5">🔍</span>
+                <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -235,7 +287,15 @@ const Products = () => {
                           }`}
                           title={isInWishlist(product._id || product.id) ? 'Already in wishlist' : 'Add to wishlist'}
                         >
-                          {isInWishlist(product._id || product.id) ? '✓' : '❤️'}
+                          {isInWishlist(product._id || product.id) ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>

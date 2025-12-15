@@ -17,7 +17,6 @@ const Customize = () => {
     quantity: 1
   });
 
-  const [previewGenerated, setPreviewGenerated] = useState(false);
   const [generatedImageBase64, setGeneratedImageBase64] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -45,7 +44,6 @@ const Customize = () => {
     }
 
     setLoading(true);
-    setPreviewGenerated(true);
 
     try {
       const response = await customizationService.generateImagePreview(
@@ -69,7 +67,6 @@ const Customize = () => {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
-      setPreviewGenerated(false);
     }
   };
 
@@ -231,7 +228,9 @@ const Customize = () => {
                   onClick={handleGeneratePreview}
                   className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition flex items-center justify-center gap-2"
                 >
-                  <span>✨</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
                   Generate AI Preview
                 </button>
               </div>
@@ -248,7 +247,9 @@ const Customize = () => {
                   <img src={productImage} alt="Product Preview" className="w-full h-full object-contain p-4" />
                 ) : (
                   <div className="text-center">
-                    <div className="text-6xl mb-4">🖼️</div>
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                     <p className="text-gray-600">No product image selected</p>
                     <p className="text-sm text-gray-500 mt-2">Please select a product from the products page to customize.</p>
                   </div>
@@ -289,7 +290,9 @@ const Customize = () => {
 
               <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <span className="text-xl">✨</span>
+                  <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
                   <div>
                     <p className="text-sm font-semibold mb-1">Powered by AI Preview Technology</p>
                     <p className="text-xs text-gray-600">

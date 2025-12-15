@@ -48,7 +48,9 @@ const Cart = () => {
 
         {items.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="text-6xl mb-4">🛒</div>
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
             <p className="text-gray-600 text-lg mb-4">Your cart is empty</p>
             <Link
               to="/products"
