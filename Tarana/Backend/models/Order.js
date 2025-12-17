@@ -46,6 +46,19 @@ const orderSchema = new mongoose.Schema({
   trackingNumber: {
     type: String
   },
+  deliveryAgent: {
+    type: String,
+    trim: true
+  },
+  shippingCost: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  deliveryZone: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DeliveryZone'
+  },
   paymentStatus: {
     type: String,
     enum: ['pending', 'paid', 'failed'],

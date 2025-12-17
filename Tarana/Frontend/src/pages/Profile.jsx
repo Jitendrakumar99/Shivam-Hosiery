@@ -11,6 +11,7 @@ const Profile = () => {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
+  const defaultAddress = user?.addresses?.find?.((a) => a.isDefault) || (user?.addresses && user.addresses[0]) || null;
   
   const [formData, setFormData] = useState({
     name: '',
@@ -42,13 +43,13 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address || '',
+        address: user.address || defaultAddress?.address || '',
         company: user.company || ''
       });
     } else if (isAuthenticated) {
       dispatch(getMe());
     }
-  }, [dispatch, isAuthenticated, user]);
+  }, [dispatch, isAuthenticated, user, defaultAddress]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -345,7 +346,7 @@ const Profile = () => {
                             name: user?.name || '',
                             email: user?.email || '',
                             phone: user?.phone || '',
-                            address: user?.address || '',
+                            address: user?.address || defaultAddress?.address || '',
                             company: user?.company || ''
                           });
                         }}
@@ -422,21 +423,6 @@ const Profile = () => {
                       />
                     ) : (
                       <p className="text-gray-900">{user?.company || 'Not provided'}</p>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Address</label>
-                    {isEditing ? (
-                      <textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        rows="3"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange resize-none"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{user?.address || 'Not provided'}</p>
                     )}
                   </div>
                 </div>

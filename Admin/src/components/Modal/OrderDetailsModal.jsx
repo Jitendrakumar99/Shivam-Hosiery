@@ -1,23 +1,61 @@
 import Modal from './Modal';
 import { useDispatch } from 'react-redux';
+import { useState } from 'react';
 import { updateOrderStatus } from '../../store/slices/orderSlice';
 
 const OrderDetailsModal = ({ isOpen, onClose, order }) => {
   const dispatch = useDispatch();
+  const [deliveryAgentInput, setDeliveryAgentInput] = useState(order?.deliveryAgent || '');
+  const [savingAgent, setSavingAgent] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(order?.paymentStatus || 'pending');
+  const [savingPayment, setSavingPayment] = useState(false);
 
   if (!order) return null;
 
-  const handlePaymentStatusChange = (e) => {
-    // In a real app, this would update payment status
-    console.log('Payment status changed to:', e.target.value);
+  const handleSavePaymentStatus = async () => {
+    if (!order?._id && !order?.id) return;
+    setSavingPayment(true);
+    try {
+      await dispatch(
+        updateOrderStatus({
+          id: order._id || order.id,
+          status: order.status,
+          paymentStatus,
+        })
+      ).unwrap();
+    } catch (err) {
+      console.error('Failed to update payment status', err);
+    } finally {
+      setSavingPayment(false);
+    }
   };
 
   const handlePrintInvoice = () => {
     window.print();
   };
 
+  const handleSaveDeliveryAgent = async () => {
+    if (!order?._id && !order?.id) return;
+    setSavingAgent(true);
+    try {
+      await dispatch(
+        updateOrderStatus({
+          id: order._id || order.id,
+          status: order.status,
+          deliveryAgent: deliveryAgentInput.trim(),
+        })
+      ).unwrap();
+    } catch (err) {
+      console.error('Failed to update delivery agent', err);
+    } finally {
+      setSavingAgent(false);
+    }
+  };
+
   const displayId = (order._id || order.id || '').toString();
   const totalAmount = Number(order.totalAmount ?? order.total ?? 0);
+  const shippingCost = Number(order.shippingCost ?? 0);
+  const grandTotal = totalAmount + shippingCost;
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Order Details - ${displayId}`} size="lg">
       <div className="space-y-6">
@@ -80,21 +118,54 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           </div>
         </div>
 
+        {/* Shipping Address with separate pincode */}
+        {order.shippingAddress && (
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Shipping Address</h3>
+            <div className="text-sm text-gray-700 space-y-1">
+              {order.shippingAddress.name && (
+                <p className="font-semibold text-gray-900">{order.shippingAddress.name}</p>
+              )}
+              {order.shippingAddress.phone && <p>{order.shippingAddress.phone}</p>}
+              {order.shippingAddress.address && <p>{order.shippingAddress.address}</p>}
+              {(order.shippingAddress.city || order.shippingAddress.state) && (
+                <p>
+                  {order.shippingAddress.city}
+                  {order.shippingAddress.city && order.shippingAddress.state && ', '}
+                  {order.shippingAddress.state}
+                </p>
+              )}
+              {order.shippingAddress.pincode && (
+                <p>
+                  <span className="font-semibold">Pincode: </span>
+                  <span>{order.shippingAddress.pincode}</span>
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Summary */}
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
-              <span className="font-semibold text-gray-800">₹{totalAmount.toLocaleString('en-IN')}</span>
+              <span className="font-semibold text-gray-800">
+                ₹{totalAmount.toLocaleString('en-IN')}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Delivery Charges:</span>
-              <span className="font-semibold text-gray-800">₹0</span>
+              <span className="font-semibold text-gray-800">
+                ₹{shippingCost.toLocaleString('en-IN')}
+              </span>
             </div>
             <div className="flex justify-between pt-2 border-t border-gray-200">
               <span className="text-lg font-semibold text-gray-800">Total:</span>
-              <span className="text-lg font-bold text-green-600">₹{totalAmount.toLocaleString('en-IN')}</span>
+              <span className="text-lg font-bold text-green-600">
+                ₹{grandTotal.toLocaleString('en-IN')}
+              </span>
             </div>
           </div>
         </div>
@@ -104,16 +175,25 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Update Payment Status
           </label>
-          <select
-            defaultValue="completed"
-            onChange={handlePaymentStatusChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-          >
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-            <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
-          </select>
+          <div className="flex flex-col gap-2">
+            <select
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            >
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="failed">Failed</option>
+            </select>
+            <button
+              type="button"
+              onClick={handleSavePaymentStatus}
+              disabled={savingPayment}
+              className="self-start px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingPayment ? 'Saving...' : 'Save Payment Status'}
+            </button>
+          </div>
         </div>
 
         {/* Payment Method & Delivery Info */}
@@ -122,12 +202,26 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
             <span className="text-gray-600">Payment Method:</span>
             <p className="font-semibold text-gray-800">{order.paymentMethod}</p>
           </div>
-          {order.deliveryAgent && (
-            <div>
-              <span className="text-gray-600">Delivery Agent:</span>
-              <p className="font-semibold text-gray-800">{order.deliveryAgent}</p>
+          <div>
+            <span className="text-gray-600">Delivery Agent:</span>
+            <div className="mt-1 flex flex-col gap-2">
+              <input
+                type="text"
+                value={deliveryAgentInput}
+                onChange={(e) => setDeliveryAgentInput(e.target.value)}
+                placeholder="Enter delivery / shipping partner name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleSaveDeliveryAgent}
+                disabled={savingAgent}
+                className="self-start px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingAgent ? 'Saving...' : 'Save Delivery Agent'}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Action Buttons */}

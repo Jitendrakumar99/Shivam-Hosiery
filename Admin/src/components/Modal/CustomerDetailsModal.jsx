@@ -1,11 +1,32 @@
 import Modal from './Modal';
+import { useDispatch } from 'react-redux';
+import { useState } from 'react';
+import { updateCustomerStatus, updateCustomerRole } from '../../store/slices/customerSlice';
 
-const CustomerDetailsModal = ({ isOpen, onClose, customer }) => {
+const CustomerDetailsModal = ({ isOpen, onClose, customer, orders = [] }) => {
   if (!customer) return null;
 
-  const avgOrderValue = customer.totalOrders > 0 
-    ? Math.round(customer.totalSpent / customer.totalOrders) 
-    : 0;
+  // Filter orders for this customer
+  const customerId = customer._id || customer.id;
+  const dispatch = useDispatch();
+  const [localRole, setLocalRole] = useState(customer.role || 'user');
+  const [localIsActive, setLocalIsActive] = useState(customer.isActive !== false);
+  const customerOrders = orders.filter((order) => {
+    const orderUserId =
+      order.user?._id?.toString() ||
+      order.user?._id ||
+      order.user?.id ||
+      order.user?.toString();
+    return orderUserId && orderUserId.toString() === customerId?.toString();
+  });
+
+  const totalOrders = customerOrders.length;
+  const totalSpent = customerOrders.reduce(
+    (sum, order) => sum + Number(order.totalAmount || order.total || 0),
+    0
+  );
+
+  const avgOrderValue = totalOrders > 0 ? Math.round(totalSpent / totalOrders) : 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Customer Details" size="md">
@@ -32,11 +53,30 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer }) => {
                 <p className="text-gray-800 font-medium">{customer.address}</p>
               </div>
             )}
-            <div>
-              <span className="text-gray-600">Status:</span>
-              <span className="ml-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                {customer.status || 'Active'}
-              </span>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <span className="text-gray-600">Status:</span>
+                <span className="ml-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                  {localIsActive === false ? 'Inactive' : 'Active'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">Role</label>
+                <select
+                  value={localRole}
+                  onChange={(e) => setLocalRole(e.target.value)}
+                  className="px-2 py-1 border border-gray-300 rounded"
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+                <button
+                  onClick={() => dispatch(updateCustomerRole({ id: customerId, role: localRole }))}
+                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+                >
+                  Save Role
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -45,15 +85,19 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer }) => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div>
             <p className="text-gray-600 text-sm">Total Orders</p>
-            <p className="text-lg sm:text-xl font-bold text-gray-800">{customer.totalOrders}</p>
+            <p className="text-lg sm:text-xl font-bold text-gray-800">{totalOrders}</p>
           </div>
           <div>
             <p className="text-gray-600 text-sm">Total Spent</p>
-            <p className="text-lg sm:text-xl font-bold text-green-600">₹{customer.totalSpent.toLocaleString()}</p>
+            <p className="text-lg sm:text-xl font-bold text-green-600">
+              ₹{totalSpent.toLocaleString('en-IN')}
+            </p>
           </div>
           <div>
             <p className="text-gray-600 text-sm">Avg Order Value</p>
-            <p className="text-lg sm:text-xl font-bold text-green-600">₹{avgOrderValue.toLocaleString()}</p>
+            <p className="text-lg sm:text-xl font-bold text-green-600">
+              ₹{avgOrderValue.toLocaleString('en-IN')}
+            </p>
           </div>
         </div>
 
@@ -61,29 +105,43 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer }) => {
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Order History</h3>
           <div className="space-y-3">
-            {/* Sample order - in real app, this would come from orders data */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-gray-800">ORD-001</span>
-                <span className="px-3 py-1 bg-black text-white rounded-full text-xs font-semibold">
-                  delivered
-                </span>
+            {customerOrders.length === 0 && (
+              <p className="text-sm text-gray-600">No orders found for this customer.</p>
+            )}
+            {customerOrders.slice(0, 3).map((order) => (
+              <div key={order._id || order.id} className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-800">
+                    {(order._id || order.id || '').toString().slice(-8).toUpperCase()}
+                  </span>
+                  <span className="px-3 py-1 bg-black text-white rounded-full text-xs font-semibold capitalize">
+                    {order.status || 'unknown'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Date:</span>
+                    <span className="ml-2 text-gray-800">
+                      {order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString()
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="ml-2 text-gray-800 font-semibold">
+                      ₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Items:</span>
+                    <span className="ml-2 text-gray-800">
+                      {order.items?.length || 0} items
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-600">Date:</span>
-                  <span className="ml-2 text-gray-800">15/11/2024</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="ml-2 text-gray-800 font-semibold">₹22,500</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Items:</span>
-                  <span className="ml-2 text-gray-800">1 items</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -91,12 +149,13 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer }) => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           <button
             onClick={() => {
-              // Handle block customer
-              alert('Block customer functionality');
+              const next = !localIsActive;
+              setLocalIsActive(next);
+              dispatch(updateCustomerStatus({ id: customerId, isActive: next }));
             }}
-            className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition"
+            className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${localIsActive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}
           >
-            Block Customer
+            {localIsActive ? 'Block Customer' : 'Unblock Customer'}
           </button>
           <button
             onClick={onClose}

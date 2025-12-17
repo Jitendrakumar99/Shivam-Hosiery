@@ -35,6 +35,7 @@ const customizationRoutes = require('./routes/customizationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const brandRoutes = require('./routes/brandRoutes');
 const clientRoutes = require('./routes/clientRoutes');
+const deliveryZoneRoutes = require('./routes/deliveryZoneRoutes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -47,6 +48,7 @@ app.use('/api/customizations', customizationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/brands', brandRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/delivery-zones', deliveryZoneRoutes);
 
 // File upload configuration
 const storage = multer.diskStorage({

@@ -52,6 +52,34 @@ router.get('/stats', cache(300), async (req, res, next) => {
   }
 });
 
+// @desc    Update user role
+// @route   PUT /api/admin/users/:id/role
+// @access  Private/Admin
+router.put('/users/:id/role', async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // @desc    Get all users
 // @route   GET /api/admin/users
 // @access  Private/Admin

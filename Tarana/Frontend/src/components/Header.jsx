@@ -258,13 +258,6 @@ const Header = () => {
               {isAuthenticated && (
                 <>
                   <Link 
-                    to="/profile" 
-                    onClick={closeMobileMenu}
-                    className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/profile' ? 'font-bold underline' : ''}`}
-                  >
-                    Profile
-                  </Link>
-                  <Link 
                     to="/orders" 
                     onClick={closeMobileMenu}
                     className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/orders' ? 'font-bold underline' : ''}`}

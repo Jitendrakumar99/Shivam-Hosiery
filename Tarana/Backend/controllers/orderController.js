@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Notification = require('../models/Notification');
+const DeliveryZone = require('../models/DeliveryZone');
 const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
 
@@ -116,6 +117,27 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
+    if (!shippingAddress.pincode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pincode is required for shipping'
+      });
+    }
+
+    // Find matching delivery zone based on pincode
+    const pincode = shippingAddress.pincode.toString();
+    const deliveryZone = await DeliveryZone.findOne({
+      status: 'active',
+      pincodes: pincode,
+    });
+
+    if (!deliveryZone) {
+      return res.status(400).json({
+        success: false,
+        message: 'We currently do not deliver to this pincode. Please choose a different delivery address.',
+      });
+    }
+
     // Calculate total and validate products
     let totalAmount = 0;
     for (const item of items) {
@@ -156,7 +178,9 @@ exports.createOrder = async (req, res, next) => {
       items,
       totalAmount,
       shippingAddress,
-      paymentMethod: paymentMethod || 'Cash on Delivery'
+      paymentMethod: paymentMethod || 'Cash on Delivery',
+      shippingCost: deliveryZone.deliveryCharge || 0,
+      deliveryZone: deliveryZone._id,
     });
 
     // Update product stock
@@ -203,7 +227,7 @@ exports.createOrder = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateOrderStatus = async (req, res, next) => {
   try {
-    const { status, trackingNumber } = req.body;
+    const { status, trackingNumber, deliveryAgent, paymentStatus } = req.body;
 
     const order = await Order.findById(req.params.id);
 
@@ -240,6 +264,16 @@ exports.updateOrderStatus = async (req, res, next) => {
     order.status = status;
     if (trackingNumber) {
       order.trackingNumber = trackingNumber;
+    }
+    if (deliveryAgent !== undefined) {
+      order.deliveryAgent = deliveryAgent;
+    }
+    if (paymentStatus !== undefined) {
+      const valid = ['pending', 'paid', 'failed'];
+      if (!valid.includes(paymentStatus)) {
+        return res.status(400).json({ success: false, message: 'Invalid payment status' });
+      }
+      order.paymentStatus = paymentStatus;
     }
     await order.save();
 
