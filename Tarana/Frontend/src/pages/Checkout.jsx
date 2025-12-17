@@ -5,6 +5,7 @@ import { createOrder, fetchOrder } from '../store/slices/orderSlice';
 import { clearCart } from '../store/slices/cartSlice';
 import { getMe } from '../store/slices/authSlice';
 import { fetchProducts } from '../store/slices/productSlice';
+import { deliveryService } from '../services/deliveryService';
 import toast from 'react-hot-toast';
 
 // Related Products Component
@@ -63,6 +64,9 @@ const Checkout = () => {
   const [formInitialized, setFormInitialized] = useState(false);
   const [orderedItems, setOrderedItems] = useState([]);
   const [orderTotal, setOrderTotal] = useState(0);
+  const [deliveryZones, setDeliveryZones] = useState([]);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingError, setShippingError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -91,6 +95,17 @@ const Checkout = () => {
     if (isAuthenticated && (!user || (user && !user.addresses))) {
       dispatch(getMe());
     }
+
+    // Load delivery zones for shipping validation & cost
+    const loadZones = async () => {
+      try {
+        const data = await deliveryService.getZones();
+        setDeliveryZones(data.data || []);
+      } catch (err) {
+        console.error('Failed to load delivery zones', err);
+      }
+    };
+    loadZones();
   }, [dispatch, isAuthenticated, items.length, navigate, orderPlaced, user]);
 
   useEffect(() => {
@@ -146,6 +161,24 @@ const Checkout = () => {
     }
   }, [user, selectedAddressId, formInitialized]);
 
+  // Update shipping cost when pincode or zones change
+  useEffect(() => {
+    if (!formData.pincode || deliveryZones.length === 0) {
+      setShippingCost(0);
+      setShippingError('');
+      return;
+    }
+    const pincode = formData.pincode.toString();
+    const zone = deliveryZones.find((z) => (z.pincodes || []).includes(pincode));
+    if (!zone) {
+      setShippingCost(0);
+      setShippingError('We currently do not deliver to this pincode. Please select a different address.');
+    } else {
+      setShippingCost(Number(zone.deliveryCharge || 0));
+      setShippingError('');
+    }
+  }, [formData.pincode, deliveryZones]);
+
   // Update form when address selection changes (after initial load)
   useEffect(() => {
     if (user && formInitialized && selectedAddressId && user.addresses) {
@@ -188,6 +221,11 @@ const Checkout = () => {
 
     if (formData.pincode.length !== 6) {
       toast.error('Please enter a valid 6-digit pincode');
+      return;
+    }
+
+    if (shippingError) {
+      toast.error(shippingError);
       return;
     }
 
@@ -632,12 +670,19 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="text-green-600">Free</span>
+                  <span className={shippingCost > 0 ? 'text-gray-800' : 'text-green-600'}>
+                    {shippingCost > 0 ? `₹${shippingCost.toLocaleString()}` : 'Free'}
+                  </span>
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">₹{total.toLocaleString()}</span>
+                  <span className="text-trana-orange">
+                    ₹{(total + (shippingCost || 0)).toLocaleString()}
+                  </span>
                 </div>
+                {shippingError && (
+                  <p className="text-xs text-red-600 mt-1">{shippingError}</p>
+                )}
               </div>
               <Link
                 to="/cart"

@@ -1,10 +1,12 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { fetchCustomers } from '../store/slices/customerSlice';
+import { fetchOrders } from '../store/slices/orderSlice';
 import CustomerDetailsModal from '../components/Modal/CustomerDetailsModal';
 
 const Customers = () => {
   const { customers, loading } = useSelector((state) => state.customers);
+  const { orders } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -12,6 +14,8 @@ const Customers = () => {
 
   useEffect(() => {
     dispatch(fetchCustomers());
+    // Load orders once so we can show basic stats in the customer details view
+    dispatch(fetchOrders());
   }, [dispatch]);
 
   const filteredCustomers = customers.filter(customer => {
@@ -124,6 +128,8 @@ const Customers = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         customer={selectedCustomer}
+        // Pass all orders so the modal can calculate stats for this customer
+        orders={orders}
       />
     </div>
   );

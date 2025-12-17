@@ -74,7 +74,7 @@ const Products = () => {
             {/* Top section: Image and product details */}
             <div className="p-3 sm:p-4 flex gap-3 sm:gap-4">
               {/* Small square image with rounded corners */}
-              <div className="w-20 h-20 sm:w-24 sm:h-24 min-w-[80px] sm:min-w-[96px] shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 min-w-20 sm:min-w-24 shrink-0">
                 <img
                   src={product.images?.[0] || product.image || 'https://via.placeholder.com/150'}
                   alt={product.name}

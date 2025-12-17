@@ -390,6 +390,12 @@ const OrderDetail = () => {
                       </p>
                     )}
                   </div>
+                  {order.deliveryAgent && (
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-1 text-gray-700">Shipping Partner</h3>
+                      <p className="text-sm text-gray-600">{order.deliveryAgent}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -419,11 +425,17 @@ const OrderDetail = () => {
               <div className="border-t border-gray-200 pt-4 space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">₹{order.totalAmount?.toLocaleString() || order.total?.toLocaleString() || 0}</span>
+                  <span className="font-semibold">
+                    ₹{(order.totalAmount || order.total || 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="font-semibold text-green-600">Free</span>
+                  <span className={order.shippingCost > 0 ? 'font-semibold' : 'font-semibold text-green-600'}>
+                    {order.shippingCost > 0
+                      ? `₹${order.shippingCost.toLocaleString()}`
+                      : 'Free'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax</span>
@@ -431,7 +443,12 @@ const OrderDetail = () => {
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">₹{order.totalAmount?.toLocaleString() || order.total?.toLocaleString() || 0}</span>
+                  <span className="text-trana-orange">
+                    ₹{(
+                      (order.totalAmount || order.total || 0) +
+                      (order.shippingCost || 0)
+                    ).toLocaleString()}
+                  </span>
                 </div>
               </div>
 

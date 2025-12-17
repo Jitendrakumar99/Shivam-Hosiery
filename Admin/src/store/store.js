@@ -6,7 +6,6 @@ import categoryReducer from './slices/categorySlice';
 import customerReducer from './slices/customerSlice';
 import clientReducer from './slices/clientSlice';
 import adminUserReducer from './slices/adminUserSlice';
-import brandReducer from './slices/brandSlice';
 import paymentReducer from './slices/paymentSlice';
 import deliveryReducer from './slices/deliverySlice';
 import reportReducer from './slices/reportSlice';
@@ -20,7 +19,6 @@ export const store = configureStore({
     customers: customerReducer,
     clients: clientReducer,
     adminUsers: adminUserReducer,
-    brands: brandReducer,
     payments: paymentReducer,
     delivery: deliveryReducer,
     reports: reportReducer,

@@ -10,6 +10,11 @@ const Clients = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [modalMode, setModalMode] = useState('add');
 
+  // Search and pagination state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 9;
+
   useEffect(() => {
     dispatch(fetchClients());
   }, [dispatch]);
@@ -21,6 +26,24 @@ const Clients = () => {
       });
     }
   };
+
+  // Filter clients by search term
+  const filteredClients = clients.filter((client) => {
+    const name = (client.name || '').toLowerCase();
+    const category = (client.category || '').toLowerCase();
+    return (
+      name.includes(searchTerm.toLowerCase()) ||
+      category.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredClients.length / clientsPerPage) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageClients = filteredClients.slice(
+    (safeCurrentPage - 1) * clientsPerPage,
+    safeCurrentPage * clientsPerPage
+  );
 
   const handleAddClient = () => {
     setSelectedClient(null);
@@ -58,20 +81,47 @@ const Clients = () => {
         </button>
       </div>
 
+      {/* Search bar */}
+      <div className="relative">
+        <svg
+          className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search by client name or industry..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] text-sm sm:text-base"
+        />
+      </div>
+
       {loading && (
         <div className="text-center py-8">
           <p className="text-gray-600">Loading clients...</p>
         </div>
       )}
 
-      {!loading && clients.length === 0 && (
+      {!loading && filteredClients.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-600">No clients found. Add your first client!</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {clients.map((client) => (
+        {pageClients.map((client) => (
           <div key={client._id || client.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
             <div className="h-40 sm:h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
               {client.logo ? (
@@ -108,6 +158,47 @@ const Clients = () => {
           </div>
         ))}
       </div>
+
+      {/* Pagination controls */}
+      {!loading && filteredClients.length > clientsPerPage && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={safeCurrentPage === 1}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, index) => {
+            const page = index + 1;
+            return (
+              <button
+                type="button"
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-2 rounded-lg text-sm ${
+                  safeCurrentPage === page
+                    ? 'bg-[#1a1a2e] text-white'
+                    : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={safeCurrentPage === totalPages}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       <ClientModal
         isOpen={isModalOpen}

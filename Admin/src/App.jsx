@@ -9,7 +9,6 @@ import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Categories from './pages/Categories';
 import Customers from './pages/Customers';
-import Brands from './pages/Brands';
 import Clients from './pages/Clients';
 import Coupons from './pages/Coupons';
 import Reviews from './pages/Reviews';
@@ -81,16 +80,6 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Customers />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/brands"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Brands />
                 </MainLayout>
               </ProtectedRoute>
             }

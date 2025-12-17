@@ -1,14 +1,18 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { deleteZone } from '../store/slices/deliverySlice';
+import { useState, useEffect } from 'react';
+import { fetchZones, deleteZone } from '../store/slices/deliverySlice';
 import DeliveryZoneModal from '../components/Modal/DeliveryZoneModal';
 
 const Delivery = () => {
-  const { zones } = useSelector((state) => state.delivery);
+  const { zones, loading, error } = useSelector((state) => state.delivery);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedZone, setSelectedZone] = useState(null);
   const [modalMode, setModalMode] = useState('add');
+
+  useEffect(() => {
+    dispatch(fetchZones());
+  }, [dispatch]);
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this zone?')) {
@@ -52,9 +56,18 @@ const Delivery = () => {
         </button>
       </div>
 
+      {loading && (
+        <div className="text-center py-4 text-gray-600 text-sm">Loading delivery zones...</div>
+      )}
+      {error && !loading && (
+        <div className="text-center py-2 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {zones.map((zone) => (
-          <div key={zone.id} className="bg-white rounded-lg shadow border border-gray-200 p-4 sm:p-6">
+          <div key={zone._id || zone.id} className="bg-white rounded-lg shadow border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 truncate pr-2">{zone.name}</h3>
               <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold capitalize flex-shrink-0">
@@ -65,12 +78,12 @@ const Delivery = () => {
               <div>
                 <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2">Pincodes Covered</p>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {zone.pincodes.slice(0, 3).map((pincode, index) => (
+                  {(zone.pincodes || []).slice(0, 3).map((pincode, index) => (
                     <span key={index} className="px-2 sm:px-3 py-0.5 sm:py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                       {pincode}
                     </span>
                   ))}
-                  {zone.pincodes.length > 3 && (
+                  {zone.pincodes && zone.pincodes.length > 3 && (
                     <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                       +{zone.pincodes.length - 3} more
                     </span>
@@ -99,7 +112,7 @@ const Delivery = () => {
                 Edit
               </button>
               <button
-                onClick={() => handleDelete(zone.id)}
+                onClick={() => handleDelete(zone._id || zone.id)}
                 className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { useDispatch } from 'react-redux';
-import { addZone, updateZone } from '../../store/slices/deliverySlice';
+import { createZone, updateZone } from '../../store/slices/deliverySlice';
 
 const DeliveryZoneModal = ({ isOpen, onClose, zone = null, mode = 'add' }) => {
   const dispatch = useDispatch();
@@ -33,7 +33,7 @@ const DeliveryZoneModal = ({ isOpen, onClose, zone = null, mode = 'add' }) => {
     }
   }, [zone, mode, isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const zoneData = {
       ...formData,
@@ -42,18 +42,19 @@ const DeliveryZoneModal = ({ isOpen, onClose, zone = null, mode = 'add' }) => {
       estimatedDays: parseInt(formData.estimatedDays) || 1,
     };
 
-    if (mode === 'edit' && zone) {
-      dispatch(updateZone({
-        id: zone.id,
-        ...zoneData,
-      }));
-    } else {
-      dispatch(addZone({
-        id: Date.now(),
-        ...zoneData,
-      }));
+    try {
+      if (mode === 'edit' && zone) {
+        await dispatch(updateZone({
+          id: zone._id || zone.id,
+          zoneData,
+        })).unwrap();
+      } else {
+        await dispatch(createZone(zoneData)).unwrap();
+      }
+      onClose();
+    } catch (err) {
+      console.error('Failed to save delivery zone', err);
     }
-    onClose();
   };
 
   return (

@@ -8,6 +8,10 @@ const Brands = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination state for clients section
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 6;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,7 +51,9 @@ const Brands = () => {
                 <div className="text-gray-300 text-sm md:text-base">Clients</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">6+</div>
+                <div className="text-3xl md:text-4xl font-bold mb-2">
+                  {Array.from(new Set(clients.map((c) => c.category))).length || 0}+
+                </div>
                 <div className="text-gray-300 text-sm md:text-base">Industries</div>
               </div>
             </div>
@@ -215,47 +221,93 @@ const Brands = () => {
               <p className="text-gray-600">Loading clients...</p>
             </div>
           ) : clients.length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {clients.map((client) => (
-                <a
-                  key={client._id || client.id}
-                  href={client.websiteUrl || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white border border-gray-200 p-6 rounded-lg shadow-md text-center block"
-                >
-                  <div className="w-full relative mb-4" style={{ paddingTop: '100%' }}>
-                    {/* This is to create a square aspect ratio container */}
-                    <div className="absolute inset-0 overflow-hidden rounded-lg">
-                      {client.logo ? (
-                        <img
-                          src={client.logo}
-                          alt={client.name}
-                          className="w-full h-full object-contain rounded-lg"
-                        />
-                      ) : (
-                        <svg
-                          className="w-8 h-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-gray-800 mb-2">{client.name}</h3>
-                  <p className="text-sm text-gray-600">{client.category}</p>
-                </a>
-              ))}
-            </div>
+            <>
+              <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {clients
+                  .slice((currentPage - 1) * clientsPerPage, currentPage * clientsPerPage)
+                  .map((client) => (
+                    <a
+                      key={client._id || client.id}
+                      href={client.websiteUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white border border-gray-200 p-6 rounded-lg shadow-md text-center block"
+                    >
+                      <div className="w-full relative mb-4" style={{ paddingTop: '100%' }}>
+                        {/* Square aspect ratio container */}
+                        <div className="absolute inset-0 overflow-hidden rounded-lg">
+                          {client.logo ? (
+                            <img
+                              src={client.logo}
+                              alt={client.name}
+                              className="w-full h-full object-contain rounded-lg"
+                            />
+                          ) : (
+                            <svg
+                              className="w-8 h-8 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-gray-800 mb-2">{client.name}</h3>
+                      <p className="text-sm text-gray-600">{client.category}</p>
+                    </a>
+                  ))}
+              </div>
 
+              {/* Pagination controls for clients section */}
+              {clients.length > clientsPerPage && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: Math.ceil(clients.length / clientsPerPage) }, (_, index) => {
+                    const page = index + 1;
+                    return (
+                      <button
+                        type="button"
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-2 rounded-lg text-sm ${
+                          currentPage === page
+                            ? 'bg-slate-900 text-white'
+                            : 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) =>
+                        Math.min(prev + 1, Math.ceil(clients.length / clientsPerPage))
+                      )
+                    }
+                    disabled={currentPage === Math.ceil(clients.length / clientsPerPage)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-600">No clients available</p>

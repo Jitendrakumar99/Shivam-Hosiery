@@ -146,52 +146,96 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Our Brands Section */}
+      {/* Our Brands Section - Featured Brand Card */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">
-            Our Brands
+            Our Flagship Brand
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            We manufacture quality products under various brands, each specializing in different market segments.
+            Introducing Trana - our premier safety garments brand trusted by industries across the nation.
           </p>
+
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-600">Loading brands...</p>
             </div>
           ) : brands.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {brands.map((brand) => (
-                <div key={brand._id || brand.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                  <div className="h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
-                    {brand.image ? (
-                      <img src={brand.image} alt={brand.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-gray-400">Brand Image</span>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">{brand.category}</span>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{brand.name}</h3>
-                    {brand.slogan && <p className="text-sm text-gray-600 mb-1">{brand.slogan}</p>}
-                    <p className="text-gray-600 mb-4 text-sm">{brand.description}</p>
-                    {brand.websiteUrl && (
-                      <a 
-                        href={brand.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                      >
-                        Visit Website
-                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                    )}
+            (() => {
+              const featured = brands.find(b => (b.name || '').toLowerCase().includes('trana')) || brands[0];
+              const imageUrl = featured?.image || 'https://images.unsplash.com/photo-1542223616-4c0a9f3f7b3b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080';
+              const categoryLabel = featured?.category || 'Safety Garments';
+              const slogan = featured?.slogan || 'सुरक्षा, हमारी प्राथमिकता';
+
+              return (
+                <div className="rounded-2xl overflow-hidden shadow-xl max-w-7xl mx-auto">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Left image */}
+                    <div className="lg:w-1/2 relative min-h-[260px]">
+                      <img src={imageUrl} alt={featured.name} className="w-full h-full object-cover" />
+                      <div className="absolute left-6 bottom-6 text-white">
+                        <span className="inline-block bg-orange-500 text-white text-xs px-3 py-1 rounded-full mb-3">{categoryLabel}</span>
+                        <h3 className="text-3xl font-bold leading-tight">{featured.name || 'Trana'}</h3>
+                        <p className="text-sm mt-1">{slogan}</p>
+                      </div>
+                    </div>
+
+                    {/* Right panel */}
+                    <div className="lg:w-1/2 bg-linear-to-br from-slate-900 to-slate-800 text-white p-8 md:p-12 flex flex-col justify-center">
+                      <h4 className="text-xl font-semibold mb-4">Premium Industrial Safety Solutions</h4>
+                      <p className="text-gray-200 mb-6 leading-relaxed">
+                        Trana specializes in high-visibility safety garments that meet international standards. Our products ensure worker safety across construction, manufacturing, energy, and infrastructure sectors.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-full">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span className="text-sm text-gray-100">ANSI/ISEA 107 Certified</span>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-full">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span className="text-sm text-gray-100">High-Visibility Garments</span>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-full">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span className="text-sm text-gray-100">Custom Design Options</span>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-full">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span className="text-sm text-gray-100">B2B Portal Access</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <Link to="/trana" className="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                          Explore Products
+                          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                        <button className="bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">Request Quote</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })()
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-600">No brands available</p>
