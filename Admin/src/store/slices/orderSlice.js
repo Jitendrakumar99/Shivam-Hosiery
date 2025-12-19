@@ -40,9 +40,9 @@ export const fetchOrder = createAsyncThunk(
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
-  async ({ id, status, deliveryAgent, paymentStatus }, { rejectWithValue }) => {
+  async ({ id, status, deliveryAgent }, { rejectWithValue }) => {
     try {
-      const data = await orderService.updateOrderStatus(id, status, deliveryAgent, paymentStatus);
+      const data = await orderService.updateOrderStatus(id, status, deliveryAgent);
       return data;
     } catch (error) {
       return rejectWithValue(

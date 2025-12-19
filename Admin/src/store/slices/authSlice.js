@@ -18,7 +18,7 @@ const loadUserFromStorage = () => {
 const initialState = {
   user: loadUserFromStorage().user,
   token: loadUserFromStorage().token,
-  loading: false,
+        loading: false,
   error: null,
   isAuthenticated: !!loadUserFromStorage().token,
 };

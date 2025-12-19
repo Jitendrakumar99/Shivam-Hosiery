@@ -1,16 +1,10 @@
 import Modal from './Modal';
-import { useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { updateCustomerStatus, updateCustomerRole } from '../../store/slices/customerSlice';
 
 const CustomerDetailsModal = ({ isOpen, onClose, customer, orders = [] }) => {
   if (!customer) return null;
 
   // Filter orders for this customer
   const customerId = customer._id || customer.id;
-  const dispatch = useDispatch();
-  const [localRole, setLocalRole] = useState(customer.role || 'user');
-  const [localIsActive, setLocalIsActive] = useState(customer.isActive !== false);
   const customerOrders = orders.filter((order) => {
     const orderUserId =
       order.user?._id?.toString() ||
@@ -53,30 +47,11 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer, orders = [] }) => {
                 <p className="text-gray-800 font-medium">{customer.address}</p>
               </div>
             )}
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <span className="text-gray-600">Status:</span>
-                <span className="ml-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                  {localIsActive === false ? 'Inactive' : 'Active'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">Role</label>
-                <select
-                  value={localRole}
-                  onChange={(e) => setLocalRole(e.target.value)}
-                  className="px-2 py-1 border border-gray-300 rounded"
-                >
-                  <option value="user">user</option>
-                  <option value="admin">admin</option>
-                </select>
-                <button
-                  onClick={() => dispatch(updateCustomerRole({ id: customerId, role: localRole }))}
-                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
-                >
-                  Save Role
-                </button>
-              </div>
+            <div>
+              <span className="text-gray-600">Status:</span>
+              <span className="ml-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                {customer.isActive === false ? 'Inactive' : 'Active'}
+              </span>
             </div>
           </div>
         </div>
@@ -149,13 +124,12 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer, orders = [] }) => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           <button
             onClick={() => {
-              const next = !localIsActive;
-              setLocalIsActive(next);
-              dispatch(updateCustomerStatus({ id: customerId, isActive: next }));
+              // Handle block customer
+              alert('Block customer functionality');
             }}
-            className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${localIsActive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+            className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition"
           >
-            {localIsActive ? 'Block Customer' : 'Unblock Customer'}
+            Block Customer
           </button>
           <button
             onClick={onClose}

@@ -291,7 +291,7 @@ exports.createOrder = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateOrderStatus = async (req, res, next) => {
   try {
-    const { status, trackingNumber, deliveryAgent, paymentStatus } = req.body;
+    const { status, trackingNumber, deliveryAgent } = req.body;
 
     const order = await Order.findById(req.params.id);
 
@@ -345,13 +345,6 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
     if (deliveryAgent !== undefined) {
       order.deliveryAgent = deliveryAgent;
-    }
-    if (paymentStatus !== undefined) {
-      const valid = ['pending', 'paid', 'failed'];
-      if (!valid.includes(paymentStatus)) {
-        return res.status(400).json({ success: false, message: 'Invalid payment status' });
-      }
-      order.paymentStatus = paymentStatus;
     }
     await order.save();
 

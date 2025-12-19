@@ -18,11 +18,5 @@ export const adminService = {
     const response = await api.put(`/admin/users/${id}/status`, { isActive });
     return response.data;
   },
-
-  // Update user role
-  updateUserRole: async (id, role) => {
-    const response = await api.put(`/admin/users/${id}/role`, { role });
-    return response.data;
-  },
 };
 

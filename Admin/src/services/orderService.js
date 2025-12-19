@@ -14,13 +14,10 @@ export const orderService = {
   },
 
   // Update order status (and optional delivery agent)
-  updateOrderStatus: async (id, status, deliveryAgent, paymentStatus) => {
+  updateOrderStatus: async (id, status, deliveryAgent) => {
     const payload = { status };
     if (deliveryAgent !== undefined) {
       payload.deliveryAgent = deliveryAgent;
-    }
-    if (paymentStatus !== undefined) {
-      payload.paymentStatus = paymentStatus;
     }
     const response = await api.put(`/orders/${id}/status`, payload);
     return response.data;

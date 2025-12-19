@@ -7,27 +7,12 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
   const dispatch = useDispatch();
   const [deliveryAgentInput, setDeliveryAgentInput] = useState(order?.deliveryAgent || '');
   const [savingAgent, setSavingAgent] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(order?.paymentStatus || 'pending');
-  const [savingPayment, setSavingPayment] = useState(false);
 
   if (!order) return null;
 
-  const handleSavePaymentStatus = async () => {
-    if (!order?._id && !order?.id) return;
-    setSavingPayment(true);
-    try {
-      await dispatch(
-        updateOrderStatus({
-          id: order._id || order.id,
-          status: order.status,
-          paymentStatus,
-        })
-      ).unwrap();
-    } catch (err) {
-      console.error('Failed to update payment status', err);
-    } finally {
-      setSavingPayment(false);
-    }
+  const handlePaymentStatusChange = (e) => {
+    // In a real app, this would update payment status
+    console.log('Payment status changed to:', e.target.value);
   };
 
   const handlePrintInvoice = () => {
@@ -180,25 +165,16 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Update Payment Status
           </label>
-          <div className="flex flex-col gap-2">
-            <select
-              value={paymentStatus}
-              onChange={(e) => setPaymentStatus(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-            >
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="failed">Failed</option>
-            </select>
-            <button
-              type="button"
-              onClick={handleSavePaymentStatus}
-              disabled={savingPayment}
-              className="self-start px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingPayment ? 'Saving...' : 'Save Payment Status'}
-            </button>
-          </div>
+          <select
+            defaultValue="completed"
+            onChange={handlePaymentStatusChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+          >
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="refunded">Refunded</option>
+          </select>
         </div>
 
         {/* Payment Method & Delivery Info */}
