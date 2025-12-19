@@ -81,25 +81,25 @@ const Products = () => {
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
-              
+
               {/* Product details */}
               <div className="flex-1 min-w-0">
                 <div className="mb-1.5 sm:mb-2">
                   <span className="bg-orange-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold inline-block">
-                    {product.category}
+                    {product.category?.name || product.category}
                   </span>
                 </div>
-                
+
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 line-clamp-2">{product.name}</h3>
-                
-                <p className="text-lg sm:text-xl font-bold text-orange-500">₹{product.price?.toFixed(2) || '0.00'}</p>
+
+                <p className="text-lg sm:text-xl font-bold text-orange-500">₹{product.pricing?.price?.toFixed(2) || product.price?.toFixed(2) || '0.00'}</p>
               </div>
             </div>
-            
+
             {/* Bottom section: Description and actions */}
             <div className="px-3 sm:px-4 pb-3 sm:pb-4 flex-1 flex flex-col">
               <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 flex-1 line-clamp-3">{product.description}</p>
-              
+
               <div className="flex items-center gap-2 sm:gap-3 mt-auto">
                 <button
                   onClick={() => handleEditProduct(product)}

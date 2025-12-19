@@ -30,13 +30,20 @@ const cartSlice = createSlice({
   },
   reducers: {
     addToCart: (state, action) => {
-      const { product, quantity = 1 } = action.payload;
+      const { product, quantity = 1, variant = null } = action.payload;
       const productId = product._id || product.id;
-      
+
       const existingItem = state.items.find(item => {
         const itemProductId = item.product._id || item.product.id;
-        return String(itemProductId) === String(productId);
+        const sameProduct = String(itemProductId) === String(productId);
+        const sameVariant = variant
+          ? item.variant && item.variant.size === variant.size && item.variant.color === variant.color
+          : !item.variant;
+        return sameProduct && sameVariant;
       });
+
+      // Determine price: Variant Price > Product Pricing Price > Product Legacy Price
+      const price = variant?.price || product.pricing?.price || product.price || 0;
 
       if (existingItem) {
         existingItem.quantity += quantity;
@@ -44,7 +51,8 @@ const cartSlice = createSlice({
         state.items.push({
           product,
           quantity,
-          price: product.price,
+          variant,
+          price: Number(price),
         });
       }
 
@@ -67,7 +75,7 @@ const cartSlice = createSlice({
         const itemProductId = String(item.product._id || item.product.id);
         return itemProductId === productIdStr;
       });
-      
+
       if (item) {
         if (quantity <= 0) {
           state.items = state.items.filter(item => {

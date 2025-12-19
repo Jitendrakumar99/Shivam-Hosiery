@@ -1,6 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState } from 'react';
-import { deleteCategory } from '../store/slices/categorySlice';
+import { deleteCategory, fetchCategories } from '../store/slices/categorySlice';
+import { useEffect } from 'react';
 import CategoryModal from '../components/Modal/CategoryModal';
 
 const Categories = () => {
@@ -9,6 +10,10 @@ const Categories = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalMode, setModalMode] = useState('add');
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
@@ -56,7 +61,15 @@ const Categories = () => {
         {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
             <div className="p-3 sm:p-4">
+              {category.image && (
+                <div className="w-full h-32 mb-3 overflow-hidden rounded-lg">
+                  <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-1.5 sm:mb-2">{category.name}</h3>
+              {category.parent && (
+                <p className="text-xs text-gray-500 mb-1">Parent: {category.parent.name || 'Unknown'}</p>
+              )}
               <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">{category.description}</p>
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">

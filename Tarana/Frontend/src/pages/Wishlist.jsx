@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import { addToCart } from '../store/slices/cartSlice';
@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 const Wishlist = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { wishlist, loading } = useAppSelector((state) => state.wishlist);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
@@ -28,8 +29,12 @@ const Wishlist = () => {
   };
 
   const handleAddToCart = (product) => {
+    if (product.variants && product.variants.length > 0) {
+      navigate(`/products/${product._id || product.id}`);
+      return;
+    }
     dispatch(addToCart({ product, quantity: 1 }));
-    toast.success(`${product.name} added to cart!`);
+    toast.success(`${product.name || product.title} added to cart!`);
   };
 
   if (!isAuthenticated) {
@@ -71,21 +76,24 @@ const Wishlist = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => {
               const product = item.product;
-              const inStock = product?.stock > 0;
-              
+              const inStock = product?.availability?.inStock !== false;
+              const hasVariants = product.variants && product.variants.length > 0;
+
               return (
                 <div key={item._id || item.product?._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="h-48 bg-gray-200 flex items-center justify-center">
                     {product?.images && product.images.length > 0 ? (
                       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-gray-500">{product?.name} Image</span>
+                      <div className="text-gray-500 flex flex-col items-center">
+                        <span className="text-sm">No Image</span>
+                      </div>
                     )}
                   </div>
                   <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{product?.name}</h3>
+                    <h3 className="text-xl font-bold mb-2">{product?.name || product?.title}</h3>
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-2xl font-bold text-trana-orange">₹{product?.price || 0}</span>
+                      <span className="text-2xl font-bold text-trana-orange">₹{product?.pricing?.price || product?.price || 0}</span>
                       {inStock ? (
                         <span className="text-sm text-green-600 font-semibold">In Stock</span>
                       ) : (
@@ -96,9 +104,9 @@ const Wishlist = () => {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={!inStock}
-                        className="flex-1 bg-trana-orange text-white py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex-1 ${hasVariants ? 'bg-[#1a1a2e] hover:bg-[#16213e]' : 'bg-trana-orange hover:bg-orange-600'} text-white py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        Add to Cart
+                        {hasVariants ? 'View Options' : 'Add to Cart'}
                       </button>
                       <button
                         onClick={() => handleRemoveFromWishlist(product._id || product.id)}

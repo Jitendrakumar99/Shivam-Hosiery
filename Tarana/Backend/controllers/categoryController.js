@@ -1,0 +1,143 @@
+const Category = require('../models/Category');
+const { clearCache } = require('../middlewares/cache');
+// @desc    Get all categories
+// @route   GET /api/categories
+// @access  Public
+exports.getCategories = async (req, res, next) => {
+  try {
+    const { status, parent } = req.query;
+    
+    const query = {};
+    if (status) {
+      query.status = status;
+    }
+    if (parent !== undefined) {
+      query.parent = parent === 'null' || parent === '' ? null : parent;
+    }
+
+    const categories = await Category.find(query)
+      .populate('parent', 'name slug')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      count: categories.length,
+      data: categories
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get single category
+// @route   GET /api/categories/:id
+// @access  Public
+exports.getCategory = async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id)
+      .populate('parent', 'name slug');
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: category
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create category
+// @route   POST /api/categories
+// @access  Private/Admin
+exports.createCategory = async (req, res, next) => {
+  try {
+    const category = await Category.create(req.body);
+
+    clearCache('/api/categories');
+
+    res.status(201).json({
+      success: true,
+      data: category
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category with this name already exists'
+      });
+    }
+    next(error);
+  }
+};
+
+// @desc    Update category
+// @route   PUT /api/categories/:id
+// @access  Private/Admin
+exports.updateCategory = async (req, res, next) => {
+  try {
+    let category = await Category.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    category = await Category.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    clearCache('/api/categories');
+    clearCache(`/api/categories/${req.params.id}`);
+
+    res.json({
+      success: true,
+      data: category
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category with this name already exists'
+      });
+    }
+    next(error);
+  }
+};
+
+// @desc    Delete category
+// @route   DELETE /api/categories/:id
+// @access  Private/Admin
+exports.deleteCategory = async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    await category.deleteOne();
+
+    clearCache('/api/categories');
+    clearCache(`/api/categories/${req.params.id}`);
+
+    res.json({
+      success: true,
+      message: 'Category deleted'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -57,14 +57,14 @@ const OrderDetail = () => {
       toast.error('No items to reorder');
       return;
     }
-    
+
     order.items.forEach((item) => {
       const product = item.product;
       if (product) {
         dispatch(addToCart({ product, quantity: item.quantity }));
       }
     });
-    
+
     toast.success('All items added to cart!');
     navigate('/cart');
   };
@@ -262,8 +262,15 @@ const OrderDetail = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-lg mb-1">{product?.name || 'Product'}</h3>
+                        {item.customization && (
+                          <p className="text-sm text-gray-500 mb-1">
+                            {Object.entries(item.customization).map(([key, value]) => value && `${key}: ${value}`).filter(Boolean).join(', ')}
+                          </p>
+                        )}
                         {product?.category && (
-                          <p className="text-sm text-gray-500 mb-2">{product.category}</p>
+                          <p className="text-sm text-gray-500 mb-2">
+                            {typeof product.category === 'object' ? product.category.name : product.category}
+                          </p>
                         )}
                         <div className="flex items-center justify-between">
                           <div>
@@ -371,7 +378,7 @@ const OrderDetail = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-              
+
               {/* Shipping Address */}
               {order.shippingAddress && (
                 <div className="mb-6">
@@ -407,14 +414,13 @@ const OrderDetail = () => {
                     <span className="font-semibold">Method:</span> {order.paymentMethod || 'Cash on Delivery'}
                   </p>
                   <p>
-                    <span className="font-semibold">Status:</span> 
-                    <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                      order.paymentStatus === 'paid' 
-                        ? 'bg-green-100 text-green-800' 
-                        : order.paymentStatus === 'failed'
+                    <span className="font-semibold">Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded text-xs ${order.paymentStatus === 'paid'
+                      ? 'bg-green-100 text-green-800'
+                      : order.paymentStatus === 'failed'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                      }`}>
                       {order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus === 'failed' ? 'Failed' : 'Pending'}
                     </span>
                   </p>
