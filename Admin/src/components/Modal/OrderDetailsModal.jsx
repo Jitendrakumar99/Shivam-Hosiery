@@ -84,6 +84,11 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">{name}</p>
+                      {it.customization && (
+                        <p className="text-sm text-gray-500 mb-1">
+                          {Object.entries(it.customization).map(([key, value]) => value && `${key}: ${value}`).filter(Boolean).join(', ')}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600">Quantity: {qty}</p>
                     </div>
                     <div className="text-right">

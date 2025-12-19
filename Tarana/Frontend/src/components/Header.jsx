@@ -66,12 +66,6 @@ const Header = () => {
                   Home
                 </Link>
                 <Link 
-                  to="/about" 
-                  className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
-                >
-                  About
-                </Link>
-                <Link 
                   to="/products" 
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/products' ? 'font-bold underline' : ''}`}
                 >
@@ -84,11 +78,18 @@ const Header = () => {
                   Customize
                 </Link>
                 <Link 
+                  to="/about" 
+                  className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
+                >
+                  About
+                </Link>
+                <Link 
                   to="/contact" 
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/contact' ? 'font-bold underline' : ''}`}
                 >
                   Contact
                 </Link>
+
                 <Link 
                   to="/shivam-hosiery" 
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/shivam-hosiery' ? 'font-bold underline' : ''}`}
@@ -220,13 +221,7 @@ const Header = () => {
               >
                 Home
               </Link>
-              <Link 
-                to="/about" 
-                onClick={closeMobileMenu}
-                className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
-              >
-                About
-              </Link>
+              
               <Link 
                 to="/products" 
                 onClick={closeMobileMenu}
@@ -240,6 +235,13 @@ const Header = () => {
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/customize' ? 'font-bold underline' : ''}`}
               >
                 Customize
+              </Link>
+              <Link 
+                to="/about" 
+                onClick={closeMobileMenu}
+                className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
+              >
+                About
               </Link>
               <Link 
                 to="/contact" 

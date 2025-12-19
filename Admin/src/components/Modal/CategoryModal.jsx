@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { useDispatch } from 'react-redux';
-import { addCategory, updateCategory } from '../../store/slices/categorySlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { createCategory, updateCategory } from '../../store/slices/categorySlice';
 
 const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
   const dispatch = useDispatch();
+  const { categories } = useSelector((state) => state.categories);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     status: 'active',
+    image: '',
+    parent: '',
   });
 
   useEffect(() => {
@@ -17,31 +20,42 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
         name: category.name || '',
         description: category.description || '',
         status: category.status || 'active',
+        image: category.image || '',
+        parent: category.parent?._id || category.parent || '',
       });
     } else {
       setFormData({
         name: '',
         description: '',
         status: 'active',
+        image: '',
+        parent: '',
       });
     }
   }, [category, mode, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      parent: formData.parent || null, // Ensure empty string becomes null
+    };
+
     if (mode === 'edit' && category) {
       dispatch(updateCategory({
-        id: category.id,
-        ...formData,
+        id: category._id || category.id,
+        categoryData: payload,
       }));
     } else {
-      dispatch(addCategory({
-        id: Date.now(),
-        ...formData,
-      }));
+      dispatch(createCategory(payload));
     }
     onClose();
   };
+
+  // Filter out the current category from potential parents to prevent cycles (simple check)
+  const availableParents = categories.filter(c =>
+    mode !== 'edit' || (c._id !== category?._id && c.id !== category?.id)
+  );
 
   return (
     <Modal
@@ -63,6 +77,37 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
             placeholder="Enter category name"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Category Image URL
+          </label>
+          <input
+            type="text"
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Parent Category
+          </label>
+          <select
+            value={formData.parent}
+            onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+          >
+            <option value="">None (Top Level)</option>
+            {availableParents.map((cat) => (
+              <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

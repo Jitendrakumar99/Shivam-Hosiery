@@ -4,31 +4,33 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchProducts } from '../store/slices/productSlice';
 import { addToWishlist, fetchWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, removeFromCart } from '../store/slices/cartSlice';
+import { fetchCategories } from '../store/slices/categorySlice';
 import toast from 'react-hot-toast';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Normalize category from URL
   const normalizeCategoryFromURL = (categoryParam) => {
     if (!categoryParam || categoryParam === 'all') return 'all';
-    
+
     // Convert URL format to display format
     const categoryMap = {
       'safety-vests': 'Safety Vests',
       'safety-jackets': 'Safety Jackets',
       'coveralls': 'Coveralls'
     };
-    
+
     // Handle URL encoded spaces (+)
     const decoded = decodeURIComponent(categoryParam).replace(/\+/g, ' ');
-    
+
     // Check if it's already in correct format
     if (['Safety Vests', 'Safety Jackets', 'Coveralls'].includes(decoded)) {
       return decoded;
     }
-    
+
     // Try to match from categoryMap (case-insensitive)
     const lowerDecoded = decoded.toLowerCase().replace(/-/g, '-');
     for (const [key, value] of Object.entries(categoryMap)) {
@@ -36,20 +38,21 @@ const Products = () => {
         return value;
       }
     }
-    
+
     return decoded; // Return as-is if no match
   };
-  
+
   const [selectedCategory, setSelectedCategory] = useState(
     normalizeCategoryFromURL(searchParams.get('category')) || 'all'
   );
   const navigate = useNavigate();
-  
+
   const dispatch = useAppDispatch();
   const { products, loading, error, pagination } = useAppSelector((state) => state.products);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { items: cartItems } = useAppSelector((state) => state.cart);
   const { wishlist } = useAppSelector((state) => state.wishlist);
+  const { categories } = useAppSelector((state) => state.categories);
 
   useEffect(() => {
     const params = {};
@@ -58,9 +61,18 @@ const Products = () => {
     }
     if (searchQuery && searchQuery.trim()) {
       params.search = searchQuery.trim();
+      // When searching, show all results without pagination
+    } else {
+      // Only apply pagination when not searching
+      params.page = currentPage;
     }
     dispatch(fetchProducts(params));
-  }, [dispatch, selectedCategory, searchQuery]);
+  }, [dispatch, selectedCategory, searchQuery, currentPage]);
+
+  // Reset to page 1 when search or category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
 
   // Sync URL with selected category on mount/URL change
   useEffect(() => {
@@ -76,6 +88,11 @@ const Products = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    dispatch(fetchCategories({ status: 'active' }));
+  }, [dispatch]);
 
   // Fetch wishlist when authenticated to check which products are in wishlist
   useEffect(() => {
@@ -96,7 +113,8 @@ const Products = () => {
     }
   };
 
-  const categories = ['All', 'Safety Vests', 'Safety Jackets', 'Coveralls'];
+  // Build categories array with 'All' option plus dynamic categories from database
+  const categoryOptions = ['All', ...categories.map(cat => cat.name)];
 
   // Filter products client-side for search query
   // This client-side filter is no longer needed as search is handled by the backend.
@@ -116,7 +134,7 @@ const Products = () => {
   const isInWishlist = (productId) => {
     if (!wishlist || !wishlist.items) return false;
     const id = productId._id || productId.id || productId;
-    return wishlist.items.some(item => 
+    return wishlist.items.some(item =>
       (item.product?._id || item.product?.id) === id
     );
   };
@@ -152,16 +170,15 @@ const Products = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              {categoryOptions.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    (selectedCategory === 'all' && category === 'All') ||
+                  className={`px-4 py-2 rounded-lg transition ${(selectedCategory === 'all' && category === 'All') ||
                     category === selectedCategory
-                      ? 'bg-trana-orange text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-                  }`}
+                    ? 'bg-trana-orange text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                    }`}
                 >
                   {category}
                 </button>
@@ -222,15 +239,47 @@ const Products = () => {
                       </button>
                     </div>
                     <div className="p-6">
-                      <p className="text-sm text-gray-500 mb-1">{product.category}</p>
+                      <p className="text-sm text-gray-500 mb-1">{product.category?.name || product.category}</p>
                       <Link to={`/products/${product._id || product.id}`}>
-                        <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition cursor-pointer">{product.name}</h3>
+                        <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition cursor-pointer">{product.title || product.name}</h3>
                       </Link>
-                      <p className="text-gray-600 mb-4 text-sm">{product.description}</p>
+
+                      {/* Rating */}
+                      {product.rating && product.rating.count > 0 && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`w-4 h-4 ${i < Math.round(product.rating.average) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            {product.rating.average.toFixed(1)} ({product.rating.count})
+                          </span>
+                        </div>
+                      )}
+
+                      <p className="text-gray-600 mb-4 text-sm line-clamp-2">{product.shortDescription || product.description}</p>
+
                       <div className="flex justify-between items-center mb-4">
-                        <p className="text-lg font-bold text-trana-orange">Starting from ₹{product.price}</p>
-                        <p className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                        <div>
+                          <p className="text-lg font-bold text-trana-orange">
+                            ₹{product.pricing?.price || product.price}
+                          </p>
+                          {product.pricing?.compareAtPrice > 0 && product.pricing.compareAtPrice > product.pricing.price && (
+                            <p className="text-sm text-gray-500 line-through">
+                              ₹{product.pricing.compareAtPrice}
+                            </p>
+                          )}
+                        </div>
+                        <p className={`text-sm font-semibold ${product.availability?.inStock !== false ? 'text-green-600' : 'text-red-600'}`}>
+                          {product.availability?.inStock !== false ? 'In Stock' : 'Out of Stock'}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -242,16 +291,25 @@ const Products = () => {
                             View Cart
                           </Link>
                         ) : (
-                          <button
-                            onClick={() => {
-                              dispatch(addToCart({ product, quantity: 1 }));
-                              toast.success(`${product.name} added to cart!`);
-                            }}
-                            disabled={product.stock <= 0}
-                            className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Add to Cart
-                          </button>
+                          product.variants && product.variants.length > 0 ? (
+                            <Link
+                              to={`/products/${product._id || product.id}`}
+                              className="flex-1 bg-[#1a1a2e] text-white py-2 rounded hover:bg-[#16213e] transition text-center"
+                            >
+                              View Options
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                dispatch(addToCart({ product, quantity: 1 }));
+                                toast.success(`${product.name || product.title} added to cart!`);
+                              }}
+                              disabled={product.availability?.inStock === false}
+                              className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Add to Cart
+                            </button>
+                          )
                         )}
                         <button
                           onClick={async () => {
@@ -280,11 +338,10 @@ const Products = () => {
                               navigate('/login');
                             }
                           }}
-                          className={`px-4 py-2 border rounded transition ${
-                            isInWishlist(product._id || product.id)
-                              ? 'border-green-500 text-green-600 bg-green-50'
-                              : 'border-trana-orange text-trana-orange hover:bg-orange-50'
-                          }`}
+                          className={`px-4 py-2 border rounded transition ${isInWishlist(product._id || product.id)
+                            ? 'border-green-500 text-green-600 bg-green-50'
+                            : 'border-trana-orange text-trana-orange hover:bg-orange-50'
+                            }`}
                           title={isInWishlist(product._id || product.id) ? 'Already in wishlist' : 'Add to wishlist'}
                         >
                           {isInWishlist(product._id || product.id) ? (
@@ -302,21 +359,34 @@ const Products = () => {
                   </div>
                 ))}
               </div>
-              {pagination && (
+              {!searchQuery && pagination && pagination.totalPages > 1 && (
                 <div className="mt-8 flex justify-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
                   {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
-                      onClick={() => dispatch(fetchProducts({ page }))}
-                      className={`px-4 py-2 rounded ${
-                        page === pagination.currentPage
-                          ? 'bg-trana-orange text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded ${page === currentPage
+                        ? 'bg-trana-orange text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
                     >
                       {page}
                     </button>
                   ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                    disabled={currentPage === pagination.totalPages}
+                    className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
                 </div>
               )}
             </>

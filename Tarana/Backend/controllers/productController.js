@@ -4,7 +4,11 @@ const { clearCache } = require('../middlewares/cache');
 // Helper function to normalize category name
 const normalizeCategory = (category) => {
   if (!category) return null;
-  
+  // If category is object (e.g. from query parser or mistake), try to get name or return null
+  if (typeof category !== 'string') {
+    return category.name || category.toString();
+  }
+
   // Convert URL format to database format
   const categoryMap = {
     'safety-vests': 'Safety Vests',
@@ -13,13 +17,13 @@ const normalizeCategory = (category) => {
     'safety vests': 'Safety Vests',
     'safety jackets': 'Safety Jackets'
   };
-  
+
   // Check if it's already in the correct format
   const validCategories = ['Safety Vests', 'Safety Jackets', 'Coveralls'];
   if (validCategories.includes(category)) {
     return category;
   }
-  
+
   // Try to match from categoryMap (case-insensitive)
   const lowerCategory = category.toLowerCase().replace(/\+/g, ' ').replace(/-/g, ' ');
   for (const [key, value] of Object.entries(categoryMap)) {
@@ -27,13 +31,13 @@ const normalizeCategory = (category) => {
       return value;
     }
   }
-  
+
   // If no match, try direct case-insensitive match
-  const matched = validCategories.find(cat => 
-    cat.toLowerCase() === lowerCategory || 
+  const matched = validCategories.find(cat =>
+    cat.toLowerCase() === lowerCategory ||
     cat.toLowerCase().replace(/\s+/g, '-') === category.toLowerCase().replace(/\s+/g, '-')
   );
-  
+
   return matched || category; // Return original if no match found
 };
 
@@ -49,29 +53,37 @@ exports.getProducts = async (req, res, next) => {
     const query = { status };
     if (category) {
       const normalizedCategory = normalizeCategory(category);
-      query.category = normalizedCategory;
+      query['category.name'] = normalizedCategory;
     }
     if (search) {
       // Use regex for case-insensitive partial matching instead of text search
       // Escape special regex characters
       const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { name: { $regex: escapedSearch, $options: 'i' } },
-        { description: { $regex: escapedSearch, $options: 'i' } }
+        { title: { $regex: escapedSearch, $options: 'i' } },
+        { description: { $regex: escapedSearch, $options: 'i' } },
+        { shortDescription: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
-    const products = await Product.find(query)
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+    // When searching, skip pagination to show all results
+    let products;
+    if (search) {
+      products = await Product.find(query)
+        .sort({ createdAt: -1 });
+    } else {
+      products = await Product.find(query)
+        .skip(startIndex)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+    }
 
     const total = await Product.countDocuments(query);
 
     res.json({
       success: true,
       count: products.length,
-      pagination: {
+      pagination: search ? null : {
         currentPage: Math.floor(startIndex / limit) + 1,
         totalPages: Math.ceil(total / limit),
         totalItems: total,

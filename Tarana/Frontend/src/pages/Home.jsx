@@ -1,6 +1,22 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchCategories } from '../store/slices/categorySlice';
 
 const Home = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { categories, loading } = useAppSelector((state) => state.categories);
+
+  useEffect(() => {
+    dispatch(fetchCategories({ status: 'active' }));
+  }, [dispatch]);
+
+  const handleCategoryClick = (categoryName) => {
+    const urlCategory = categoryName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/products?category=${urlCategory}`);
+  };
+
   return (
     <div className="home-page">
       {/* Hero Section */}
@@ -80,59 +96,47 @@ const Home = () => {
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
             Comprehensive safety garment solutions for every industrial need.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="h-64 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Safety Vest Image</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Safety Vests</h3>
-                <p className="text-gray-600 mb-4">
-                  High-visibility vests with reflective features for maximum visibility.
-                </p>
-                <Link 
-                  to="/products?category=safety-vests" 
-                  className="inline-block bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
-                >
-                  View Collection
-                </Link>
-              </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading categories...</p>
             </div>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="h-64 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Safety Jacket Image</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Safety Jackets</h3>
-                <p className="text-gray-600 mb-4">
-                  Weather-resistant jackets with insulation and reflective features.
-                </p>
-                <Link 
-                  to="/products?category=safety-jackets" 
-                  className="inline-block bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {categories.map((category) => (
+                <div 
+                  key={category._id} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => handleCategoryClick(category.name)}
                 >
-                  View Collection
-                </Link>
-              </div>
+                  <div className="h-64 bg-gray-200 overflow-hidden">
+                    {category.image ? (
+                      <img 
+                        src={category.image} 
+                        alt={category.name}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-gray-500">{category.name} Image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2">{category.name}</h3>
+                    <p className="text-gray-600 mb-4">
+                      {category.description || 'High-quality safety garments for your protection.'}
+                    </p>
+                    <button 
+                      className="inline-block bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
+                    >
+                      View Collection
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="h-64 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Coveralls Image</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">Coveralls</h3>
-                <p className="text-gray-600 mb-4">
-                  Full-body protection with reinforced construction and safety features.
-                </p>
-                <Link 
-                  to="/products?category=coveralls" 
-                  className="inline-block bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
-                >
-                  View Collection
-                </Link>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 

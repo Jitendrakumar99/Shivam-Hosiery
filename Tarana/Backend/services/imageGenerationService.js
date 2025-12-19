@@ -1,46 +1,81 @@
+const axios = require('axios');
+const FormData = require('form-data');
+
 function buildCustomizationPrompt(customizationData, baseImageDescription) {
-  const base = typeof baseImageDescription === 'string' && baseImageDescription.trim().length > 0
-    ? baseImageDescription.trim()
-    : '';
   const parts = [];
-  if (base) parts.push(base);
-  if (customizationData && typeof customizationData === 'object') {
-    try {
-      parts.push(JSON.stringify(customizationData));
-    } catch (_) {
-      parts.push(String(customizationData));
-    }
-  } else if (customizationData) {
-    parts.push(String(customizationData));
+  
+  // Start with base description
+  if (baseImageDescription && typeof baseImageDescription === 'string' && baseImageDescription.trim()) {
+    parts.push(baseImageDescription.trim());
+  } else {
+    parts.push('A safety garment');
   }
-  return parts.filter(Boolean).join(' | ');
+  
+  // Add customization details
+  if (customizationData && typeof customizationData === 'object') {
+    const { productType, primaryColor, size, reflectiveTape, companyLogo, logoPlacement, customizationPrompt } = customizationData;
+    
+    if (productType) {
+      parts.push(`type: ${productType}`);
+    }
+    if (primaryColor) {
+      parts.push(`in ${primaryColor} color`);
+    }
+    if (reflectiveTape) {
+      parts.push('with 360° reflective tape');
+    }
+    if (companyLogo) {
+      parts.push(`with "${companyLogo}" logo on ${logoPlacement || 'front'}`);
+    }
+    if (customizationPrompt) {
+      parts.push(customizationPrompt);
+    }
+  }
+  
+  return parts.join(', ');
 }
-
-function parseDataUrl(input) {
-  if (typeof input !== 'string') return null;
-  const m = input.match(/^data:([^;]+);base64,(.*)$/i);
-  if (!m) return null;
-  return { mimeType: m[1], base64: m[2] };
-}
-
-function isLikelyBase64(input) {
-  if (typeof input !== 'string') return false;
-  if (/[^A-Za-z0-9+/=]/.test(input)) return false;
-  return input.length % 4 === 0;
-}
-
-const PLACEHOLDER_PNG_BASE64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAGVwJm1qjIpgAAAABJRU5ErkJggg==';
 
 async function generateImageFromPrompt(prompt, productImage) {
-  const dataUrl = parseDataUrl(productImage);
-  if (dataUrl) {
-    return { imageBase64: dataUrl.base64, mimeType: dataUrl.mimeType };
+  try {
+    const apiKey = process.env.STABILITY_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('STABILITY_API_KEY is not configured in environment variables');
+    }
+
+    const payload = {
+      prompt: prompt,
+      output_format: 'webp',
+      aspect_ratio: '1:1'
+    };
+
+    const response = await axios.postForm(
+      'https://api.stability.ai/v2beta/stable-image/generate/ultra',
+      axios.toFormData(payload, new FormData()),
+      {
+        validateStatus: undefined,
+        responseType: 'arraybuffer',
+        headers: { 
+          Authorization: `Bearer ${apiKey}`, 
+          Accept: 'image/*' 
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      const imageBase64 = Buffer.from(response.data).toString('base64');
+      return { 
+        imageBase64, 
+        mimeType: 'image/webp' 
+      };
+    } else {
+      const errorText = Buffer.from(response.data).toString('utf-8');
+      throw new Error(`Stability AI API error (${response.status}): ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Stability AI generation error:', error.message);
+    throw error;
   }
-  if (isLikelyBase64(productImage)) {
-    return { imageBase64: productImage, mimeType: 'image/png' };
-  }
-  return { imageBase64: PLACEHOLDER_PNG_BASE64, mimeType: 'image/png' };
 }
 
 module.exports = { buildCustomizationPrompt, generateImageFromPrompt };
