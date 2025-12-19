@@ -37,20 +37,6 @@ export const updateCustomerStatus = createAsyncThunk(
   }
 );
 
-export const updateCustomerRole = createAsyncThunk(
-  'customers/updateCustomerRole',
-  async ({ id, role }, { rejectWithValue }) => {
-    try {
-      const data = await adminService.updateUserRole(id, role);
-      return data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to update customer role'
-      );
-    }
-  }
-);
-
 const customerSlice = createSlice({
   name: 'customers',
   initialState,
@@ -77,17 +63,6 @@ const customerSlice = createSlice({
       })
       // Update Customer Status
       .addCase(updateCustomerStatus.fulfilled, (state, action) => {
-        if (action.payload.data) {
-          const index = state.customers.findIndex(
-            (c) => c._id === action.payload.data._id
-          );
-          if (index !== -1) {
-            state.customers[index] = action.payload.data;
-          }
-        }
-      })
-      // Update Customer Role
-      .addCase(updateCustomerRole.fulfilled, (state, action) => {
         if (action.payload.data) {
           const index = state.customers.findIndex(
             (c) => c._id === action.payload.data._id

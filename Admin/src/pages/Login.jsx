@@ -41,8 +41,8 @@ const Login = () => {
       if (login.fulfilled.match(result)) {
         // Check if user is admin
         if (result.payload && result.payload.user && result.payload.user.role === 'admin') {
-          navigate('/dashboard');
-        } else {
+      navigate('/dashboard');
+    } else {
           setError('Access denied. Admin privileges required.');
           dispatch({ type: 'auth/logout' });
         }
