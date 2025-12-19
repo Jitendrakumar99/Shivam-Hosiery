@@ -77,6 +77,12 @@ const Cart = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold mb-2">{product.name}</h3>
+                        {item.variant && (
+                          <div className="text-sm text-gray-500 mb-2">
+                            <span className="mr-3">Size: {item.variant.size}</span>
+                            {item.variant.color && <span>Color: {item.variant.color}</span>}
+                          </div>
+                        )}
                         <p className="text-gray-600 mb-2">₹{item.price} each</p>
                         <div className="flex items-center gap-4">
                           <label className="text-sm font-semibold">Quantity:</label>

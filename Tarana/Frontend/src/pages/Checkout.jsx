@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 const RelatedProductsSection = ({ orderedItems }) => {
   const { products } = useAppSelector((state) => state.products);
   const orderedProductIds = orderedItems.map(item => item.product._id || item.product.id);
-  
+
   // Filter out products that were already ordered and get related products
   const relatedProducts = products
     .filter(product => !orderedProductIds.includes(product._id || product.id))
@@ -43,8 +43,8 @@ const RelatedProductsSection = ({ orderedItems }) => {
                 <span className="text-gray-400 text-sm">No Image</span>
               </div>
             )}
-            <h3 className="font-semibold text-sm mb-2">{product.name}</h3>
-            <p className="text-trana-orange font-bold">₹{product.price}</p>
+            <h3 className="font-semibold text-sm mb-2">{product.name || product.title}</h3>
+            <p className="text-trana-orange font-bold">₹{product.pricing?.price || product.price || 0}</p>
           </Link>
         ))}
       </div>
@@ -128,7 +128,7 @@ const Checkout = () => {
           return;
         }
       }
-      
+
       // Use default address if available
       if (user.addresses && user.addresses.length > 0) {
         const defaultAddress = user.addresses.find(addr => addr.isDefault) || user.addresses[0];
@@ -234,6 +234,7 @@ const Checkout = () => {
         product: item.product._id || item.product.id,
         quantity: item.quantity,
         price: item.price,
+        customization: item.variant ? { Size: item.variant.size, Color: item.variant.color || '' } : undefined
       })),
       shippingAddress: {
         name: formData.name,
@@ -251,26 +252,29 @@ const Checkout = () => {
     if (createOrder.fulfilled.match(result)) {
       const createdOrder = result.payload.data;
       setTrackingId(createdOrder.trackingNumber || createdOrder._id?.slice(-12).toUpperCase());
-      
+
       // Store ordered items and total before clearing cart
       setOrderedItems([...items]);
       setOrderTotal(total);
-      
+
       // Fetch the full order details
       if (createdOrder._id) {
         await dispatch(fetchOrder(createdOrder._id));
       }
-      
+
       // Fetch related products based on ordered items
       if (items.length > 0) {
-        const firstProductCategory = items[0].product?.category;
-        if (firstProductCategory) {
-          dispatch(fetchProducts({ category: firstProductCategory, limit: 8 }));
+        // category can be object or string depending on population depth
+        const cat = items[0].product?.category;
+        const categoryName = typeof cat === 'object' ? cat?.name : cat;
+
+        if (categoryName) {
+          dispatch(fetchProducts({ category: categoryName, limit: 8 }));
         } else {
           dispatch(fetchProducts({ limit: 8 }));
         }
       }
-      
+
       dispatch(clearCart());
       setOrderPlaced(true);
       toast.success('Order placed successfully!');
@@ -331,8 +335,15 @@ const Checkout = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-1">{item.product.name}</h3>
+                      {item.customization && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          {Object.entries(item.customization).map(([key, value]) => value && `${key}: ${value}`).filter(Boolean).join(', ')}
+                        </p>
+                      )}
                       {item.product.category && (
-                        <p className="text-sm text-gray-500 mb-1">{item.product.category}</p>
+                        <p className="text-sm text-gray-500 mb-1">
+                          {typeof item.product.category === 'object' ? item.product.category.name : item.product.category}
+                        </p>
                       )}
                       <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                     </div>
@@ -458,7 +469,7 @@ const Checkout = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
               <h2 className="text-2xl font-bold mb-6">Shipping Information</h2>
-              
+
               {/* Saved Addresses Selection */}
               {user?.addresses && user.addresses.length > 0 && (
                 <div className="mb-6">
@@ -468,11 +479,10 @@ const Checkout = () => {
                       <div
                         key={address._id}
                         onClick={() => setSelectedAddressId(address._id)}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                          selectedAddressId === address._id
-                            ? 'border-trana-orange bg-orange-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition ${selectedAddressId === address._id
+                          ? 'border-trana-orange bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}
                       >
                         {address.isDefault && (
                           <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mb-2">
@@ -654,6 +664,11 @@ const Checkout = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-sm mb-1">{product.name}</h3>
+                        {item.variant && (
+                          <p className="text-xs text-gray-500 mb-1">
+                            Size: {item.variant.size} {item.variant.color && `| Color: ${item.variant.color}`}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
                         <p className="text-sm font-semibold text-trana-orange">
                           ₹{item.price * item.quantity}

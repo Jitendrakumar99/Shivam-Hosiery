@@ -79,8 +79,8 @@ const Orders = () => {
     return orderUserId === currentUserId;
   });
 
-  const filteredOrders = filter === 'all' 
-    ? userOrders 
+  const filteredOrders = filter === 'all'
+    ? userOrders
     : userOrders.filter(order => order.status === filter);
 
   if (!isAuthenticated) {
@@ -117,11 +117,10 @@ const Orders = () => {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${
-                filter === status
-                  ? 'bg-trana-orange text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${filter === status
+                ? 'bg-trana-orange text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </button>
@@ -192,8 +191,15 @@ const Orders = () => {
                               </div>
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900">{product.name || item.name || 'Product'}</h4>
+                                {item.customization && (
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    {Object.entries(item.customization).map(([key, value]) => value && `${key}: ${value}`).filter(Boolean).join(', ')}
+                                  </p>
+                                )}
                                 {product.category && (
-                                  <p className="text-sm text-gray-500">{product.category}</p>
+                                  <p className="text-sm text-gray-500">
+                                    {typeof product.category === 'object' ? product.category.name : product.category}
+                                  </p>
                                 )}
                                 <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                               </div>

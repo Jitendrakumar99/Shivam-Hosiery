@@ -1,6 +1,6 @@
 const Customization = require('../models/Customization');
 const { clearCache } = require('../middlewares/cache');
-// const { generateImageFromPrompt, buildCustomizationPrompt } = require('../services/imageGenerationService');
+const { generateImageFromPrompt, buildCustomizationPrompt } = require('../services/imageGenerationService');
 
 // @desc    Create customization request
 // @route   POST /api/customizations

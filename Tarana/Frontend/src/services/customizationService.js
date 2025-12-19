@@ -25,6 +25,8 @@ export const customizationService = {
       customizationData,
       productImage,
       baseImageDescription
+    }, {
+      timeout: 60000 // 60 seconds for AI image generation
     });
     return response.data;
   }
