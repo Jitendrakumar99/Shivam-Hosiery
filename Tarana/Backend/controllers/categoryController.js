@@ -1,11 +1,12 @@
 const Category = require('../models/Category');
+const Product = require('../models/Product');
 const { clearCache } = require('../middlewares/cache');
 // @desc    Get all categories
 // @route   GET /api/categories
 // @access  Public
 exports.getCategories = async (req, res, next) => {
   try {
-    const { status, parent } = req.query;
+    const { status, parent, populateChildren } = req.query;
     
     const query = {};
     if (status) {
@@ -15,9 +16,16 @@ exports.getCategories = async (req, res, next) => {
       query.parent = parent === 'null' || parent === '' ? null : parent;
     }
 
-    const categories = await Category.find(query)
+    let categoriesQuery = Category.find(query)
       .populate('parent', 'name slug')
       .sort({ name: 1 });
+
+    // If populateChildren is true, also populate the children virtual field
+    if (populateChildren === 'true') {
+      categoriesQuery = categoriesQuery.populate('children');
+    }
+
+    const categories = await categoriesQuery;
 
     res.json({
       success: true,
@@ -91,6 +99,7 @@ exports.updateCategory = async (req, res, next) => {
       });
     }
 
+    const prevName = category.name;
     category = await Category.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
@@ -98,6 +107,16 @@ exports.updateCategory = async (req, res, next) => {
 
     clearCache('/api/categories');
     clearCache(`/api/categories/${req.params.id}`);
+    clearCache('/api/products');
+
+    // If category name changed, sync embedded category name in products
+    if (prevName !== category.name) {
+      await Product.updateMany(
+        { 'category.id': category._id },
+        { $set: { 'category.name': category.name } }
+      );
+      clearCache('/api/products');
+    }
 
     res.json({
       success: true,
@@ -132,6 +151,7 @@ exports.deleteCategory = async (req, res, next) => {
 
     clearCache('/api/categories');
     clearCache(`/api/categories/${req.params.id}`);
+    clearCache('/api/products');
 
     res.json({
       success: true,

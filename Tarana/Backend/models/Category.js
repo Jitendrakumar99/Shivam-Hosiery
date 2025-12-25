@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema(
       required: [true, 'Category name is required'],
       unique: true,
       trim: true,
-      maxlength: [100, 'Category name cannot exceed 100 characters']
+      maxlength: [150, 'Category name cannot exceed 100 characters']
     },
     description: {
       type: String,
@@ -37,6 +37,13 @@ const categorySchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Virtual field to get subcategories
+categorySchema.virtual('children', {
+  ref: 'Category',
+  localField: '_id',
+  foreignField: 'parent'
+});
 
 // Generate slug from name before saving
 categorySchema.pre('save', function(next) {

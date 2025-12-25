@@ -1,4 +1,6 @@
 const Product = require('../models/Product');
+const Category = require('../models/Category');
+const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
 
 // Helper function to normalize category name
@@ -46,39 +48,103 @@ const normalizeCategory = (category) => {
 // @access  Public
 exports.getProducts = async (req, res, next) => {
   try {
-    const { category, search, status = 'active' } = req.query;
+    const { category, categoryId, categorySlug, parentId, parentSlug, parent, search, status = 'active' } = req.query;
     const { startIndex, limit } = req.pagination || { startIndex: 0, limit: 10 };
 
-    // Build query
-    const query = { status };
-    if (category) {
-      const normalizedCategory = normalizeCategory(category);
-      query['category.name'] = normalizedCategory;
-    }
+    // Base product match (product status)
+    const baseMatch = { status };
+
+    // Text search conditions on products
+    const searchMatch = {};
     if (search) {
-      // Use regex for case-insensitive partial matching instead of text search
-      // Escape special regex characters
       const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      query.$or = [
+      searchMatch.$or = [
         { title: { $regex: escapedSearch, $options: 'i' } },
         { description: { $regex: escapedSearch, $options: 'i' } },
         { shortDescription: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
-    // When searching, skip pagination to show all results
-    let products;
-    if (search) {
-      products = await Product.find(query)
-        .sort({ createdAt: -1 });
-    } else {
-      products = await Product.find(query)
-        .skip(startIndex)
-        .limit(limit)
-        .sort({ createdAt: -1 });
+    // Category filter settings
+    const categoryFilters = [];
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      categoryFilters.push({ 'categoryDoc._id': new mongoose.Types.ObjectId(categoryId) });
+    }
+    if (categorySlug) {
+      categoryFilters.push({ 'categoryDoc.slug': categorySlug.toString().toLowerCase() });
+    }
+    if (category) {
+      const normalizedCategory = normalizeCategory(category);
+      categoryFilters.push({ 'categoryDoc.name': normalizedCategory });
     }
 
-    const total = await Product.countDocuments(query);
+    // Parent category filters (include products whose category is the parent itself or a child with that parent)
+    const parentFilters = [];
+    if (parentId && mongoose.Types.ObjectId.isValid(parentId)) {
+      const pid = new mongoose.Types.ObjectId(parentId);
+      parentFilters.push({ 'categoryDoc.parent': pid });
+      parentFilters.push({ 'categoryDoc._id': pid });
+    }
+    if (parentSlug) {
+      const ps = parentSlug.toString().toLowerCase();
+      // We'll also join parent category to filter by its slug reliably
+      parentFilters.push({ 'categoryDoc.slug': ps });
+      parentFilters.push({ 'parentDoc.slug': ps });
+    }
+    if (parent) {
+      const normalizedParent = normalizeCategory(parent);
+      parentFilters.push({ 'categoryDoc.name': normalizedParent });
+      parentFilters.push({ 'parentDoc.name': normalizedParent });
+    }
+
+    const pipeline = [
+      { $match: { ...baseMatch, ...searchMatch } },
+      // Join categories to enforce category status filtering
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category.id',
+          foreignField: '_id',
+          as: 'categoryDoc'
+        }
+      },
+      { $unwind: { path: '$categoryDoc', preserveNullAndEmptyArrays: true } },
+      // Lookup parent category for parent-based filtering
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'categoryDoc.parent',
+          foreignField: '_id',
+          as: 'parentDoc'
+        }
+      },
+      { $unwind: { path: '$parentDoc', preserveNullAndEmptyArrays: true } },
+      // Exclude products with missing category or inactive category
+      { $match: { 'categoryDoc.status': 'active' } },
+    ];
+
+    if (categoryFilters.length > 0) {
+      pipeline.push({ $match: { $or: categoryFilters } });
+    }
+    if (parentFilters.length > 0) {
+      pipeline.push({ $match: { $or: parentFilters } });
+    }
+
+    // Sorting and pagination
+    pipeline.push({ $sort: { createdAt: -1 } });
+    const countPipeline = pipeline.map(stage => ({ ...stage }));
+
+    if (!search) {
+      pipeline.push({ $skip: startIndex });
+      pipeline.push({ $limit: limit });
+    }
+
+    const [products, totalAgg] = await Promise.all([
+      Product.aggregate(pipeline),
+      Product.aggregate([...countPipeline, { $count: 'total' }])
+    ]);
+
+    const total = totalAgg[0]?.total || 0;
 
     res.json({
       success: true,
@@ -103,7 +169,24 @@ exports.getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (!product) {
+    if (!product || product.status !== 'active') {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Ensure product's category is active
+    if (product.category?.id) {
+      const cat = await Category.findById(product.category.id).select('status');
+      if (!cat || cat.status !== 'active') {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+      }
+    } else {
+      // No category id -> hide product
       return res.status(404).json({
         success: false,
         message: 'Product not found'
