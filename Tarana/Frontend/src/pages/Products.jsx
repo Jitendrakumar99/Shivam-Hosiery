@@ -42,6 +42,7 @@ const Products = () => {
     return decoded; // Return as-is if no match
   };
 
+  const parentSlug = searchParams.get('parentSlug');
   const [selectedCategory, setSelectedCategory] = useState(
     normalizeCategoryFromURL(searchParams.get('category')) || 'all'
   );
@@ -58,6 +59,8 @@ const Products = () => {
     const params = {};
     if (selectedCategory && selectedCategory !== 'all') {
       params.category = selectedCategory;
+    } else if (parentSlug) {
+      params.parentSlug = parentSlug;
     }
     if (searchQuery && searchQuery.trim()) {
       params.search = searchQuery.trim();
@@ -67,7 +70,7 @@ const Products = () => {
       params.page = currentPage;
     }
     dispatch(fetchProducts(params));
-  }, [dispatch, selectedCategory, searchQuery, currentPage]);
+  }, [dispatch, selectedCategory, searchQuery, currentPage, parentSlug]);
 
   // Reset to page 1 when search or category changes
   useEffect(() => {
@@ -105,16 +108,28 @@ const Products = () => {
     const categoryValue = category === 'All' ? 'all' : category;
     setSelectedCategory(categoryValue);
     if (categoryValue === 'all') {
-      setSearchParams({});
+      // Preserve parentSlug if present
+      if (parentSlug) {
+        setSearchParams({ parentSlug });
+      } else {
+        setSearchParams({});
+      }
     } else {
       // Convert to URL-friendly format (lowercase with hyphens)
       const urlCategory = categoryValue.toLowerCase().replace(/\s+/g, '-');
-      setSearchParams({ category: urlCategory });
+      // Preserve parentSlug for context
+      if (parentSlug) {
+        setSearchParams({ parentSlug, category: urlCategory });
+      } else {
+        setSearchParams({ category: urlCategory });
+      }
     }
   };
 
   // Build categories array with 'All' option plus dynamic categories from database
-  const categoryOptions = ['All', ...categories.map(cat => cat.name)];
+  // Build child categories list; hide parent categories from the filter options
+  const childCategories = categories.filter(cat => cat.parent && (!parentSlug || cat.parent.slug === parentSlug));
+  const categoryOptions = ['All', ...childCategories.map(cat => cat.name)];
 
   // Filter products client-side for search query
   // This client-side filter is no longer needed as search is handled by the backend.
@@ -153,9 +168,10 @@ const Products = () => {
 
       {/* Search and Filters */}
       <section className="py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="w-full md:w-1/3">
+        <div className="max-w-5xl mx-auto px-4 md:px-8">
+          <div className="flex flex-col gap-4">
+            {/* Full width search bar */}
+            <div className="w-full">
               <div className="relative">
                 <input
                   type="text"
@@ -169,21 +185,25 @@ const Products = () => {
                 </svg>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categoryOptions.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`px-4 py-2 rounded-lg transition ${(selectedCategory === 'all' && category === 'All') ||
-                    category === selectedCategory
-                    ? 'bg-trana-orange text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-                    }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+            
+            {/* Category filters - only show when there's a parentSlug */}
+            {parentSlug && (
+              <div className="flex flex-wrap gap-2">
+                {categoryOptions.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => handleCategoryChange(category)}
+                    className={`px-4 py-2 rounded-lg transition ${(selectedCategory === 'all' && category === 'All') ||
+                      category === selectedCategory
+                      ? 'bg-trana-orange text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                      }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

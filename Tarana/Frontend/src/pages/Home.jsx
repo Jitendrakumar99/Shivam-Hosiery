@@ -9,12 +9,35 @@ const Home = () => {
   const { categories, loading } = useAppSelector((state) => state.categories);
 
   useEffect(() => {
-    dispatch(fetchCategories({ status: 'active' }));
+    // Fetch only top-level (parent) categories that are active
+    dispatch(fetchCategories({ status: 'active', parent: 'null' }));
   }, [dispatch]);
 
-  const handleCategoryClick = (categoryName) => {
-    const urlCategory = categoryName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/products?category=${urlCategory}`);
+  const handleCategoryClick = (category) => {
+    // Navigate to products page filtered by parent category (by slug)
+    const slug = (category.slug || category.name.toLowerCase().replace(/\s+/g, '-'));
+    navigate(`/products?parentSlug=${slug}`);
+  };
+
+  // No slider needed; render as a single row without scroll
+
+  // Only show the required parent categories in the specified order
+  const parentOrder = [
+    'Healthcare',
+    'Hospitality',
+    'Industry',
+    'Police and defence'
+  ];
+  const parentCategories = parentOrder
+    .map(name => categories.find(c => c.name === name))
+    .filter(Boolean);
+
+  // Static hero images for the 4 parent tiles
+  const parentImages = {
+    Hospitality: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop',
+    Healthcare: 'https://images.unsplash.com/photo-1584985592272-72f33dfdd0ec?q=80&w=1600&auto=format&fit=crop',
+    Industry: 'https://images.unsplash.com/photo-1503852460964-8e8a1f1c1a47?q=80&w=1600&auto=format&fit=crop',
+    'Police and defence': 'https://images.unsplash.com/photo-1565548064290-1c1fb9fd1eb1?q=80&w=1600&auto=format&fit=crop'
   };
 
   return (
@@ -102,36 +125,27 @@ const Home = () => {
               <p className="text-gray-600">Loading categories...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {categories.map((category) => (
-                <div 
-                  key={category._id} 
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
-                  onClick={() => handleCategoryClick(category.name)}
+            <div className="grid grid-cols-4 gap-6">
+              {parentCategories.map((category) => (
+                <div
+                  key={category._id || category.id}
+                  className="relative rounded-lg overflow-hidden group cursor-pointer"
+                  onClick={() => handleCategoryClick(category)}
                 >
-                  <div className="h-64 bg-gray-200 overflow-hidden">
-                    {category.image ? (
-                      <img 
-                        src={category.image} 
-                        alt={category.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="h-full flex items-center justify-center">
-                        <span className="text-gray-500">{category.name} Image</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{category.name}</h3>
-                    <p className="text-gray-600 mb-4">
-                      {category.description || 'High-quality safety garments for your protection.'}
-                    </p>
-                    <button 
-                      className="inline-block bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
-                    >
-                      View Collection
-                    </button>
+                  <img
+                    src={category.image || parentImages[category.name] || parentImages.Hospitality}
+                    alt={category.name}
+                    className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      // Fallback to static image if category image fails to load
+                      if (e.target.src !== parentImages[category.name]) {
+                        e.target.src = parentImages[category.name] || parentImages.Hospitality;
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/35" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white text-2xl font-bold drop-shadow-md">{category.name === 'Police and defence' ? 'Police' : category.name}</span>
                   </div>
                 </div>
               ))}

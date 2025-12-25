@@ -14,6 +14,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     title: '',
     description: '',
     shortDescription: '',
+    parentCategory: '',
+    subCategory: '',
     category: '',
     pricing: {
       price: '',
@@ -44,15 +46,35 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
   });
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchCategories({ populateChildren: 'true' }));
   }, [dispatch]);
 
   useEffect(() => {
     if (product && mode === 'edit') {
+      // Find parent and subcategory from product category
+      const productCategory = categories.find(c => c._id === product.category || c.name === product.category);
+      let parentCategory = '';
+      let subCategory = '';
+      
+      if (productCategory) {
+        if (productCategory.parent) {
+          // This is a subcategory, find its parent
+          const parent = categories.find(c => c._id === productCategory.parent);
+          parentCategory = parent?._id || '';
+          subCategory = productCategory._id || '';
+        } else {
+          // This is a parent category
+          parentCategory = productCategory._id || '';
+          subCategory = '';
+        }
+      }
+
       setFormData({
         title: product.title || product.name || '',
         description: product.description || '',
         shortDescription: product.shortDescription || '',
+        parentCategory,
+        subCategory,
         category: product.category?.name || product.category || '',
         pricing: {
           price: product.pricing?.price || product.price || '',
@@ -84,6 +106,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         title: '',
         description: '',
         shortDescription: '',
+        parentCategory: '',
+        subCategory: '',
         category: '',
         pricing: { price: '', compareAtPrice: '' },
         images: [''],
@@ -93,7 +117,39 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         status: 'active',
       });
     }
-  }, [product, mode, isOpen]);
+  }, [product, mode, isOpen, categories]);
+
+  // Helper functions for category selection
+  const getParentCategories = () => {
+    return categories.filter(c => !c.parent);
+  };
+
+  const getSubCategories = (parentId) => {
+    const parent = categories.find(c => (c._id === parentId || c.id === parentId));
+    if (parent && parent.children) {
+      return parent.children;
+    }
+    // Fallback to manual filtering
+    return categories.filter(c => c.parent && (c.parent._id === parentId || c.parent === parentId));
+  };
+
+  const availableSubCategories = getSubCategories(formData.parentCategory);
+
+  const handleParentCategoryChange = (e) => {
+    const newParentId = e.target.value;
+    setFormData({
+      ...formData,
+      parentCategory: newParentId,
+      subCategory: '', // Reset subcategory when parent changes
+    });
+  };
+
+  const handleSubCategoryChange = (e) => {
+    setFormData({
+      ...formData,
+      subCategory: e.target.value,
+    });
+  };
 
   const handleAddVariant = () => {
     if (!newVariant.size || !newVariant.price || !newVariant.quantity) {
@@ -146,12 +202,17 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     e.preventDefault();
 
     // Construct payload
+    // Determine the category to use (subcategory if selected, otherwise parent)
+    const selectedCategoryId = formData.subCategory || formData.parentCategory;
+    const selectedCategory = categories.find(c => (c._id === selectedCategoryId || c.id === selectedCategoryId));
+    
     const payload = {
       title: formData.title,
       description: formData.description,
       shortDescription: formData.shortDescription,
       category: {
-        name: formData.category,
+        id: selectedCategoryId,
+        name: selectedCategory?.name || '',
       },
       pricing: {
         price: parseFloat(formData.pricing.price),
@@ -241,32 +302,49 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Parent Category *</label>
                 <select
                   required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.parentCategory}
+                  onChange={handleParentCategoryChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
                 >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id || cat._id} value={cat.name}>
+                  <option value="">Select Parent Category</option>
+                  {getParentCategories().map((cat) => (
+                    <option key={cat._id || cat.id} value={cat._id || cat.id}>
                       {cat.name}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Sub Category</label>
                 <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+                  value={formData.subCategory}
+                  onChange={handleSubCategoryChange}
+                  disabled={!formData.parentCategory}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500 disabled:bg-gray-100"
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="">Select Sub Category</option>
+                  {availableSubCategories.map((cat) => (
+                    <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
 
             <div>

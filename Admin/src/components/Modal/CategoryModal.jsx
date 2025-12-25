@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { useDispatch, useSelector } from 'react-redux';
-import { createCategory, updateCategory } from '../../store/slices/categorySlice';
+import { createCategory, updateCategory, fetchCategories } from '../../store/slices/categorySlice';
 
-const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
+const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', defaultParent = '' }) => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.categories);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
     status: 'active',
     image: '',
     parent: '',
@@ -18,7 +17,6 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
     if (category && mode === 'edit') {
       setFormData({
         name: category.name || '',
-        description: category.description || '',
         status: category.status || 'active',
         image: category.image || '',
         parent: category.parent?._id || category.parent || '',
@@ -26,36 +24,51 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
     } else {
       setFormData({
         name: '',
-        description: '',
         status: 'active',
         image: '',
-        parent: '',
+        parent: defaultParent || '',
       });
     }
-  }, [category, mode, isOpen]);
+  }, [category, mode, isOpen, defaultParent]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
       ...formData,
       parent: formData.parent || null, // Ensure empty string becomes null
     };
 
-    if (mode === 'edit' && category) {
-      dispatch(updateCategory({
-        id: category._id || category.id,
-        categoryData: payload,
-      }));
-    } else {
-      dispatch(createCategory(payload));
+    try {
+      if (mode === 'edit' && category) {
+        // Prevent editing parent in edit mode
+        delete payload.parent;
+        // Ensure description is not sent
+        delete payload.description;
+        dispatch(updateCategory({
+          id: category._id || category.id,
+          categoryData: payload,
+        })).then(() => {
+          // Refresh categories with populated children to reflect changes
+          dispatch(fetchCategories({ populateChildren: 'true' }));
+        });
+      } else {
+        dispatch(createCategory(payload)).then(() => {
+          // Refresh categories with populated children to reflect new category
+          dispatch(fetchCategories({ populateChildren: 'true' }));
+        });
+      }
+      onClose();
+    } catch (_) {
+      // Keep modal open on error; errors are handled by slice
     }
-    onClose();
   };
 
   // Filter out the current category from potential parents to prevent cycles (simple check)
   const availableParents = categories.filter(c =>
     mode !== 'edit' || (c._id !== category?._id && c.id !== category?.id)
   );
+  const selectedParentObj = categories.find(c => (c._id === defaultParent || c.id === defaultParent));
+  const selectedParentName = selectedParentObj?.name || '';
 
   return (
     <Modal
@@ -79,50 +92,36 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add' }) => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Category Image URL
-          </label>
-          <input
-            type="text"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-            placeholder="https://example.com/image.jpg"
-          />
-        </div>
+        {!(mode === 'add' && !!defaultParent) && !(mode === 'edit' && !!category?.parent) && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Category Image URL
+            </label>
+            <input
+              type="text"
+              value={formData.image}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Parent Category
-          </label>
-          <select
-            value={formData.parent}
-            onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
-          >
-            <option value="">None (Top Level)</option>
-            {availableParents.map((cat) => (
-              <option key={cat._id || cat.id} value={cat._id || cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            required
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] resize-none"
-            placeholder="Enter category description"
-          />
-        </div>
+        {mode === 'add' && !!defaultParent && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Parent Category
+            </label>
+            <input
+              type="text"
+              value={selectedParentName}
+              disabled
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+              placeholder="Selected parent"
+            />
+          </div>
+        )}
+        {/* Description removed as requested */}
 
         <div className="flex items-center">
           <input
