@@ -35,15 +35,11 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       keywords: '',
     },
     status: 'active',
+    minOrderQuantity: 0,
   });
 
   // Helper for variant management
-  const [newVariant, setNewVariant] = useState({
-    size: '',
-    color: '',
-    price: '',
-    quantity: '',
-  });
+  const [variantColor, setVariantColor] = useState('');
 
   useEffect(() => {
     dispatch(fetchCategories({ populateChildren: 'true' }));
@@ -92,6 +88,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           color: v.color,
           price: v.price,
           quantity: v.inventory?.quantity
+
         })) || [],
         seo: {
           title: product.seo?.title || '',
@@ -99,6 +96,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           keywords: product.seo?.keywords?.join(', ') || '',
         },
         status: product.status || 'active',
+        minOrderQuantity: product.minOrderQuantity || 0,
       });
     } else {
       // Reset form
@@ -115,6 +113,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         variants: [],
         seo: { title: '', description: '', keywords: '' },
         status: 'active',
+        minOrderQuantity: 0,
       });
     }
   }, [product, mode, isOpen, categories]);
@@ -151,45 +150,47 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     });
   };
 
-  const handleAddVariant = () => {
-    if (!newVariant.size || !newVariant.price || !newVariant.quantity) {
-      alert('Size, Price, and Quantity are required for a variant');
-      return;
-    }
-    setFormData({
-      ...formData,
-      variants: [...formData.variants, { ...newVariant }]
-    });
-    setNewVariant({ size: '', color: '', price: formData.pricing.price || '', quantity: '' });
-  };
-
-  const handleGenerateVariants = () => {
+  const handleAddColorVariants = (colorInput) => {
+    const color = (typeof colorInput === 'string' ? colorInput : variantColor);
     const price = formData.pricing.price;
+
     if (!price) {
-      alert('Please set a Default Price first to generate variants.');
+      alert('Please set a Default Price first.');
+      return;
+    }
+    if (!color) {
+      alert('Please enter or select a color.');
       return;
     }
 
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-    const colors = ['Red', 'Blue'];
-    const generatedVariants = [];
+    const colorExists = formData.variants.some(v => v.color?.toLowerCase() === color.toLowerCase());
+    if (colorExists) {
+      alert(`Color "${color}" is already added.`);
+      return;
+    }
 
-    sizes.forEach(size => {
-      colors.forEach(color => {
-        generatedVariants.push({
-          size,
-          color,
-          price: price,
-          quantity: 100 // Default quantity
-        });
-      });
-    });
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
+    const newVariants = sizes.map(size => ({
+      size,
+      color,
+      price: price,
+      quantity: 100 // Default quantity
+    }));
 
     setFormData({
       ...formData,
-      variants: generatedVariants
+      variants: [...formData.variants, ...newVariants]
+    });
+    setVariantColor('');
+  };
+
+  const handleRemoveColorVariants = (colorToRemove) => {
+    setFormData({
+      ...formData,
+      variants: formData.variants.filter(v => v.color !== colorToRemove)
     });
   };
+
 
   const handleRemoveVariant = (index) => {
     setFormData({
@@ -232,7 +233,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         description: formData.seo.description,
         keywords: formData.seo.keywords.split(',').map(k => k.trim()).filter(Boolean)
       },
-      status: formData.status
+      status: formData.status,
+      minOrderQuantity: parseInt(formData.minOrderQuantity) || 0,
     };
 
     try {
@@ -300,7 +302,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Parent Category *</label>
                 <select
@@ -332,6 +334,17 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Min Order Qty</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.minOrderQuantity}
+                  onChange={(e) => setFormData({ ...formData, minOrderQuantity: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+                  placeholder="Min quantity"
+                />
               </div>
             </div>
 
@@ -442,76 +455,143 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold">Variants</h4>
-                <button
-                  type="button"
-                  onClick={handleGenerateVariants}
-                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
-                  title="Generates 10 variants: S, M, L, XL, XXL x Red, Blue"
-                >
-                  Generate Default Variants
-                </button>
-              </div>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Select Color to Add All Sizes
+                </label>
 
-              <div className="flex flex-wrap gap-2 mb-4 items-end bg-gray-50 p-3 rounded">
-                <div>
-                  <label className="block text-xs text-gray-600">Size</label>
-                  <select
-                    value={newVariant.size}
-                    onChange={(e) => setNewVariant({ ...newVariant, size: e.target.value })}
-                    className="w-24 px-2 py-1 border rounded"
+                <div className="flex flex-wrap gap-3 items-center">
+                  {/* Preset Colors */}
+                  <div className="flex gap-2">
+                    {['Red', 'Blue', 'Black', 'White', 'Green', 'Yellow', 'Pink'].map(
+                      (color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setVariantColor(color.toLowerCase())}
+                          className={`group flex flex-col items-center gap-1 p-1 rounded transition-colors
+              ${variantColor === color.toLowerCase()
+                              ? 'bg-orange-50 ring-1 ring-orange-200'
+                              : 'hover:bg-gray-100'
+                            }`}
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full border border-gray-300 shadow-sm
+                         group-hover:scale-110 transition-transform"
+                            style={{ backgroundColor: color.toLowerCase() }}
+                          />
+                          <span
+                            className={`text-[10px] ${variantColor === color.toLowerCase()
+                              ? 'text-orange-600 font-bold'
+                              : 'text-gray-500'
+                              }`}
+                          >
+                            {color}
+                          </span>
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <div className="h-8 w-px bg-gray-300 mx-2" />
+
+                  {/* Custom Color Picker (Same Size & Style) */}
+                  <button
+                    type="button"
+                    className={`group flex flex-col items-center gap-1 p-1 rounded transition-colors
+        ${variantColor &&
+                        !['red', 'blue', 'black', 'white', 'green', 'yellow', 'pink'].includes(
+                          variantColor
+                        )
+                        ? 'bg-orange-50 ring-1 ring-orange-200'
+                        : 'hover:bg-gray-100'
+                      }`}
                   >
-                    <option value="">Select</option>
-                    {['S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'].map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600">Color</label>
+                    <label className="cursor-pointer">
+                      <input
+                        type="color"
+                        onChange={(e) => setVariantColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                      />
+                      <div
+                        className="w-8 h-8 rounded-full border border-gray-300 shadow-sm
+                     group-hover:scale-110 transition-transform"
+                        style={{ backgroundColor: variantColor || '#ffffff' }}
+                      />
+                    </label>
+                    <span className="text-[10px] text-gray-500">Custom</span>
+                  </button>
+
+                  {/* Color Name / Hex Input */}
                   <input
                     type="text"
                     list="variant-colors"
-                    value={newVariant.color}
-                    onChange={(e) => setNewVariant({ ...newVariant, color: e.target.value })}
-                    className="w-32 px-2 py-1 border rounded"
-                    placeholder="Color"
+                    value={variantColor}
+                    onChange={(e) => setVariantColor(e.target.value)}
+                    className="w-32 px-2 py-1.5 border text-sm rounded-lg"
+                    placeholder="Color / Hex"
                   />
+
                   <datalist id="variant-colors">
-                    {['Red', 'Blue', 'Green', 'Black', 'White', 'Yellow', 'Orange', 'Purple', 'Pink', 'Grey', 'Brown', 'Navy', 'Maroon', 'Beige', 'Cream'].map(c => (
-                      <option key={c} value={c} />
+                    {[
+                      'Green',
+                      'Yellow',
+                      'Orange',
+                      'Purple',
+                      'Pink',
+                      'Grey',
+                      'Brown',
+                      'Navy',
+                      'Maroon',
+                      'Beige',
+                      'Cream',
+                    ].map((c) => (
+                      <option key={c} value={c.toLowerCase()} />
                     ))}
                   </datalist>
+
+                  {/* Add Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleAddColorVariants()}
+                    className="bg-orange-500 text-white px-4 py-1.5 rounded text-sm font-semibold
+                 hover:bg-orange-600 transition-colors"
+                  >
+                    Add
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-600">Price</label>
-                  <input
-                    type="number"
-                    value={newVariant.price}
-                    onChange={(e) => setNewVariant({ ...newVariant, price: e.target.value })}
-                    className="w-24 px-2 py-1 border rounded"
-                    placeholder="Price"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600">Qty</label>
-                  <input
-                    type="number"
-                    value={newVariant.quantity}
-                    onChange={(e) => setNewVariant({ ...newVariant, quantity: e.target.value })}
-                    className="w-20 px-2 py-1 border rounded"
-                    placeholder="Qty"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddVariant}
-                  className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
-                >
-                  Add
-                </button>
+
+                <p className="text-[11px] text-gray-500 mt-2">
+                  * Select a color and click "Add" to generate variants for S, M, L, XL, XXL,
+                  XXXL, and Free Size.
+                </p>
               </div>
+
+
+              {/* Added Colors Management */}
+              {formData.variants.length > 0 && (
+                <div className="mb-4">
+                  <h5 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Manage Added Colors</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {[...new Set(formData.variants.map(v => v.color))].filter(Boolean).map(color => (
+                      <div key={color} className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm">
+                        <div className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: color.toLowerCase() }} />
+                        <span className="text-sm font-medium text-gray-700">{color}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveColorVariants(color)}
+                          className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                          title={`Delete all ${color} variants`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="border rounded overflow-hidden">
                 <table className="w-full text-sm">
