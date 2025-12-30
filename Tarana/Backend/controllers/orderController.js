@@ -166,6 +166,14 @@ exports.createOrder = async (req, res, next) => {
         });
       }
 
+      // Enforce minOrderQuantity
+      if (product.minOrderQuantity && item.quantity < product.minOrderQuantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Minimum order quantity for ${product.title} is ${product.minOrderQuantity}`
+        });
+      }
+
       let price = product.pricing?.price;
       let variant = null;
 
@@ -180,27 +188,10 @@ exports.createOrder = async (req, res, next) => {
 
         if (variant) {
           price = variant.price;
-          if (variant.inventory.quantity < item.quantity) {
-            return res.status(400).json({
-              success: false,
-              message: `Insufficient stock for ${product.title} (${size}${color ? ` - ${color}` : ''}). Available: ${variant.inventory.quantity}, Requested: ${item.quantity}`
-            });
-          }
-        } else {
-          // Fallback or error if variant requested but not found?
-          // Proceeding with base price if strict check not enforced, but warning:
         }
       }
 
-      // Stock check for non-variant or if no variant matched but product is simple
-      if (!variant) {
-        if (product.availability && product.availability.inStock === false) {
-          return res.status(400).json({
-            success: false,
-            message: `Product out of stock: ${product.title}`
-          });
-        }
-      }
+      // No stock check needed as we are manufacture
 
       if (price === undefined || price === null) {
         return res.status(500).json({
@@ -214,7 +205,6 @@ exports.createOrder = async (req, res, next) => {
       validatedItems.push({
         ...item,
         price: price, // Ensure correct price is saved
-        _variantId: variant ? variant._id : null // Keep track for stock update
       });
     }
 
@@ -228,35 +218,6 @@ exports.createOrder = async (req, res, next) => {
       deliveryZone: deliveryZone._id,
     });
 
-    // Update product stock
-    for (const item of validatedItems) {
-      if (item._variantId) {
-        // Update variant stock
-        await Product.findOneAndUpdate(
-          { _id: item.product, 'variants._id': item._variantId },
-          { $inc: { 'variants.$.inventory.quantity': -item.quantity } }
-        );
-      } else {
-        // Simple product - we can't decrement quantity as it doesn't exist, 
-        // but if we had it, we would here. 
-        // For now, do nothing or update inStock? 
-        // Schema doesn't allow decrementing boolean.
-      }
-
-      // Update global availability only if needed (complex logic omitted for brevity, usually pre-save hook handles it)
-      // Actually Product pre-save hook re-calculates inStock based on variants.
-      // So if we updated variant quantity, we should trigger a save?
-      // findOneAndUpdate might not trigger pre-save.
-      // Let's rely on the direct update for now. 
-      // To strictly trigger header update, we might need to findById and save.
-
-      const product = await Product.findById(item.product);
-      await product.save(); // This triggers the pre-save hook to update inStock
-
-      try {
-        clearCache(`/api/products/${item.product}`);
-      } catch (_) { }
-    }
     // Clear products list cache
     clearCache('/api/products');
 
@@ -304,40 +265,7 @@ exports.updateOrderStatus = async (req, res, next) => {
 
     const prevStatus = order.status;
 
-    // Handle stock adjustments based on status transitions
-    if (prevStatus !== 'cancelled' && status === 'cancelled') {
-      // Order is being cancelled now: restore stock
-      for (const item of order.items) {
-        // Identify if item had variant based on customization
-        const product = await Product.findById(item.product);
-        if (product && product.variants && product.variants.length > 0 && item.customization) {
-          const size = item.customization.get('Size') || item.customization.get('size'); // Map access
-          // For restore, we try to find the variant again
-          if (size) {
-            // We need to match precise variant
-            // This is tricky if variant data changed. 
-            // Ideally we should have stored variantId in order item, but schema doesn't have it explicitly.
-            // We rely on matching logic again.
-            const variant = product.variants.find(v => v.size === size); // heuristic
-            if (variant) {
-              variant.inventory.quantity += item.quantity;
-            }
-          }
-        }
-        if (product) await product.save();
-        try { clearCache(`/api/products/${item.product}`); } catch (_) { }
-      }
-      clearCache('/api/products');
-    } else if (prevStatus === 'cancelled' && status !== 'cancelled') {
-      // Order was cancelled before, now being re-activated: decrease stock again
-      for (const item of order.items) {
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: { stock: -item.quantity }
-        });
-        try { clearCache(`/api/products/${item.product}`); } catch (_) { }
-      }
-      clearCache('/api/products');
-    }
+    // No stock adjustments needed as we are manufacture
 
     order.status = status;
     if (trackingNumber) {
@@ -404,25 +332,7 @@ exports.cancelOrder = async (req, res, next) => {
       });
     }
 
-    // Restore stock
-    for (const item of order.items) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        // Try to identify variant and restore stock
-        if (product.variants && product.variants.length > 0 && item.customization) {
-          const size = item.customization.get('Size') || item.customization.get('size');
-          if (size) {
-            const variant = product.variants.find(v => v.size === size);
-            if (variant) {
-              variant.inventory.quantity += item.quantity;
-            }
-          }
-        }
-        await product.save();
-      }
-      try { clearCache(`/api/products/${item.product}`); } catch (_) { }
-    }
-    // Clear products list cache
+    // Clear cache
     clearCache('/api/products');
 
     order.status = 'cancelled';

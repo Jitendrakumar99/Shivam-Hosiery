@@ -144,6 +144,11 @@ const productSchema = new mongoose.Schema({
       default: true
     }
   },
+  minOrderQuantity: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
   url: {
     type: String,
     default: ''
@@ -158,27 +163,22 @@ const productSchema = new mongoose.Schema({
 });
 
 // Generate handle from title before saving
-productSchema.pre('save', function(next) {
+productSchema.pre('save', function (next) {
   if (this.isModified('title') && !this.handle) {
     this.handle = this.title
       .toLowerCase()
       .replace(/\s+/g, '-')
       .replace(/[^\w-]+/g, '');
   }
-  
+
   // Set featured image if not set
   if (!this.featuredImage && this.images && this.images.length > 0) {
     this.featuredImage = this.images[0];
   }
-  
-  // Calculate availability from variants
-  if (this.variants && this.variants.length > 0) {
-    const totalStock = this.variants.reduce((total, variant) => {
-      return total + (variant.inventory?.quantity || 0);
-    }, 0);
-    this.availability.inStock = totalStock > 0;
-  }
-  
+
+  // Always in stock for manufacturer
+  this.availability.inStock = true;
+
   next();
 });
 

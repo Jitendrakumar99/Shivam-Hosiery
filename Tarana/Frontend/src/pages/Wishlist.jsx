@@ -34,7 +34,7 @@ const Wishlist = () => {
       return;
     }
     dispatch(addToCart({ product, quantity: 1 }));
-    toast.success(`${product.name || product.title} added to cart!`);
+    toast.success(`${product.title || product.name} added to cart!`);
   };
 
   if (!isAuthenticated) {

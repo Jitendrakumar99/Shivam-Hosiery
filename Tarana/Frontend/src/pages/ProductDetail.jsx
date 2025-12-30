@@ -25,6 +25,10 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [showSizeChart, setShowSizeChart] = useState(false);
+  const [useCustomColor, setUseCustomColor] = useState(false);
+  const [customColor, setCustomColor] = useState('#ff6600');
 
   useEffect(() => {
     if (id) {
@@ -41,11 +45,14 @@ const ProductDetail = () => {
 
   // Set default variant when product loads
   useEffect(() => {
-    if (product && product.variants && product.variants.length > 0) {
-      const firstVariant = product.variants[0];
-      setSelectedVariant(firstVariant);
-      setSelectedSize(firstVariant.size);
-      setSelectedColor(firstVariant.color || '');
+    if (product) {
+      if (product.variants && product.variants.length > 0) {
+        const firstVariant = product.variants[0];
+        setSelectedVariant(firstVariant);
+        setSelectedSize(firstVariant.size);
+        setSelectedColor(firstVariant.color || '');
+      }
+      setQuantity(product.minOrderQuantity || 1);
     }
   }, [product]);
 
@@ -105,19 +112,34 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || isAdding) return;
 
-    if (product.variants && product.variants.length > 0 && !selectedVariant) {
+    if (product.variants && product.variants.length > 0 && !selectedVariant && !useCustomColor) {
       toast.error('Please select a size and color');
       return;
     }
 
+    if (!selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+
+    const finalColor = useCustomColor ? customColor : selectedColor;
+    const finalVariant = selectedVariant
+      ? { ...selectedVariant, color: finalColor }
+      : { size: selectedSize, color: finalColor, price: product.pricing?.price || product.price, inventory: { quantity: 9999 } };
+
+    setIsAdding(true);
     dispatch(addToCart({
       product,
       quantity,
-      variant: selectedVariant
+      variant: finalVariant
     }));
     toast.success(`${quantity} x ${product.title || product.name} added to cart!`);
+
+    setTimeout(() => {
+      setIsAdding(false);
+    }, 2000);
   };
 
   const handleAddToWishlist = async () => {
@@ -175,8 +197,7 @@ const ProductDetail = () => {
   const productTitle = product.title || product.name;
   const productPrice = selectedVariant?.price || product.pricing?.price || product.price;
   const compareAtPrice = product.pricing?.compareAtPrice;
-  const inStock = selectedVariant ? selectedVariant.inventory.quantity > 0 : (product.availability?.inStock !== false);
-  const availableStock = selectedVariant?.inventory.quantity || product.stock || 0;
+  const minOrderQuantity = product.minOrderQuantity || 1;
 
   // Get unique sizes and colors
   const uniqueSizes = product.variants ? [...new Set(product.variants.map(v => v.size))] : [];
@@ -268,13 +289,9 @@ const ProductDetail = () => {
                 {compareAtPrice > productPrice && (
                   <span className="text-xl text-gray-500 line-through">₹{compareAtPrice}</span>
                 )}
-                {inStock ? (
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    ✓ In Stock ({availableStock} available)
-                  </span>
-                ) : (
-                  <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    Out of Stock
+                {minOrderQuantity > 1 && (
+                  <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
+                    Min Order: {minOrderQuantity}
                   </span>
                 )}
               </div>
@@ -287,7 +304,18 @@ const ProductDetail = () => {
               {/* Variants - Size Selection */}
               {uniqueSizes.length > 0 && (
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2">Size</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold">Size</label>
+                    <button
+                      onClick={() => setShowSizeChart(true)}
+                      className="text-trana-orange text-sm font-semibold hover:underline flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Size Chart
+                    </button>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {uniqueSizes.map((size) => (
                       <button
@@ -306,51 +334,84 @@ const ProductDetail = () => {
               )}
 
               {/* Variants - Color Selection */}
-              {uniqueColors.length > 0 && (
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold mb-2">Color: <span className="text-gray-600 font-normal">{selectedColor}</span></label>
-                  <div className="flex flex-wrap gap-3">
-                    {uniqueColors.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => handleVariantChange(selectedSize, color)}
-                        className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${selectedColor === color
-                          ? 'border-trana-orange ring-2 ring-trana-orange ring-offset-2 scale-110'
-                          : 'border-gray-300 hover:border-trana-orange hover:scale-105'
-                          }`}
-                        style={{ backgroundColor: color.toLowerCase() }}
-                        title={color}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold">
+                    Color: <span className="text-gray-600 font-normal">{useCustomColor ? customColor : selectedColor}</span>
+                  </label>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  {uniqueColors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => {
+                        setUseCustomColor(false);
+                        handleVariantChange(selectedSize, color);
+                      }}
+                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${!useCustomColor && selectedColor === color
+                        ? 'border-trana-orange ring-2 ring-trana-orange ring-offset-2 scale-110'
+                        : 'border-gray-300 hover:border-trana-orange hover:scale-105'
+                        }`}
+                      style={{ backgroundColor: color.toLowerCase() }}
+                      title={color}
+                    />
+                  ))}
+
+                  {/* Custom Color Bubble Picker */}
+                  <div className="relative group">
+                    <button
+                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden ${useCustomColor
+                        ? 'border-trana-orange ring-2 ring-trana-orange ring-offset-2 scale-110'
+                        : 'border-gray-300 hover:border-trana-orange hover:scale-105'
+                        }`}
+                      title="Pick Custom Color"
+                    >
+                      <input
+                        type="color"
+                        value={customColor}
+                        onChange={(e) => {
+                          setUseCustomColor(true);
+                          setCustomColor(e.target.value);
+                        }}
+                        className="absolute inset-0 w-full h-full cursor-pointer opacity-0 scale-[3]"
                       />
-                    ))}
+                      <div
+                        className="w-full h-full"
+                        style={{
+                          backgroundColor: useCustomColor ? customColor : 'white',
+                          backgroundImage: !useCustomColor ? 'conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red)' : 'none'
+                        }}
+                      />
+                    </button>
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition font-bold text-gray-500 uppercase tracking-tighter">Custom</span>
                   </div>
                 </div>
-              )}
+              </div>
 
-             
+
 
               {/* Quantity */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2">Quantity</label>
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
+                    onClick={() => setQuantity(Math.max(minOrderQuantity, quantity - 1))}
+                    disabled={quantity <= minOrderQuantity}
                     className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 transition disabled:opacity-50"
                   >
                     −
                   </button>
                   <input
                     type="number"
-                    min="1"
-                    max={availableStock}
+                    min={minOrderQuantity}
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.min(Math.max(1, parseInt(e.target.value) || 1), availableStock))}
+                    onChange={(e) => setQuantity(Math.max(minOrderQuantity, parseInt(e.target.value) || minOrderQuantity))}
                     className="w-20 text-center border border-gray-300 rounded-lg py-2 font-semibold"
                   />
                   <button
-                    onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
-                    disabled={quantity >= availableStock}
-                    className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 transition disabled:opacity-50"
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 transition"
                   >
                     +
                   </button>
@@ -361,10 +422,10 @@ const ProductDetail = () => {
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!inStock}
+                  disabled={isAdding}
                   className="flex-1 bg-trana-orange text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  {isAdding ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={handleAddToWishlist}
@@ -382,28 +443,28 @@ const ProductDetail = () => {
             <h2 className="text-2xl font-bold mb-4">Product Description</h2>
             <p className="text-gray-700 mb-6">{product.description}</p>
 
-             {/* Attributes */}
-             <h3 className="font-semibold text-lg mb-2 border-t border-gray-200">Product Details</h3>
-              {product.attributes && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="grid grid-cols-2 gap-2 text-md">
-                    {product.attributes.gender && (
-                      <div><span className="text-gray-600">Gender:</span> <span className="font-medium">{product.attributes.gender}</span></div>
-                    )}
-                    {product.attributes.fabric && (
-                      <div><span className="text-gray-600">Fabric:</span> <span className="font-medium">{product.attributes.fabric}</span></div>
-                    )}
-                    {product.attributes.length && (
-                      <div><span className="text-gray-600">Length:</span> <span className="font-medium">{product.attributes.length}</span></div>
-                    )}
-                    {product.attributes.sleeve && (
-                      <div><span className="text-gray-600">Sleeve:</span> <span className="font-medium">{product.attributes.sleeve}</span></div>
-                    )}
-                  </div>
+            {/* Attributes */}
+            <h3 className="font-semibold text-lg mb-2 border-t border-gray-200">Product Details</h3>
+            {product.attributes && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 text-md">
+                  {product.attributes.gender && (
+                    <div><span className="text-gray-600">Gender:</span> <span className="font-medium">{product.attributes.gender}</span></div>
+                  )}
+                  {product.attributes.fabric && (
+                    <div><span className="text-gray-600">Fabric:</span> <span className="font-medium">{product.attributes.fabric}</span></div>
+                  )}
+                  {product.attributes.length && (
+                    <div><span className="text-gray-600">Length:</span> <span className="font-medium">{product.attributes.length}</span></div>
+                  )}
+                  {product.attributes.sleeve && (
+                    <div><span className="text-gray-600">Sleeve:</span> <span className="font-medium">{product.attributes.sleeve}</span></div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
           </div>
-          
+
         </div>
 
         {/* Reviews Section */}
@@ -539,6 +600,59 @@ const ProductDetail = () => {
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+        )}
+        {/* Size Chart Modal */}
+        {showSizeChart && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+                <h3 className="text-2xl font-bold text-gray-900">Size Guide</h3>
+                <button
+                  onClick={() => setShowSizeChart(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="p-4 border-b font-bold text-gray-700">Size</th>
+                        <th className="p-4 border-b font-bold text-gray-700">Chest (Inches)</th>
+                        <th className="p-4 border-b font-bold text-gray-700">Waist (Inches)</th>
+                        <th className="p-4 border-b font-bold text-gray-700">Length (Inches)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { s: 'S', c: '36-38', w: '30-32', l: '26' },
+                        { s: 'M', c: '38-40', w: '32-34', l: '27' },
+                        { s: 'L', c: '40-42', w: '34-36', l: '28' },
+                        { s: 'XL', c: '42-44', w: '36-38', l: '29' },
+                        { s: 'XXL', c: '44-46', w: '38-40', l: '30' },
+                        { s: 'XXXL', c: '46-48', w: '40-42', l: '31' },
+                      ].map((item, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition">
+                          <td className="p-4 border-b font-semibold text-trana-orange">{item.s}</td>
+                          <td className="p-4 border-b text-gray-600">{item.c}</td>
+                          <td className="p-4 border-b text-gray-600">{item.w}</td>
+                          <td className="p-4 border-b text-gray-600">{item.l}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-6 p-4 bg-orange-50 rounded-lg text-sm text-orange-800">
+                  <p className="font-semibold mb-1">How to measure?</p>
+                  <p>For the best fit, measure your body dimensions and compare them with the chart above. If you're between sizes, we recommend going one size up for comfort.</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

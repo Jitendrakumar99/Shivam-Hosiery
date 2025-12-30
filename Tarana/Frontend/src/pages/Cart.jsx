@@ -21,8 +21,9 @@ const Cart = () => {
     toast.success('Item removed from cart');
   };
 
-  const handleQuantityChange = (productId, quantity) => {
-    dispatch(updateQuantity({ productId, quantity: parseInt(quantity) }));
+  const handleQuantityChange = (productId, quantity, minOrderQuantity = 1) => {
+    const newQuantity = Math.max(minOrderQuantity, parseInt(quantity) || minOrderQuantity);
+    dispatch(updateQuantity({ productId, quantity: newQuantity }));
   };
 
   if (!isAuthenticated) {
@@ -88,14 +89,19 @@ const Cart = () => {
                           <label className="text-sm font-semibold">Quantity:</label>
                           <input
                             type="number"
-                            min="1"
+                            min={product.minOrderQuantity || 1}
                             value={item.quantity}
-                            onChange={(e) => handleQuantityChange(product._id || product.id, e.target.value)}
+                            onChange={(e) => handleQuantityChange(product._id || product.id, e.target.value, product.minOrderQuantity)}
                             className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
                           />
+                          {product.minOrderQuantity > 1 && (
+                            <span className="text-xs text-orange-600 font-medium">
+                              (Min: {product.minOrderQuantity})
+                            </span>
+                          )}
                           <button
                             onClick={() => handleRemove(product._id || product.id)}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className="text-red-600 hover:text-red-800 text-sm ml-auto"
                           >
                             Remove
                           </button>

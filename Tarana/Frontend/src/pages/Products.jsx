@@ -278,9 +278,6 @@ const Products = () => {
                             </p>
                           )}
                         </div>
-                        <p className={`text-sm font-semibold ${product.availability?.inStock !== false ? 'text-green-600' : 'text-red-600'}`}>
-                          {product.availability?.inStock !== false ? 'In Stock' : 'Out of Stock'}
-                        </p>
                       </div>
                       <div className="flex gap-2">
                         {isInCart(product) ? (
@@ -304,8 +301,7 @@ const Products = () => {
                                 dispatch(addToCart({ product, quantity: 1 }));
                                 toast.success(`${product.name || product.title} added to cart!`);
                               }}
-                              disabled={product.availability?.inStock === false}
-                              className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition"
                             >
                               Add to Cart
                             </button>
@@ -392,10 +388,10 @@ const Products = () => {
             </>
           )}
         </div>
-      </section>
+      </section >
 
       {/* Bulk Quantities Section */}
-      <section className="py-12 bg-gray-50">
+      < section className="py-12 bg-gray-50" >
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Need Bulk Quantities?</h2>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
@@ -416,8 +412,8 @@ const Products = () => {
             </Link>
           </div>
         </div>
-      </section>
-    </div>
+      </section >
+    </div >
   );
 };
 
