@@ -66,27 +66,48 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Ensure uploads directory exists
+const fs = require('fs');
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
 // File upload route
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ 
-      success: false,
-      message: "No file uploaded" 
-    });
-  }
-  res.json({ 
-    success: true,
-    message: "File uploaded successfully", 
-    file: {
-      filename: req.file.filename,
-      path: `/uploads/${req.file.filename}`
+app.post("/api/upload", (req, res, next) => {
+  upload.single("file")(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        success: false,
+        message: `Multer upload error: ${err.message}`
+      });
+    } else if (err) {
+      return res.status(500).json({
+        success: false,
+        message: `Unknown upload error: ${err.message}`
+      });
     }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "File uploaded successfully",
+      file: {
+        filename: req.file.filename,
+        path: `/uploads/${req.file.filename}`
+      }
+    });
   });
 });
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     success: true,
     message: "Trana Safety API is running",
     version: "1.0.0"
