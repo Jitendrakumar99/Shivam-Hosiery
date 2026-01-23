@@ -55,7 +55,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       const productCategory = categories.find(c => c._id === product.category || c.name === product.category);
       let parentCategory = '';
       let subCategory = '';
-      
+
       if (productCategory) {
         if (productCategory.parent) {
           // This is a subcategory, find its parent
@@ -205,7 +205,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     // Determine the category to use (subcategory if selected, otherwise parent)
     const selectedCategoryId = formData.subCategory || formData.parentCategory;
     const selectedCategory = categories.find(c => (c._id === selectedCategoryId || c.id === selectedCategoryId));
-    
+
     const payload = {
       title: formData.title,
       description: formData.description,

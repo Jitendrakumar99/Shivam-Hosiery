@@ -6,7 +6,7 @@ import { clientService } from '../services/clientService';
 const Home = () => {
   // Replace with your actual hero background image URL
   const heroImageUrl = 'https://images.unsplash.com/photo-1761396716215-9ccb2a7eda9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080';
-  
+
   const [brands, setBrands] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,48 +28,48 @@ const Home = () => {
     };
     fetchData();
   }, []);
-  
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative text-white py-16 md:py-24 lg:py-32 overflow-hidden min-h-[500px] md:min-h-[600px] flex items-center">
-  {/* Background Image */}
-  <div 
-    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-    style={{
-      backgroundImage: `url("${heroImageUrl}")`,
-    }}
-  >
-    {/* Dark overlay for text readability */}
-    <div className="absolute inset-0 bg-slate-900/75"></div>
-  </div>
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url("${heroImageUrl}")`,
+          }}
+        >
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-slate-900/75"></div>
+        </div>
 
-  {/* Content */}
-  <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div className="max-w-3xl">
-      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 drop-shadow-lg">
-        Shivam Hosiery & Trana
-      </h1>
-      <p className="text-base md:text-lg lg:text-xl mb-6 text-gray-200 drop-shadow-md">
-        Leading manufacturer of quality garments with a commitment to excellence, safety, and innovation.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Link 
-          to="/about" 
-          className="bg-white text-slate-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center shadow-lg"
-        >
-          Learn More
-        </Link>
-        <Link 
-          to="/trana" 
-          className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-gray-700 transition-colors text-center shadow-lg"
-        >
-          Visit Trana Safety
-        </Link>
-      </div>
-    </div>
-  </div>
-</section>
+        {/* Content */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-3xl">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 drop-shadow-lg">
+              Shivam Hosiery & Trana
+            </h1>
+            <p className="text-base md:text-lg lg:text-xl mb-6 text-gray-200 drop-shadow-md">
+              Leading manufacturer of quality garments with a commitment to excellence, safety, and innovation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/about"
+                className="bg-white text-slate-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-center shadow-lg"
+              >
+                Learn More
+              </Link>
+              <Link
+                to="/trana"
+                className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-gray-700 transition-colors text-center shadow-lg"
+              >
+                Visit Trana Safety
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
 
       {/* Statistics Section */}
@@ -110,18 +110,18 @@ const Home = () => {
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Today, we operate from a state-of-the-art facility spanning over 50,000 square feet, equipped with modern machinery and a skilled workforce. We specialize in manufacturing various types of garments, including our flagship brand "Trana" for safety garments, which has become synonymous with quality and reliability in industrial protection.
               </p>
-              <Link 
-                to="/about" 
+              <Link
+                to="/about"
                 className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-slate-800 transition-colors"
               >
                 Read More
               </Link>
             </div>
-            <img 
-                src="https://images.unsplash.com/photo-1675176785803-bffbbb0cd2f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
-                alt="Manufacturing facility"
-                className="w-full h-full object-cover"
-              />
+            <img
+              src="https://images.unsplash.com/photo-1675176785803-bffbbb0cd2f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+              alt="Manufacturing facility"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
@@ -174,7 +174,6 @@ const Home = () => {
                     <div className="lg:w-1/2 relative min-h-[260px]">
                       <img src={imageUrl} alt={featured.name} className="w-full h-full object-cover" />
                       <div className="absolute left-6 bottom-6 text-white">
-                        <span className="inline-block bg-orange-500 text-white text-xs px-3 py-1 rounded-full mb-3">{categoryLabel}</span>
                         <h3 className="text-3xl font-bold leading-tight">{featured.name || 'Trana'}</h3>
                         <p className="text-sm mt-1">{slogan}</p>
                       </div>

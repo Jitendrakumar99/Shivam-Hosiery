@@ -164,12 +164,11 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-600">{order.user?.name || order.customer || 'N/A'}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
+                  <span className={`px-2 py-1 rounded text-xs ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
+                          'bg-yellow-100 text-yellow-800'
+                    }`}>
                     {order.status}
                   </span>
                   <p className="text-sm text-gray-600 mt-1">₹{(order.totalAmount || order.total || 0).toLocaleString('en-IN')}</p>
