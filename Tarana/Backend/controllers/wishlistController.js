@@ -89,7 +89,8 @@ exports.removeFromWishlist = async (req, res, next) => {
     }
 
     wishlist.items = wishlist.items.filter(
-      item => item.product.toString() !== req.params.productId
+      item => item.product.toString() !== req.params.productId &&
+        item._id.toString() !== req.params.productId
     );
 
     await wishlist.save();

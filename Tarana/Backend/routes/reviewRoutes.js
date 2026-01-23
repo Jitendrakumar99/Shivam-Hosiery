@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  getReviews,
   getProductReviews,
   createReview,
   updateReview,
@@ -19,6 +20,7 @@ const Review = require('../models/Review');
 router.get('/product/:productId', paginate(Review), cache(300), getProductReviews);
 
 // Protected routes
+router.get('/', protect, authorize('admin'), paginate(Review), getReviews);
 router.post('/', protect, createReview);
 router.put('/:id', protect, updateReview);
 router.delete('/:id', protect, deleteReview);

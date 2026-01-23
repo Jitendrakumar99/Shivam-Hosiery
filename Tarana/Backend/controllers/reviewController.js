@@ -2,6 +2,52 @@ const Review = require('../models/Review');
 const Product = require('../models/Product');
 const { clearCache } = require('../middlewares/cache');
 
+// @desc    Get all reviews
+// @route   GET /api/reviews
+// @access  Private/Admin
+exports.getReviews = async (req, res, next) => {
+  try {
+    const { status, sort = '-createdAt' } = req.query;
+    const { startIndex, limit } = req.pagination || { startIndex: 0, limit: 10 };
+
+    const query = {};
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    const reviews = await Review.find(query)
+      .populate('productId', 'title name images')
+      .skip(startIndex)
+      .limit(limit)
+      .sort(sort);
+
+    const total = await Review.countDocuments(query);
+
+    // Transform reviews to include product info in the format expected by admin
+    const formattedReviews = reviews.map(review => {
+      const reviewObj = review.toObject();
+      return {
+        ...reviewObj,
+        product: reviewObj.productId
+      };
+    });
+
+    res.json({
+      success: true,
+      count: formattedReviews.length,
+      pagination: {
+        currentPage: Math.floor(startIndex / limit) + 1,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: limit
+      },
+      data: formattedReviews
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get reviews for a product
 // @route   GET /api/reviews/product/:productId
 // @access  Public
@@ -192,7 +238,7 @@ exports.updateReviewStatus = async (req, res, next) => {
       req.params.id,
       { status },
       { new: true, runValidators: true }
-    );
+    ).populate('productId', 'title name images');
 
     if (!review) {
       return res.status(404).json({
@@ -206,9 +252,15 @@ exports.updateReviewStatus = async (req, res, next) => {
 
     clearCache(`/api/reviews/product/${review.productId}`);
 
+    const reviewObj = review.toObject();
+    const formattedReview = {
+      ...reviewObj,
+      product: reviewObj.productId
+    };
+
     res.json({
       success: true,
-      data: review
+      data: formattedReview
     });
   } catch (error) {
     next(error);
@@ -231,7 +283,7 @@ exports.addAdminReply = async (req, res, next) => {
         }
       },
       { new: true, runValidators: true }
-    );
+    ).populate('productId', 'title name images');
 
     if (!review) {
       return res.status(404).json({
@@ -242,9 +294,15 @@ exports.addAdminReply = async (req, res, next) => {
 
     clearCache(`/api/reviews/product/${review.productId}`);
 
+    const reviewObj = review.toObject();
+    const formattedReview = {
+      ...reviewObj,
+      product: reviewObj.productId
+    };
+
     res.json({
       success: true,
-      data: review
+      data: formattedReview
     });
   } catch (error) {
     next(error);
