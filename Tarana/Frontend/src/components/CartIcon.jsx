@@ -3,11 +3,12 @@ import { useAppSelector } from '../store/hooks';
 
 const CartIcon = () => {
   const { items } = useAppSelector((state) => state.cart);
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const itemCount = items.length; // Count unique products, not total quantity
 
   return (
     <Link
       to="/cart"
+      id="cart-icon-header"
       className="relative flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full transition"
       aria-label="Shopping cart"
     >

@@ -8,6 +8,7 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
   const { categories } = useSelector((state) => state.categories);
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     status: 'active',
     image: '',
     parent: '',
@@ -17,6 +18,7 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
     if (category && mode === 'edit') {
       setFormData({
         name: category.name || '',
+        description: category.description || '',
         status: category.status || 'active',
         image: category.image || '',
         parent: category.parent?._id || category.parent || '',
@@ -24,6 +26,7 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
     } else {
       setFormData({
         name: '',
+        description: '',
         status: 'active',
         image: '',
         parent: defaultParent || '',
@@ -42,8 +45,6 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
       if (mode === 'edit' && category) {
         // Prevent editing parent in edit mode
         delete payload.parent;
-        // Ensure description is not sent
-        delete payload.description;
         dispatch(updateCategory({
           id: category._id || category.id,
           categoryData: payload,
@@ -92,6 +93,21 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            placeholder="Enter category description"
+            rows={3}
+            maxLength={500}
+          />
+          <p className="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
+        </div>
+
         {!(mode === 'add' && !!defaultParent) && !(mode === 'edit' && !!category?.parent) && (
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -121,7 +137,6 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
             />
           </div>
         )}
-        {/* Description removed as requested */}
 
         <div className="flex items-center">
           <input

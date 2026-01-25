@@ -47,20 +47,98 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
   useEffect(() => {
     if (product && mode === 'edit') {
-      // Find parent and subcategory from product category
-      const productCategory = categories.find(c => c._id === product.category || c.name === product.category);
+      // Extract category ID from product.category object
+      // product.category can be: { id: ObjectId, name: String, parent: String } or just a string/ID
+      const categoryId = product.category?.id || product.category?._id || product.category;
+      
       let parentCategory = '';
       let subCategory = '';
-      
-      if (productCategory) {
-        if (productCategory.parent) {
-          // This is a subcategory, find its parent
-          const parent = categories.find(c => c._id === productCategory.parent);
-          parentCategory = parent?._id || '';
-          subCategory = productCategory._id || '';
+
+      // Only try to find category in list if categories are loaded
+      if (categories.length > 0 && categoryId) {
+        // Find the category in the categories list
+        let productCategory = categories.find(c => {
+          const cId = c._id || c.id;
+          const pId = categoryId?._id || categoryId;
+          return String(cId) === String(pId);
+        });
+        
+        // If not found by ID, try by name
+        if (!productCategory && product.category?.name) {
+          productCategory = categories.find(c => c.name === product.category.name);
+        }
+
+        if (productCategory) {
+          // Check if this category has a parent (it's a subcategory)
+          // parent can be: populated object { _id, name, slug } or just ObjectId
+          const parentId = productCategory.parent?._id || productCategory.parent || product.category?.parent;
+          
+          if (parentId) {
+            // This is a subcategory
+            const parentIdStr = String(parentId?._id || parentId);
+            // Find the parent category in the list
+            const parent = categories.find(c => {
+              const cId = c._id || c.id;
+              return String(cId) === parentIdStr;
+            });
+            
+            if (parent) {
+              parentCategory = String(parent._id || parent.id);
+              subCategory = String(productCategory._id || productCategory.id);
+            } else {
+              // Parent not found in categories list, but we have the ID
+              parentCategory = parentIdStr;
+              subCategory = String(productCategory._id || productCategory.id);
+            }
+          } else {
+            // This is a parent category (no parent)
+            parentCategory = String(productCategory._id || productCategory.id);
+            subCategory = '';
+          }
+        } else if (categoryId) {
+          // Category not found in list, but we have the ID
+          // Check if any category in the list has this category as its parent (making it a parent category)
+          const hasChildren = categories.some(c => {
+            const cParentId = c.parent?._id || c.parent;
+            return cParentId && String(cParentId) === String(categoryId);
+          });
+          
+          if (hasChildren) {
+            // It's a parent category (has children)
+            parentCategory = String(categoryId);
+            subCategory = '';
+          } else {
+            // Check if it's a subcategory by looking for a category with this ID that has a parent
+            const subCat = categories.find(c => {
+              const cId = c._id || c.id;
+              const cParentId = c.parent?._id || c.parent;
+              return String(cId) === String(categoryId) && cParentId;
+            });
+            
+            if (subCat) {
+              // It's a subcategory
+              const parentId = subCat.parent?._id || subCat.parent;
+              parentCategory = String(parentId);
+              subCategory = String(categoryId);
+            } else {
+              // Can't determine, assume it's a parent category
+              parentCategory = String(categoryId);
+              subCategory = '';
+            }
+          }
+        }
+      } else if (categoryId) {
+        // Categories not loaded yet, but we have the category ID
+        // Use product.category.parent if available to determine if it's a subcategory
+        const productParentId = product.category?.parent;
+        
+        if (productParentId) {
+          // It's a subcategory
+          parentCategory = String(productParentId);
+          subCategory = String(categoryId);
         } else {
-          // This is a parent category
-          parentCategory = productCategory._id || '';
+          // Assume it's a parent category (will be corrected when categories load)
+          parentCategory = String(categoryId);
           subCategory = '';
         }
       }
@@ -98,8 +176,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         status: product.status || 'active',
         minOrderQuantity: product.minOrderQuantity || 0,
       });
-    } else {
-      // Reset form
+    } else if (!product || mode !== 'edit') {
+      // Reset form for add mode or when product is cleared
       setFormData({
         title: '',
         description: '',
@@ -206,7 +284,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     // Determine the category to use (subcategory if selected, otherwise parent)
     const selectedCategoryId = formData.subCategory || formData.parentCategory;
     const selectedCategory = categories.find(c => (c._id === selectedCategoryId || c.id === selectedCategoryId));
-    
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -313,7 +391,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                 >
                   <option value="">Select Parent Category</option>
                   {getParentCategories().map((cat) => (
-                    <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                    <option key={cat._id || cat.id} value={String(cat._id || cat.id)}>
                       {cat.name}
                     </option>
                   ))}
@@ -329,7 +407,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                 >
                   <option value="">Select Sub Category</option>
                   {availableSubCategories.map((cat) => (
-                    <option key={cat._id || cat.id} value={cat._id || cat.id}>
+                    <option key={cat._id || cat.id} value={String(cat._id || cat.id)}>
                       {cat.name}
                     </option>
                   ))}

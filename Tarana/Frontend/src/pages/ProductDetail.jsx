@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchProduct, fetchProducts } from '../store/slices/productSlice';
@@ -6,6 +6,7 @@ import { addToWishlist, fetchWishlist } from '../store/slices/wishlistSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import { fetchProductReviews } from '../store/slices/reviewSlice';
 import ReviewForm from '../components/ReviewForm';
+import { createFlyingAnimation, triggerCartBounce, triggerWishlistAnimation } from '../utils/animations';
 import toast from 'react-hot-toast';
 
 const ProductDetail = () => {
@@ -29,6 +30,8 @@ const ProductDetail = () => {
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [useCustomColor, setUseCustomColor] = useState(false);
   const [customColor, setCustomColor] = useState('#ff6600');
+  const productImageRef = useRef(null);
+  const wishlistButtonRef = useRef(null);
 
   useEffect(() => {
     if (id) {
@@ -56,17 +59,19 @@ const ProductDetail = () => {
     }
   }, [product]);
 
-  // Fetch related products
+  // Fetch related products - random 3-4 products
   useEffect(() => {
-    if (product && product.category) {
-      const categoryName = product.category?.name || product.category;
-      dispatch(fetchProducts({ category: categoryName, limit: 4 }))
+    if (product) {
+      // Fetch all products and pick random ones
+      dispatch(fetchProducts({ limit: 50 }))
         .then((result) => {
           if (fetchProducts.fulfilled.match(result)) {
-            const related = result.payload.data.filter(
+            const allProducts = result.payload.data.filter(
               (p) => (p._id || p.id) !== (product._id || product.id)
             );
-            setRelatedProducts(related.slice(0, 4));
+            // Shuffle and pick 3-4 random products
+            const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
+            setRelatedProducts(shuffled.slice(0, Math.min(4, shuffled.length)));
           }
         });
     }
@@ -130,12 +135,29 @@ const ProductDetail = () => {
       : { size: selectedSize, color: finalColor, price: product.pricing?.price || product.price, inventory: { quantity: 9999 } };
 
     setIsAdding(true);
+    
+    // Get product image for animation
+    const productImage = productImageRef.current;
+    
+    // Trigger flying animation - will automatically target cart icon in header (right side)
+    if (productImage && product.images && product.images.length > 0) {
+      createFlyingAnimation(product.images[0] || product.images[selectedImage], productImage);
+      // Trigger cart bounce after a short delay
+      setTimeout(() => {
+        triggerCartBounce();
+      }, 300);
+    }
+    
     dispatch(addToCart({
       product,
       quantity,
       variant: finalVariant
     }));
-    toast.success(`${quantity} x ${product.title || product.name} added to cart!`);
+    
+    toast.success(`${quantity} x ${product.title || product.name} added to cart!`, {
+      duration: 2000,
+      position: 'bottom-right',
+    });
 
     setTimeout(() => {
       setIsAdding(false);
@@ -155,9 +177,17 @@ const ProductDetail = () => {
       return;
     }
 
+    // Trigger wishlist animation
+    if (wishlistButtonRef.current) {
+      triggerWishlistAnimation(wishlistButtonRef.current);
+    }
+
     const result = await dispatch(addToWishlist(product._id || product.id));
     if (addToWishlist.fulfilled.match(result)) {
-      toast.success(`${product.title || product.name} added to wishlist!`);
+      toast.success(`${product.title || product.name} added to wishlist!`, {
+        duration: 2000,
+        position: 'bottom-right',
+      });
       dispatch(fetchWishlist());
     }
   };
@@ -242,7 +272,12 @@ const ProductDetail = () => {
                 <div className="flex-1">
                   <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
                     {images.length > 0 ? (
-                      <img src={images[selectedImage]} alt={productTitle} className="w-full h-full object-contain p-4" />
+                      <img 
+                        ref={productImageRef}
+                        src={images[selectedImage]} 
+                        alt={productTitle} 
+                        className="w-full h-full object-contain p-4" 
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
                         <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,11 +319,18 @@ const ProductDetail = () => {
               )}
 
               {/* Price */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-6 flex-wrap">
+                <div className="flex items-center gap-3">
                 <span className="text-3xl font-bold text-trana-orange">₹{productPrice}</span>
                 {compareAtPrice > productPrice && (
+                    <>
                   <span className="text-xl text-gray-500 line-through">₹{compareAtPrice}</span>
+                      <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded">
+                        {Math.round(((compareAtPrice - productPrice) / compareAtPrice) * 100)}% OFF
+                      </span>
+                    </>
                 )}
+                </div>
                 {minOrderQuantity > 1 && (
                   <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
                     Min Order: {minOrderQuantity}
@@ -428,11 +470,26 @@ const ProductDetail = () => {
                   {isAdding ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
+                  ref={wishlistButtonRef}
                   onClick={handleAddToWishlist}
                   className={`px-6 py-3 border-2 rounded-lg font-semibold transition ${inWishlist ? 'border-green-500 text-green-600 bg-green-50' : 'border-trana-orange text-trana-orange hover:bg-orange-50'
                     }`}
                 >
-                  {inWishlist ? '✓ In Wishlist' : '♡ Add to Wishlist'}
+                  {inWishlist ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                      In Wishlist
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      Add to Wishlist
+                    </span>
+                  )}
                 </button>
               </div>
             </div>

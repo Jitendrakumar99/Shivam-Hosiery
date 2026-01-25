@@ -29,8 +29,18 @@ router.get('/stats', cache(300), async (req, res, next) => {
       Product.countDocuments(),
       Order.countDocuments(),
       Order.aggregate([
-        { $match: { status: { $in: ['delivered', 'shipped'] } } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        { 
+          $match: { 
+            status: { $in: ['delivered', 'shipped'] },
+            paymentStatus: 'paid' // Only count paid orders for revenue
+          } 
+        },
+        { 
+          $project: {
+            grandTotal: { $add: ['$totalAmount', { $ifNull: ['$shippingCost', 0] }] }
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$grandTotal' } } }
       ]),
       Order.countDocuments({ status: 'pending' }),
       Contact.countDocuments({ status: 'new' })
@@ -132,6 +142,101 @@ router.put('/users/:id/status', async (req, res, next) => {
     res.json({
       success: true,
       data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Create new user (admin can create users with specific role)
+// @route   POST /api/admin/users
+// @access  Private/Admin
+router.post('/users', async (req, res, next) => {
+  try {
+    const { name, email, password, phone, company, address, role = 'user' } = req.body;
+
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Validate role
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Must be "user" or "admin"'
+      });
+    }
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      company,
+      address,
+      role
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        company: user.company,
+        address: user.address,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+    next(error);
+  }
+});
+
+// @desc    Delete a user
+// @route   DELETE /api/admin/users/:id
+// @access  Private/Admin
+router.delete('/users/:id', async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+
+    // Prevent deleting yourself
+    if (req.user?.id && String(req.user.id) === String(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account'
+      });
+    }
+
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    await user.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
     });
   } catch (error) {
     next(error);
