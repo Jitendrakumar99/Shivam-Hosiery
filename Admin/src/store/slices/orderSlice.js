@@ -45,9 +45,8 @@ export const updateOrderStatus = createAsyncThunk(
       const data = await orderService.updateOrderStatus(id, status, deliveryAgent, paymentStatus);
       return data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to update order status'
-      );
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update order status';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -99,15 +98,23 @@ const orderSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload.data) {
+        state.error = null;
+        if (action.payload?.data) {
+          const updatedOrder = action.payload.data;
+          const orderId = updatedOrder._id || updatedOrder.id;
+          
+          // Update in orders array
           const index = state.orders.findIndex(
-            (o) => o._id === action.payload.data._id
+            (o) => (o._id || o.id) === orderId
           );
           if (index !== -1) {
-            state.orders[index] = action.payload.data;
+            // Merge the updated order data to preserve all fields
+            state.orders[index] = { ...state.orders[index], ...updatedOrder };
           }
-          if (state.order && state.order._id === action.payload.data._id) {
-            state.order = action.payload.data;
+          
+          // Update single order if it matches
+          if (state.order && (state.order._id || state.order.id) === orderId) {
+            state.order = { ...state.order, ...updatedOrder };
           }
         }
       })

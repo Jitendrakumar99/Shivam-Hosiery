@@ -17,33 +17,63 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
       setDeliveryAgentInput(order.deliveryAgent || '');
       setPaymentStatus(order.paymentStatus || 'pending');
     }
-  }, [order]);
+  }, [order?.paymentStatus, order?.deliveryAgent, order?._id, order?.id]);
 
   if (!order) return null;
 
   const handlePaymentStatusChange = async (e) => {
     const newPaymentStatus = e.target.value;
     const previousPaymentStatus = paymentStatus;
-    setPaymentStatus(newPaymentStatus);
     
     if (!order?._id && !order?.id) return;
     
     setSavingPaymentStatus(true);
+    setPaymentStatus(newPaymentStatus); // Optimistically update UI
+    
     try {
-      await dispatch(
+      // Update payment status
+      const updateResult = await dispatch(
         updateOrderStatus({
           id: order._id || order.id,
-          status: order.status, // Keep existing status
           paymentStatus: newPaymentStatus,
+          // Don't send status if we're only updating payment status
         })
       ).unwrap();
       
-      // Refresh orders list and stats to update everywhere
-      await dispatch(fetchOrders());
-      await dispatch(fetchStats()); // Refresh stats when payment status changes
+      // If update was successful, refresh data (but don't fail if refresh has issues)
+      if (updateResult?.success !== false) {
+        try {
+          // Refresh orders list and stats to update everywhere
+          // Always refresh stats when payment status changes as it affects revenue calculations
+          await Promise.all([
+            dispatch(fetchOrders()),
+            dispatch(fetchStats())
+          ]);
+        } catch (refreshError) {
+          // Log refresh error but don't show it to user since the update succeeded
+          console.warn('Payment status updated successfully, but refresh failed:', refreshError);
+        }
+      } else {
+        throw new Error(updateResult?.message || 'Update failed');
+      }
+      
+      // Success - no need to revert, the UI is already updated optimistically
     } catch (err) {
       console.error('Failed to update payment status', err);
-      alert('Failed to update payment status. Please try again.');
+      
+      // Extract error message from different possible error formats
+      let errorMessage = 'Please try again.';
+      if (err?.payload) {
+        errorMessage = err.payload;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      alert(`Failed to update payment status: ${errorMessage}`);
       // Revert on error
       setPaymentStatus(previousPaymentStatus);
     } finally {
@@ -63,11 +93,15 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
         updateOrderStatus({
           id: order._id || order.id,
           status: order.status,
+          paymentStatus: order.paymentStatus, // Preserve payment status
           deliveryAgent: deliveryAgentInput.trim(),
         })
       ).unwrap();
+      // Refresh orders list to show updated delivery agent
+      await dispatch(fetchOrders());
     } catch (err) {
       console.error('Failed to update delivery agent', err);
+      alert('Failed to update delivery agent. Please try again.');
     } finally {
       setSavingAgent(false);
     }
@@ -216,10 +250,14 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                   })
                 ).unwrap();
                  // Refresh orders list and stats to update everywhere
-                 await dispatch(fetchOrders());
-                 // Only refresh stats if payment status might affect revenue
-                 if (newStatus === 'delivered' || newStatus === 'shipped') {
-                   await dispatch(fetchStats());
+                 // Refresh stats if status change might affect revenue
+                 if (newStatus === 'delivered' || newStatus === 'shipped' || order.status === 'delivered' || order.status === 'shipped') {
+                   await Promise.all([
+                     dispatch(fetchOrders()),
+                     dispatch(fetchStats())
+                   ]);
+                 } else {
+                   await dispatch(fetchOrders());
                  }
                } catch (err) {
                  console.error('Failed to update order status', err);
@@ -230,7 +268,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           >
             <option value="pending">Pending</option>
             <option value="processing">Processing</option>
-            <option value="packed">Packed</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>

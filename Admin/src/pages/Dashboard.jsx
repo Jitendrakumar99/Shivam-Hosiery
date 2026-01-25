@@ -54,7 +54,7 @@ function buildRevenueTrendFromOrders(orders) {
 }
 
 function buildOrderStatusDistribution(orders) {
-  const dist = { pending: 0, processing: 0, packed: 0, shipped: 0, delivered: 0, cancelled: 0 };
+  const dist = { pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
   orders.forEach((o) => {
     const s = (o.status || 'pending').toLowerCase();
     if (dist[s] !== undefined) dist[s] += 1;
