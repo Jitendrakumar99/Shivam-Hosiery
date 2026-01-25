@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
-import { fetchCustomers } from '../store/slices/customerSlice';
+import { fetchCustomers, deleteCustomer } from '../store/slices/customerSlice';
 import { fetchOrders } from '../store/slices/orderSlice';
 import CustomerDetailsModal from '../components/Modal/CustomerDetailsModal';
 
@@ -35,6 +35,20 @@ const Customers = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCustomer(null);
+  };
+
+  const handleDeleteCustomer = async (customer) => {
+    const id = customer?._id || customer?.id;
+    if (!id) return;
+    if (!window.confirm(`Delete customer "${customer.name || customer.email}"? This cannot be undone.`)) return;
+
+    try {
+      await dispatch(deleteCustomer(id)).unwrap();
+      alert('Customer deleted successfully');
+      dispatch(fetchCustomers());
+    } catch (err) {
+      alert(err || 'Failed to delete customer');
+    }
   };
 
   return (
@@ -114,7 +128,12 @@ const Customers = () => {
                 </svg>
                 View
               </button>
-              <button className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition">
+              <button
+                type="button"
+                onClick={() => handleDeleteCustomer(customer)}
+                className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                title="Delete customer"
+              >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>

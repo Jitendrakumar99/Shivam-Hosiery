@@ -54,16 +54,8 @@ exports.getProducts = async (req, res, next) => {
     // Base product match (product status)
     const baseMatch = { status };
 
-    // Text search conditions on products
-    const searchMatch = {};
-    if (search) {
-      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      searchMatch.$or = [
-        { title: { $regex: escapedSearch, $options: 'i' } },
-        { description: { $regex: escapedSearch, $options: 'i' } },
-        { shortDescription: { $regex: escapedSearch, $options: 'i' } }
-      ];
-    }
+    // We'll apply search after category lookups so we can search by subcategory + parent category too.
+    const escapedSearch = search ? search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
 
     // Category filter settings
     const categoryFilters = [];
@@ -98,7 +90,7 @@ exports.getProducts = async (req, res, next) => {
     }
 
     const pipeline = [
-      { $match: { ...baseMatch, ...searchMatch } },
+      { $match: { ...baseMatch } },
       // Join categories to enforce category status filtering
       {
         $lookup: {
@@ -122,6 +114,21 @@ exports.getProducts = async (req, res, next) => {
       // Exclude products with missing category or inactive category
       { $match: { 'categoryDoc.status': 'active' } },
     ];
+
+    // Search by product title + subcategory name + parent category name
+    if (escapedSearch) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { title: { $regex: escapedSearch, $options: 'i' } },
+            { description: { $regex: escapedSearch, $options: 'i' } },
+            { shortDescription: { $regex: escapedSearch, $options: 'i' } },
+            { 'categoryDoc.name': { $regex: escapedSearch, $options: 'i' } },
+            { 'parentDoc.name': { $regex: escapedSearch, $options: 'i' } },
+          ]
+        }
+      });
+    }
 
     if (categoryFilters.length > 0) {
       pipeline.push({ $match: { $or: categoryFilters } });

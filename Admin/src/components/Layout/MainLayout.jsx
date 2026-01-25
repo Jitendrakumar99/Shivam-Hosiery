@@ -7,7 +7,7 @@ const MainLayout = ({ children }) => {
       <Header />
       <div className="flex flex-1 relative">
         <Sidebar />
-        <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 overflow-auto md:ml-0">
+        <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 overflow-auto md:ml-56 lg:ml-64">
           {children}
         </main>
       </div>

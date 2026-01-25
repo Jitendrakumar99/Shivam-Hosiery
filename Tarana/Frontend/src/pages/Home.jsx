@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchCategories } from '../store/slices/categorySlice';
+import { fetchProducts } from '../store/slices/productSlice';
 
 const Home = () => {
   const dispatch = useAppDispatch();
@@ -12,6 +13,16 @@ const Home = () => {
   useEffect(() => {
     // Fetch only top-level (parent) categories that are active
     dispatch(fetchCategories({ status: 'active', parent: 'null' }));
+    // Fetch products for "You may also like" section
+    dispatch(fetchProducts({ limit: 20 }))
+      .then((result) => {
+        if (fetchProducts.fulfilled.match(result)) {
+          // Shuffle and pick 3-4 random products
+          const allProducts = result.payload.data || [];
+          const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
+          setFeaturedProducts(shuffled.slice(0, 4));
+        }
+      });
   }, [dispatch]);
 
   const handleCategoryClick = (category) => {
@@ -195,6 +206,64 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* You May Also Like Section */}
+      {featuredProducts.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">You May Also Like</h2>
+            <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+              Discover our featured products
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => {
+                const discountPercentage = product.pricing?.compareAtPrice > product.pricing?.price
+                  ? Math.round(((product.pricing.compareAtPrice - product.pricing.price) / product.pricing.compareAtPrice) * 100)
+                  : 0;
+                
+                return (
+                  <Link
+                    key={product._id || product.id}
+                    to={`/products/${product._id || product.id}`}
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition group"
+                  >
+                    <div className="h-64 bg-gray-200 relative overflow-hidden">
+                      {product.images && product.images.length > 0 ? (
+                        <>
+                          <img 
+                            src={product.images[0]} 
+                            alt={product.title || product.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                          />
+                          {discountPercentage > 0 && (
+                            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                              {discountPercentage}% OFF
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <p className="text-xs text-gray-500 mb-1">{product.category?.name || product.category}</p>
+                      <h3 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-trana-orange transition">
+                        {product.title || product.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <p className="text-trana-orange font-bold">₹{product.pricing?.price || product.price}</p>
+                        {product.pricing?.compareAtPrice > product.pricing?.price && (
+                          <p className="text-sm text-gray-500 line-through">₹{product.pricing.compareAtPrice}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Why Choose Trana Section */}
       <section className="py-16 bg-white">

@@ -27,10 +27,20 @@ exports.getCategories = async (req, res, next) => {
 
     const categories = await categoriesQuery;
 
+    // Enforce rule: subcategories must not expose images
+    const sanitized = categories.map((c) => {
+      const obj = c.toObject ? c.toObject() : c;
+      const isSubCategory = !!(obj.parent);
+      if (isSubCategory) {
+        return { ...obj, image: '' };
+      }
+      return obj;
+    });
+
     res.json({
       success: true,
-      count: categories.length,
-      data: categories
+      count: sanitized.length,
+      data: sanitized
     });
   } catch (error) {
     next(error);
@@ -54,7 +64,7 @@ exports.getCategory = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: category
+      data: category?.parent ? { ...category.toObject(), image: '' } : category
     });
   } catch (error) {
     next(error);
@@ -66,6 +76,10 @@ exports.getCategory = async (req, res, next) => {
 // @access  Private/Admin
 exports.createCategory = async (req, res, next) => {
   try {
+    // Enforce rule: subcategories must not store image
+    if (req.body?.parent) {
+      req.body.image = '';
+    }
     const category = await Category.create(req.body);
 
     clearCache('/api/categories');
@@ -100,6 +114,11 @@ exports.updateCategory = async (req, res, next) => {
     }
 
     const prevName = category.name;
+    // Enforce rule: subcategories must not store image
+    if (category.parent) {
+      req.body.image = '';
+    }
+
     category = await Category.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true

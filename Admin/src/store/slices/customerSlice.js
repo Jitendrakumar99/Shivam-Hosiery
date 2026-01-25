@@ -37,6 +37,20 @@ export const updateCustomerStatus = createAsyncThunk(
   }
 );
 
+export const deleteCustomer = createAsyncThunk(
+  'customers/deleteCustomer',
+  async (id, { rejectWithValue }) => {
+    try {
+      const data = await adminService.deleteUser(id);
+      return { id, data };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to delete customer'
+      );
+    }
+  }
+);
+
 const customerSlice = createSlice({
   name: 'customers',
   initialState,
@@ -71,6 +85,22 @@ const customerSlice = createSlice({
             state.customers[index] = action.payload.data;
           }
         }
+      })
+      // Delete Customer
+      .addCase(deleteCustomer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteCustomer.fulfilled, (state, action) => {
+        state.loading = false;
+        const deletedId = action.payload.id;
+        state.customers = state.customers.filter(
+          c => String(c._id || c.id) !== String(deletedId)
+        );
+      })
+      .addCase(deleteCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
