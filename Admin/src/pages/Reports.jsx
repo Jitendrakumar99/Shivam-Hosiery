@@ -62,7 +62,7 @@ function buildRevenueTrendFromOrders(orders) {
 }
 
 function buildOrderStatusDistribution(orders) {
-  const dist = { pending: 0, processing: 0, packed: 0, shipped: 0, delivered: 0, cancelled: 0 };
+  const dist = { pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
   orders.forEach((o) => {
     const s = (o.status || 'pending').toLowerCase();
     if (dist[s] !== undefined) dist[s] += 1;
@@ -70,18 +70,95 @@ function buildOrderStatusDistribution(orders) {
   return dist;
 }
 
-function buildCategoryDistribution(products) {
+function buildParentCategoryDistribution(products, categories) {
+  // Filter to only parent categories (categories without a parent field)
+  const parentCategories = (categories || []).filter(cat => {
+    const parentId = cat.parent?._id || cat.parent;
+    return !parentId; // No parent means it's a parent category
+  });
+  
+  // Create a map of category ID to parent category name
+  const parentCategoryMap = {};
+  parentCategories.forEach(cat => {
+    const catId = cat._id || cat.id;
+    parentCategoryMap[catId] = cat.name;
+  });
+  
+  // Create a map for all categories (including subcategories) to find their parent
+  const categoryToParentMap = {};
+  (categories || []).forEach(cat => {
+    const catId = cat._id || cat.id;
+    const parentId = cat.parent?._id || cat.parent;
+    
+    if (parentId) {
+      // This is a subcategory - find its parent name
+      const parentName = parentCategoryMap[parentId];
+      if (parentName) {
+        categoryToParentMap[catId] = parentName;
+      }
+    } else {
+      // This is a parent category - map to itself
+      categoryToParentMap[catId] = cat.name;
+    }
+  });
+  
+  // Count products by parent category
   const dist = {};
   products.forEach((p) => {
-    const catName = p.category?.name || p.category || 'Uncategorized';
-    dist[catName] = (dist[catName] || 0) + 1;
+    let parentCategoryName = 'Uncategorized';
+    
+    // Get product's category ID
+    const productCategoryId = p.category?.id?._id || p.category?.id || p.category?._id || p.category;
+    
+    if (productCategoryId) {
+      // Try to find parent category name from map
+      const parentName = categoryToParentMap[productCategoryId];
+      if (parentName) {
+        parentCategoryName = parentName;
+      } else {
+        // If not found in map, try to find category in categories list
+        const foundCategory = categories?.find(cat => {
+          const catId = cat._id || cat.id;
+          return String(catId) === String(productCategoryId);
+        });
+        
+        if (foundCategory) {
+          const parentId = foundCategory.parent?._id || foundCategory.parent;
+          if (parentId) {
+            // It's a subcategory - get parent name
+            parentCategoryName = parentCategoryMap[parentId] || foundCategory.name;
+          } else {
+            // It's a parent category
+            parentCategoryName = foundCategory.name;
+          }
+        } else if (p.category?.parent) {
+          // Product has parent category name directly
+          parentCategoryName = p.category.parent;
+        } else if (p.category?.name) {
+          // Fallback to category name if no parent info
+          parentCategoryName = p.category.name;
+        }
+      }
+    } else if (p.category?.parent) {
+      // Product has parent category name directly
+      parentCategoryName = p.category.parent;
+    } else if (p.category?.name) {
+      // Fallback to category name
+      parentCategoryName = p.category.name;
+    }
+    
+    dist[parentCategoryName] = (dist[parentCategoryName] || 0) + 1;
   });
+  
   const total = products.length;
   if (total === 0) return {};
+  
+  // Convert to percentages
   const result = {};
   Object.entries(dist).forEach(([cat, count]) => {
     result[cat] = Math.round((count / total) * 100);
   });
+  
   return result;
 }
 
@@ -321,6 +398,7 @@ const Reports = () => {
   const { metrics, loading: statsLoading } = useSelector((state) => state.reports);
   const { orders } = useSelector((state) => state.orders);
   const { products } = useSelector((state) => state.products);
+  const { categories } = useSelector((state) => state.categories);
 
   useEffect(() => {
     dispatch(fetchStats());
@@ -331,7 +409,7 @@ const Reports = () => {
 
   const revenueTrend = buildRevenueTrendFromOrders(orders || []);
   const orderStatusDistribution = buildOrderStatusDistribution(orders || []);
-  const categoryDistribution = buildCategoryDistribution(products || []);
+  const categoryDistribution = buildParentCategoryDistribution(products || [], categories || []);
   const revenueMax = Math.max(1, ...revenueTrend.map(i => Number(i.revenue) || 0));
   const pieColors = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ef4444', '#14b8a6'];
 
@@ -472,8 +550,8 @@ const Reports = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Product Category Distribution</h3>
-              <p className="text-sm text-gray-600">Products by category</p>
+              <h3 className="text-lg font-semibold text-gray-800">Parent Category Distribution</h3>
+              <p className="text-sm text-gray-600">Products by parent category</p>
             </div>
             <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

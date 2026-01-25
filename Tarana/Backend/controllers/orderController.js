@@ -252,7 +252,7 @@ exports.createOrder = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateOrderStatus = async (req, res, next) => {
   try {
-    const { status, trackingNumber, deliveryAgent } = req.body;
+    const { status, trackingNumber, deliveryAgent, paymentStatus } = req.body;
 
     const order = await Order.findById(req.params.id);
 
@@ -264,33 +264,93 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
 
     const prevStatus = order.status;
+    const prevPaymentStatus = order.paymentStatus;
 
-    // No stock adjustments needed as we are manufacture
-
-    order.status = status;
+    // Update status if provided
+    if (status !== undefined && status !== null) {
+      // Validate order status
+      const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid order status. Must be one of: ${validStatuses.join(', ')}`
+        });
+      }
+      order.status = status;
+    }
+    
+    // Update payment status if provided
+    if (paymentStatus !== undefined && paymentStatus !== null) {
+      // Validate payment status
+      const validStatuses = ['pending', 'paid', 'failed', 'refunded'];
+      if (!validStatuses.includes(paymentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid payment status. Must be one of: ${validStatuses.join(', ')}`
+        });
+      }
+      order.paymentStatus = paymentStatus;
+    }
+    
     if (trackingNumber) {
       order.trackingNumber = trackingNumber;
     }
     if (deliveryAgent !== undefined) {
       order.deliveryAgent = deliveryAgent;
     }
+    
     await order.save();
 
-    // Create notification
-    await Notification.create({
-      user: order.user,
-      type: 'order',
-      title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-      message: `Your order #${order._id} status has been updated to ${status}.`,
-      link: `/orders/${order._id}`
-    });
+    // Create notification for status or payment status changes
+    // Wrap in try-catch so notification failures don't break the update
+    const statusChanged = status !== undefined && status !== prevStatus;
+    const paymentStatusChanged = paymentStatus !== undefined && paymentStatus !== prevPaymentStatus;
+    
+    if (statusChanged) {
+      try {
+        await Notification.create({
+          user: order.user,
+          type: 'order',
+          title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          message: `Your order #${order._id} status has been updated to ${status}.`,
+          link: `/orders/${order._id}`
+        });
+      } catch (notifError) {
+        // Log notification error but don't fail the order update
+        console.error('Error creating order status notification:', notifError);
+      }
+    }
+    
+    if (paymentStatusChanged) {
+      try {
+        await Notification.create({
+          user: order.user,
+          type: 'order', // Use 'order' type since payment status is order-related
+          title: `Payment Status Updated`,
+          message: `Your order #${order._id} payment status has been updated to ${paymentStatus}.`,
+          link: `/orders/${order._id}`
+        });
+      } catch (notifError) {
+        // Log notification error but don't fail the order update
+        console.error('Error creating payment status notification:', notifError);
+      }
+    }
 
+    // Clear all relevant caches
     clearCache('/api/orders');
     clearCache(`/api/orders/${req.params.id}`);
+    
+    // Clear stats cache when payment status or order status changes (affects revenue calculations)
+    if (paymentStatusChanged || (statusChanged && (status === 'delivered' || status === 'shipped' || prevStatus === 'delivered' || prevStatus === 'shipped'))) {
+      clearCache('/api/admin/stats');
+    }
 
+    // Convert Mongoose document to plain object for JSON response
+    const orderData = order.toObject ? order.toObject() : order;
+    
     res.json({
       success: true,
-      data: order
+      data: orderData
     });
   } catch (error) {
     next(error);

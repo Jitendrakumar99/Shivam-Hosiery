@@ -50,25 +50,31 @@ const Orders = () => {
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const currentOrder = orders.find(o => (o._id || o.id) === orderId);
+      if (!currentOrder) {
+        alert('Order not found');
+        return;
+      }
+      
+      const prevStatus = currentOrder.status;
+      
       await dispatch(updateOrderStatus({ 
         id: orderId, 
         status: newStatus,
         paymentStatus: currentOrder?.paymentStatus // Preserve payment status
       })).unwrap();
+      
       // Refresh orders list to show updated status
       await dispatch(fetchOrders());
+      
       // Refresh stats if status change might affect revenue
-      if (newStatus === 'delivered' || newStatus === 'shipped') {
+      if (newStatus === 'delivered' || newStatus === 'shipped' || prevStatus === 'delivered' || prevStatus === 'shipped') {
         await dispatch(fetchStats());
       }
-      // Update selectedOrder if it's the one being changed
+      
+      // Update selectedOrder if it's the one being changed - refresh from Redux state
       if (selectedOrder && (selectedOrder._id || selectedOrder.id) === orderId) {
-        const updatedOrder = orders.find(
-          o => (o._id || o.id) === orderId
-        );
-        if (updatedOrder) {
-          setSelectedOrder(updatedOrder);
-        }
+        // The Redux state should be updated, so we can get it from there after fetch
+        // We'll update it in handleCloseModal or when orders are refreshed
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -93,7 +99,6 @@ const Orders = () => {
     switch (status) {
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'shipped': return 'bg-blue-100 text-blue-800';
-      case 'packed': return 'bg-purple-100 text-purple-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'processing': return 'bg-indigo-100 text-indigo-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
@@ -149,7 +154,6 @@ const Orders = () => {
           <option value="all">All Orders</option>
           <option value="pending">Pending</option>
           <option value="processing">Processing</option>
-          <option value="packed">Packed</option>
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
@@ -218,7 +222,6 @@ const Orders = () => {
                 >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
-                  <option value="packed">Packed</option>
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
