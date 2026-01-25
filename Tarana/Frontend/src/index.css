@@ -4,39 +4,192 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  overflow-x: hidden;
 }
 
-/* Animation utilities */
-@keyframes bounce {
-  0%, 100% {
+@layer utilities {
+
+  /* ... existing hero and card animations ... */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-parallax-zoom {
+    animation: parallaxZoom 20s ease-in-out infinite alternate;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-600 {
+    animation-delay: 600ms;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes parallaxZoom {
+    0% {
+      transform: scale(1);
+    }
+
+    100% {
+      transform: scale(1.1);
+    }
+  }
+
+  /* Product Card Animations */
+  .product-card {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .product-image-zoom {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .product-card:hover .product-image-zoom {
+    transform: scale(1.1);
+  }
+
+  .actions-reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .product-card:hover .actions-reveal {
+    opacity: 1;
     transform: translateY(0);
   }
-  50% {
-    transform: translateY(-10px);
+
+  /* CTA Button Pulsing */
+  .pulse-hover:hover {
+    animation: subtlePulse 2s infinite;
   }
-}
 
-.animate-bounce {
-  animation: bounce 0.6s ease-in-out;
-}
+  @keyframes subtlePulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(245, 74, 0, 0.4);
+    }
 
-@keyframes pulse {
-  0%, 100% {
+    70% {
+      box-shadow: 0 0 0 15px rgba(245, 74, 0, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(245, 74, 0, 0);
+    }
+  }
+
+  /* --- NEW ANIMATIONS --- */
+
+  /* Flying Item Animation */
+  .flying-item {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  /* Cart Bounce */
+  .animate-cart-bounce {
+    animation: cartBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes cartBounce {
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  /* Wishlist Heart Pop */
+  .animate-heart-pop {
+    animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes heartPop {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.4);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Page Transitions */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .page-enter-active {
     opacity: 1;
+    transform: translateY(0);
+    transition: opacity 400ms, transform 400ms;
   }
-  50% {
-    opacity: 0.5;
+
+  .page-exit {
+    opacity: 1;
+    transform: translateY(0);
   }
-}
 
-.animate-pulse {
-  animation: pulse 0.5s ease-in-out;
-}
+  .page-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 300ms, transform 300ms;
+  }
 
-.scale-125 {
-  transform: scale(1.25);
-  transition: transform 0.3s ease;
+  /* Global Loader */
+  .loader-spin {
+    border: 3px solid rgba(245, 74, 0, 0.1);
+    border-top: 3px solid #f54a00;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 }

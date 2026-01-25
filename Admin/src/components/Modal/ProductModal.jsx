@@ -9,6 +9,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
   const { categories } = useSelector((state) => state.categories);
   const { loading } = useSelector((state) => state.products);
   const [activeTab, setActiveTab] = useState('basic');
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -149,7 +150,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         shortDescription: product.shortDescription || '',
         parentCategory,
         subCategory,
-        category: product.category?.name || product.category || '',
+        category: catName || '',
         pricing: {
           price: product.pricing?.price || product.price || '',
           compareAtPrice: product.pricing?.compareAtPrice || '',
@@ -165,7 +166,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           size: v.size,
           color: v.color,
           price: v.price,
-          quantity: v.inventory?.quantity
+          quantity: v.inventory?.quantity ?? v.quantity ?? 0
 
         })) || [],
         seo: {
@@ -193,8 +194,16 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         status: 'active',
         minOrderQuantity: 0,
       });
+      setHasInitialized(true);
     }
-  }, [product, mode, isOpen, categories]);
+  }, [product, mode, isOpen, categories, hasInitialized]);
+
+  // Reset initialization when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHasInitialized(false);
+    }
+  }, [isOpen]);
 
   // Helper functions for category selection
   const getParentCategories = () => {
@@ -290,11 +299,11 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       description: formData.description,
       shortDescription: formData.shortDescription,
       category: {
-        id: selectedCategoryId,
-        name: selectedCategory?.name || '',
+        ...(selectedCategoryId && /^[0-9a-fA-F]{24}$/.test(selectedCategoryId) ? { id: selectedCategoryId } : {}),
+        name: selectedCategory?.name || formData.category || '',
       },
       pricing: {
-        price: parseFloat(formData.pricing.price),
+        price: parseFloat(formData.pricing.price) || 0,
         compareAtPrice: parseFloat(formData.pricing.compareAtPrice) || 0,
         currency: 'INR'
       },
@@ -303,13 +312,13 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       variants: formData.variants.map(v => ({
         size: v.size,
         color: v.color,
-        price: parseFloat(v.price),
-        inventory: { quantity: parseInt(v.quantity) }
+        price: parseFloat(v.price) || 0,
+        inventory: { quantity: parseInt(v.quantity) || 0 }
       })),
       seo: {
         title: formData.seo.title,
         description: formData.seo.description,
-        keywords: formData.seo.keywords.split(',').map(k => k.trim()).filter(Boolean)
+        keywords: formData.seo.keywords ? formData.seo.keywords.split(',').map(k => k.trim()).filter(Boolean) : []
       },
       status: formData.status,
       minOrderQuantity: parseInt(formData.minOrderQuantity) || 0,
