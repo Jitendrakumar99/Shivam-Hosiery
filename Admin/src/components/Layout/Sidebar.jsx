@@ -41,7 +41,7 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-56 lg:w-64 bg-gray-50 p-3 lg:p-4 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed md:fixed inset-y-0 left-0 z-40 w-56 lg:w-64 bg-gray-50 p-3 lg:p-4 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -58,7 +58,7 @@ const Sidebar = () => {
           </button>
         </div>
         <h2 className="hidden md:block text-base lg:text-lg font-semibold text-gray-800 mb-3 lg:mb-4">Navigation</h2>
-        <nav className="space-y-1">
+        <nav className="space-y-1 overflow-y-auto scrollbar-hide flex-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -79,7 +79,7 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
-        <div className="mt-6 lg:mt-8">
+        <div className="mt-6 lg:mt-8 flex-shrink-0">
           <h3 className="text-xs lg:text-sm font-semibold text-gray-600 mb-2">Quick Links</h3>
           <div className="space-y-2">
             <button className="w-full text-left px-3 lg:px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-xs lg:text-sm transition">

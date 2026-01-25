@@ -75,38 +75,92 @@ const Brands = () => {
               <p className="text-gray-600">Loading brands...</p>
             </div>
           ) : brands.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {brands.map((brand) => (
-                <div key={brand._id || brand.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                  <div className="h-48 overflow-hidden bg-gray-200 flex items-center justify-center">
-                    {brand.image ? (
-                      <img src={brand.image} alt={brand.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-gray-400">Brand Image</span>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-2">{brand.category}</span>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{brand.name}</h3>
-                    {brand.slogan && <p className="text-sm text-gray-600 mb-1">{brand.slogan}</p>}
-                    <p className="text-gray-600 mb-4 text-sm">{brand.description}</p>
-                    {brand.websiteUrl && (
-                      <a 
-                        href={brand.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 transition-colors text-sm"
-                      >
-                        Visit Website
-                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                    )}
+            (() => {
+              // Find Trana brand or use first brand
+              const tranBrand = brands.find(b => b.name?.toLowerCase().includes('trana')) || brands[0];
+              const brandImage = tranBrand.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1600&auto=format&fit=crop';
+              
+              return (
+                <div className="max-w-7xl mx-auto">
+                  <div className="grid lg:grid-cols-2 gap-0 bg-white rounded-lg overflow-hidden shadow-lg">
+                    {/* Left Section - Image with Overlay */}
+                    <div className="relative h-[500px] lg:h-auto overflow-hidden">
+                      <img 
+                        src={brandImage} 
+                        alt={tranBrand.name || 'Trana Safety'} 
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Overlay with Text */}
+                      <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/60 flex flex-col justify-end p-6 md:p-8">
+                        <div className="mb-4">
+                          <span className="inline-block bg-[#f54a00] text-white px-4 py-2 rounded text-sm font-semibold mb-3">
+                            Safety Garments
+                          </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
+                          {tranBrand.name || 'Trana'}
+                        </h3>
+                        <p className="text-white text-lg md:text-xl">
+                          सुरक्षा, हमारी प्राथमिकता
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Section - Content */}
+                    <div className="bg-white p-6 md:p-8 lg:p-12 flex flex-col justify-center">
+                      <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
+                        Premium Safety Solutions
+                      </h3>
+                      
+                      <p className="text-gray-700 mb-4 leading-relaxed">
+                        {tranBrand.name || 'Trana'} is our flagship brand dedicated to manufacturing premium safety garments for industrial and workplace protection. With a focus on high-visibility clothing, {tranBrand.name || 'Trana'} ensures that workers remain safe and visible in hazardous environments.
+                      </p>
+                      
+                      <p className="text-gray-700 mb-6 leading-relaxed">
+                        Our products meet international safety standards and are trusted by leading organizations across multiple industries including construction, manufacturing, energy, and infrastructure.
+                      </p>
+
+                      {/* Features List */}
+                      <ul className="space-y-3 mb-8">
+                        {[
+                          'ANSI/ISEA 107 certified products',
+                          'High-visibility safety vests and jackets',
+                          'Industrial coveralls and protective wear',
+                          'Customization options available',
+                          'Bulk ordering with B2B portal'
+                        ].map((feature, index) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <svg className="w-5 h-5 text-[#f54a00] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-gray-700">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Call-to-Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <Link
+                          to="/trana"
+                          className="inline-flex items-center justify-center bg-[#f54a00] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e04400] transition-colors"
+                        >
+                          Explore {tranBrand.name || 'Trana'} Products
+                          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                        <Link
+                          to="/customize"
+                          className="inline-flex items-center justify-center border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                        >
+                          Customize Products
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })()
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-600">No brands available</p>

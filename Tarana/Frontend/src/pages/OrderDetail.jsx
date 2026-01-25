@@ -415,13 +415,22 @@ const OrderDetail = () => {
                   </p>
                   <p>
                     <span className="font-semibold">Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded text-xs ${order.paymentStatus === 'paid'
-                      ? 'bg-green-100 text-green-800'
-                      : order.paymentStatus === 'failed'
+                    <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                      order.paymentStatus === 'paid'
+                        ? 'bg-green-100 text-green-800'
+                        : order.paymentStatus === 'failed'
                         ? 'bg-red-100 text-red-800'
+                        : order.paymentStatus === 'refunded'
+                        ? 'bg-orange-100 text-orange-800'
                         : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {order.paymentStatus === 'paid' ? 'Paid' : order.paymentStatus === 'failed' ? 'Failed' : 'Pending'}
+                    }`}>
+                      {order.paymentStatus === 'paid' 
+                        ? 'Paid' 
+                        : order.paymentStatus === 'failed' 
+                        ? 'Failed' 
+                        : order.paymentStatus === 'refunded'
+                        ? 'Refunded'
+                        : 'Pending'}
                     </span>
                   </p>
                 </div>

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchProducts } from '../store/slices/productSlice';
 import { addToWishlist, fetchWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, removeFromCart } from '../store/slices/cartSlice';
 import { fetchCategories } from '../store/slices/categorySlice';
+import { createFlyingAnimation, triggerCartBounce, triggerWishlistAnimation } from '../utils/animations';
 import toast from 'react-hot-toast';
 
 const Products = () => {
@@ -289,14 +290,21 @@ const Products = () => {
 
                       <div className="flex justify-between items-center mb-4">
                         <div>
+                          <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-lg font-bold text-trana-orange">
                             ₹{product.pricing?.price || product.price}
                           </p>
                           {product.pricing?.compareAtPrice > 0 && product.pricing.compareAtPrice > product.pricing.price && (
+                              <>
                             <p className="text-sm text-gray-500 line-through">
                               ₹{product.pricing.compareAtPrice}
                             </p>
+                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+                                  {Math.round(((product.pricing.compareAtPrice - product.pricing.price) / product.pricing.compareAtPrice) * 100)}% OFF
+                                </span>
+                              </>
                           )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -317,9 +325,22 @@ const Products = () => {
                             </Link>
                           ) : (
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                const productImage = e.currentTarget.closest('.bg-white').querySelector('img');
+                                
+                                // Trigger flying animation - will automatically target cart icon in header (right side)
+                                if (productImage && product.images && product.images.length > 0) {
+                                  createFlyingAnimation(product.images[0], productImage);
+                                  setTimeout(() => {
+                                    triggerCartBounce();
+                                  }, 300);
+                                }
+                                
                                 dispatch(addToCart({ product, quantity: 1 }));
-                                toast.success(`${product.name || product.title} added to cart!`);
+                                toast.success(`${product.name || product.title} added to cart!`, {
+                                  duration: 2000,
+                                  position: 'bottom-right',
+                                });
                               }}
                               className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition"
                             >
@@ -328,15 +349,22 @@ const Products = () => {
                           )
                         )}
                         <button
-                          onClick={async () => {
+                          onClick={async (e) => {
                             if (isAuthenticated) {
                               if (isInWishlist(product._id || product.id)) {
                                 toast.info('Product is already in your wishlist');
                                 return;
                               }
+                              
+                              // Trigger wishlist animation
+                              triggerWishlistAnimation(e.currentTarget);
+                              
                               const result = await dispatch(addToWishlist(product._id || product.id));
                               if (addToWishlist.fulfilled.match(result)) {
-                                toast.success(`${product.name} added to wishlist!`);
+                                toast.success(`${product.name} added to wishlist!`, {
+                                  duration: 2000,
+                                  position: 'bottom-right',
+                                });
                                 // Refresh wishlist to update UI
                                 dispatch(fetchWishlist());
                               } else {
@@ -361,8 +389,8 @@ const Products = () => {
                           title={isInWishlist(product._id || product.id) ? 'Already in wishlist' : 'Add to wishlist'}
                         >
                           {isInWishlist(product._id || product.id) ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                             </svg>
                           ) : (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

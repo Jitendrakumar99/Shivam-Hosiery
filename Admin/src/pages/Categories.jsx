@@ -203,11 +203,7 @@ const Categories = () => {
           {(categories || []).filter(c => !!c.parent).map((category) => (
             <div key={category._id || category.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
               <div className="p-4">
-                {category.image && (
-                  <div className="w-full h-24 sm:h-32 mb-3 overflow-hidden rounded-lg">
-                    <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-                  </div>
-                )}
+                {/* Sub-categories do not have images by design */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">

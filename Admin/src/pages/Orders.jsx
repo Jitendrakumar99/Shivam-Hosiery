@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
+import { fetchStats } from '../store/slices/reportSlice';
 import { useState, useEffect } from 'react';
 import OrderDetailsModal from '../components/Modal/OrderDetailsModal';
 
@@ -15,6 +16,25 @@ const Orders = () => {
     dispatch(fetchOrders());
   }, [dispatch]);
 
+  // Update selectedOrder when orders list updates
+  useEffect(() => {
+    if (selectedOrder && orders.length > 0) {
+      const updatedOrder = orders.find(
+        o => (o._id || o.id) === (selectedOrder._id || selectedOrder.id)
+      );
+      if (updatedOrder) {
+        // Only update if there are actual changes to avoid infinite loops
+        const orderChanged = 
+          updatedOrder.status !== selectedOrder.status ||
+          updatedOrder.paymentStatus !== selectedOrder.paymentStatus ||
+          updatedOrder.deliveryAgent !== selectedOrder.deliveryAgent;
+        if (orderChanged) {
+          setSelectedOrder(updatedOrder);
+        }
+      }
+    }
+  }, [orders]);
+
   const filteredOrders = orders.filter(order => {
     const orderId = (order._id || order.id || '').toString();
     const customerName = (order.user?.name || order.customer || '').toLowerCase();
@@ -27,10 +47,33 @@ const Orders = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const handleStatusChange = (orderId, newStatus) => {
-    dispatch(updateOrderStatus({ id: orderId, status: newStatus })).then(() => {
-      dispatch(fetchOrders());
-    });
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const currentOrder = orders.find(o => (o._id || o.id) === orderId);
+      await dispatch(updateOrderStatus({ 
+        id: orderId, 
+        status: newStatus,
+        paymentStatus: currentOrder?.paymentStatus // Preserve payment status
+      })).unwrap();
+      // Refresh orders list to show updated status
+      await dispatch(fetchOrders());
+      // Refresh stats if status change might affect revenue
+      if (newStatus === 'delivered' || newStatus === 'shipped') {
+        await dispatch(fetchStats());
+      }
+      // Update selectedOrder if it's the one being changed
+      if (selectedOrder && (selectedOrder._id || selectedOrder.id) === orderId) {
+        const updatedOrder = orders.find(
+          o => (o._id || o.id) === orderId
+        );
+        if (updatedOrder) {
+          setSelectedOrder(updatedOrder);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      alert('Failed to update order status. Please try again.');
+    }
   };
 
   const handleViewOrder = (order) => {
@@ -38,9 +81,12 @@ const Orders = () => {
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     setIsModalOpen(false);
     setSelectedOrder(null);
+    // Refresh orders list and stats when modal closes to ensure all updates are reflected
+    await dispatch(fetchOrders());
+    await dispatch(fetchStats()); // Refresh stats in case payment status changed
   };
 
   const getStatusColor = (status) => {
@@ -52,6 +98,26 @@ const Orders = () => {
       case 'processing': return 'bg-indigo-100 text-indigo-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPaymentStatusColor = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'refunded': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPaymentStatusText = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'paid': return 'Paid';
+      case 'failed': return 'Failed';
+      case 'pending': return 'Pending';
+      case 'refunded': return 'Refunded';
+      default: return 'Pending';
     }
   };
 
@@ -110,10 +176,10 @@ const Orders = () => {
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-800">{(order._id || order.id)?.slice(-8) || 'N/A'}</h3>
                   <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                    {order.status}
+                    Order Status: {order.status || 'N/A'}
                   </span>
-                  <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                    completed
+                  <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getPaymentStatusColor(order.paymentStatus || 'pending')}`}>
+                    Payment Status: {getPaymentStatusText(order.paymentStatus || 'pending')}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs sm:text-sm">

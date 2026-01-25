@@ -1,18 +1,54 @@
 import Modal from './Modal';
 import { useDispatch } from 'react-redux';
-import { useState } from 'react';
-import { updateOrderStatus } from '../../store/slices/orderSlice';
+import { useState, useEffect } from 'react';
+import { updateOrderStatus, fetchOrders } from '../../store/slices/orderSlice';
+import { fetchStats } from '../../store/slices/reportSlice';
 
 const OrderDetailsModal = ({ isOpen, onClose, order }) => {
   const dispatch = useDispatch();
   const [deliveryAgentInput, setDeliveryAgentInput] = useState(order?.deliveryAgent || '');
   const [savingAgent, setSavingAgent] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(order?.paymentStatus || 'pending');
+  const [savingPaymentStatus, setSavingPaymentStatus] = useState(false);
+
+  // Update local state when order changes
+  useEffect(() => {
+    if (order) {
+      setDeliveryAgentInput(order.deliveryAgent || '');
+      setPaymentStatus(order.paymentStatus || 'pending');
+    }
+  }, [order]);
 
   if (!order) return null;
 
-  const handlePaymentStatusChange = (e) => {
-    // In a real app, this would update payment status
-    console.log('Payment status changed to:', e.target.value);
+  const handlePaymentStatusChange = async (e) => {
+    const newPaymentStatus = e.target.value;
+    const previousPaymentStatus = paymentStatus;
+    setPaymentStatus(newPaymentStatus);
+    
+    if (!order?._id && !order?.id) return;
+    
+    setSavingPaymentStatus(true);
+    try {
+      await dispatch(
+        updateOrderStatus({
+          id: order._id || order.id,
+          status: order.status, // Keep existing status
+          paymentStatus: newPaymentStatus,
+        })
+      ).unwrap();
+      
+      // Refresh orders list and stats to update everywhere
+      await dispatch(fetchOrders());
+      await dispatch(fetchStats()); // Refresh stats when payment status changes
+    } catch (err) {
+      console.error('Failed to update payment status', err);
+      alert('Failed to update payment status. Please try again.');
+      // Revert on error
+      setPaymentStatus(previousPaymentStatus);
+    } finally {
+      setSavingPaymentStatus(false);
+    }
   };
 
   const handlePrintInvoice = () => {
@@ -160,21 +196,66 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
           </div>
         </div>
 
+        {/* Update Order Status */}
+        <div className="pt-4 border-t border-gray-200">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Update Order Status
+          </label>
+          <select
+            value={order.status || 'pending'}
+            onChange={async (e) => {
+              const newStatus = e.target.value;
+              if (!order?._id && !order?.id) return;
+              
+              try {
+                await dispatch(
+                  updateOrderStatus({
+                    id: order._id || order.id,
+                    status: newStatus,
+                    paymentStatus: order.paymentStatus, // Keep existing payment status
+                  })
+                ).unwrap();
+                 // Refresh orders list and stats to update everywhere
+                 await dispatch(fetchOrders());
+                 // Only refresh stats if payment status might affect revenue
+                 if (newStatus === 'delivered' || newStatus === 'shipped') {
+                   await dispatch(fetchStats());
+                 }
+               } catch (err) {
+                 console.error('Failed to update order status', err);
+                 alert('Failed to update order status. Please try again.');
+               }
+             }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+          >
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="packed">Packed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
         {/* Update Payment Status */}
         <div className="pt-4 border-t border-gray-200">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Update Payment Status
           </label>
           <select
-            defaultValue="completed"
+            value={paymentStatus}
             onChange={handlePaymentStatusChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            disabled={savingPaymentStatus}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
+            <option value="paid">Paid</option>
             <option value="failed">Failed</option>
             <option value="refunded">Refunded</option>
           </select>
+          {savingPaymentStatus && (
+            <p className="text-sm text-gray-500 mt-1">Updating payment status...</p>
+          )}
         </div>
 
         {/* Payment Method & Delivery Info */}
