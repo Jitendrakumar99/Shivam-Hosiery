@@ -8,8 +8,13 @@ exports.errorHandler = (err, req, res, next) => {
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-    const message = 'Resource not found';
-    error = { message, statusCode: 404 };
+    if (err.path === '_id') {
+      const message = 'Resource not found';
+      error = { message, statusCode: 404 };
+    } else {
+      const message = `Invalid value for field: ${err.path}`;
+      error = { message, statusCode: 400 };
+    }
   }
 
   // Mongoose duplicate key

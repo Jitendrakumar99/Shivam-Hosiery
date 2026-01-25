@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useRef } from 'react';
 import { fetchProducts } from '../store/slices/productSlice';
 import { addToWishlist, fetchWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, removeFromCart } from '../store/slices/cartSlice';
@@ -154,6 +155,46 @@ const Products = () => {
     );
   };
 
+  const productRefs = useRef({});
+
+  const animateFlyToCart = (productId, productImage) => {
+    const productElement = productRefs.current[productId];
+    const cartIcon = document.getElementById('header-cart-icon');
+
+    if (!productElement || !cartIcon || !productImage) return;
+
+    const rect = productElement.getBoundingClientRect();
+    const cartRect = cartIcon.getBoundingClientRect();
+
+    const flyer = document.createElement('img');
+    flyer.src = productImage;
+    flyer.className = 'flying-item';
+    flyer.style.left = `${rect.left + rect.width / 2 - 40}px`;
+    flyer.style.top = `${rect.top + rect.height / 2 - 40}px`;
+    flyer.style.width = '80px';
+    flyer.style.height = '80px';
+    flyer.style.borderRadius = '50%';
+    flyer.style.objectFit = 'cover';
+    flyer.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+    flyer.style.opacity = '1';
+
+    document.body.appendChild(flyer);
+
+    // Force reflow
+    flyer.offsetWidth;
+
+    flyer.style.left = `${cartRect.left + cartRect.width / 2 - 10}px`;
+    flyer.style.top = `${cartRect.top + cartRect.height / 2 - 10}px`;
+    flyer.style.width = '20px';
+    flyer.style.height = '20px';
+    flyer.style.opacity = '0.5';
+    flyer.style.transform = 'scale(0.5) rotate(360deg)';
+
+    setTimeout(() => {
+      flyer.remove();
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -185,7 +226,7 @@ const Products = () => {
                 </svg>
               </div>
             </div>
-            
+
             {/* Category filters - only show when there's a parentSlug */}
             {parentSlug && (
               <div className="flex flex-wrap gap-2">
@@ -234,11 +275,15 @@ const Products = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
-                  <div key={product._id || product.id} className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                  <div
+                    key={product._id || product.id}
+                    ref={el => productRefs.current[product._id || product.id] = el}
+                    className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden product-card"
+                  >
                     <div className="h-72 bg-gray-200 flex items-center justify-center relative group">
                       <Link to={`/products/${product._id || product.id}`} className="absolute inset-0 z-0 ">
                         {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-fit hover:scale-105  transition-transform duration-300" />
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-fit product-image-zoom transition-transform duration-500" />
                         ) : (
                           <span className="text-gray-500">{product.name} Image</span>
                         )}
@@ -261,12 +306,12 @@ const Products = () => {
                     <div className="p-6">
                       <p className="text-sm text-gray-500 mb-1">{product.category?.name || product.category}</p>
                       <Link to={`/products/${product._id || product.id}`}>
-                        <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition cursor-pointer">{product.title || product.name}</h3>
+                        <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition-colors duration-300 cursor-pointer">{product.title || product.name}</h3>
                       </Link>
 
                       {/* Rating */}
                       {product.rating && product.rating.count > 0 && (
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 transition-all duration-300">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
                               <svg
@@ -287,7 +332,7 @@ const Products = () => {
 
                       <p className="text-gray-600 mb-4 text-sm line-clamp-2">{product.shortDescription || product.description}</p>
 
-                      <div className="flex justify-between items-center mb-4">
+                      <div className="flex justify-between items-center mb-0 transition-all duration-300">
                         <div>
                           <p className="text-lg font-bold text-trana-orange">
                             ₹{product.pricing?.price || product.price}
@@ -299,7 +344,7 @@ const Products = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-4 actions-reveal">
                         {isInCart(product) ? (
                           <Link
                             to="/cart"
@@ -319,9 +364,13 @@ const Products = () => {
                             <button
                               onClick={() => {
                                 dispatch(addToCart({ product, quantity: 1 }));
-                                toast.success(`${product.name || product.title} added to cart!`);
+                                animateFlyToCart(product._id || product.id, product.images?.[0]);
+                                toast.success(`${product.name || product.title} added to cart!`, {
+                                  icon: '🛒',
+                                  position: 'bottom-center'
+                                });
                               }}
-                              className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition"
+                              className="flex-1 bg-trana-orange text-white py-2 rounded-full font-semibold hover:bg-orange-600 transition shadow-md hover:shadow-lg active:scale-95"
                             >
                               Add to Cart
                             </button>
@@ -361,11 +410,11 @@ const Products = () => {
                           title={isInWishlist(product._id || product.id) ? 'Already in wishlist' : 'Add to wishlist'}
                         >
                           {isInWishlist(product._id || product.id) ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 animate-heart-pop" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                           )}

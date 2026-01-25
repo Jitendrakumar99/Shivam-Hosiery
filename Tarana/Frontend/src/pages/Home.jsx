@@ -7,6 +7,7 @@ const Home = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { categories, loading } = useAppSelector((state) => state.categories);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Fetch only top-level (parent) categories that are active
@@ -43,36 +44,44 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Hero Section */}
-      <section className="bg-trana-orange text-white py-10 md:py-32 h-screen relative overflow-hidden">
-        {/* Background Image */}
-        <img 
-          src="https://images.unsplash.com/photo-1640236889867-2bf2c34f7d8f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080" 
-          alt="Hero Background" 
-          className="absolute inset-0 w-full h-full object-cover opacity-30"
-        />
+      <section className="bg-trana-orange text-white py-10 md:py-32 h-[90vh] md:h-screen relative overflow-hidden flex items-center">
+        {/* Background Image with Zoom Animation */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1640236889867-2bf2c34f7d8f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+            alt="Hero Background"
+            className="w-full h-full object-cover opacity-30 animate-parallax-zoom"
+          />
+        </div>
+
         {/* Overlay */}
-        <div className="absolute inset-0 bg-trana-orange opacity-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-trana-orange to-transparent opacity-10 z-5"></div>
+
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">Trana Safety Garments</h1>
-          <p className="text-2xl md:text-3xl mb-4">सुरक्षा, हमारी प्राथमिकता.</p>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full text-center md:text-left">
+          <h1 className="text-4xl md:text-7xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight">
+            Trana <span className="text-white">Safety</span> <br className="hidden md:block" />
+            Garments
+          </h1>
+          <p className="text-2xl md:text-4xl mb-4 animate-fade-in-up delay-200 font-medium opacity-90">
+            सुरक्षा, हमारी प्राथमिकता.
+          </p>
+          <p className="text-lg md:text-xl mb-8 max-w-2xl animate-fade-in-up delay-400 text-white/80 font-light">
             Premium safety garments designed for maximum protection and visibility in industrial environments.
           </p>
-          <div className="flex gap-4">
-          <Link 
-            to="/products" 
-            className="inline-block bg-white text-trana-orange px-8 py-3  rounded font-semibold hover:bg-gray-100 transition"
-          >
-            Browse Products
-          </Link>
-          <Link 
-            to="/customize" 
-            className="inline-block bg-white text-trana-orange px-8 py-3 rounded font-semibold hover:bg-gray-100 transition"
-          >
-           Customize Your Order
-
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-600 justify-center md:justify-start">
+            <Link
+              to="/products"
+              className="inline-block bg-white text-trana-orange px-10 py-4 rounded-full font-bold hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl transition-all pulse-hover no-underline text-center"
+            >
+              Browse Products
+            </Link>
+            <Link
+              to="/customize"
+              className="inline-block bg-transparent border-2 border-white text-white px-10 py-4 rounded-full font-bold hover:bg-white hover:text-trana-orange hover:scale-105 active:scale-95 transition-all no-underline text-center"
+            >
+              Customize Your Order
+            </Link>
           </div>
         </div>
       </section>
@@ -125,17 +134,17 @@ const Home = () => {
               <p className="text-gray-600">Loading categories...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {parentCategories.map((category) => (
                 <div
                   key={category._id || category.id}
-                  className="relative rounded-lg overflow-hidden group cursor-pointer"
+                  className="relative rounded-lg overflow-hidden group cursor-pointer h-64 md:h-80"
                   onClick={() => handleCategoryClick(category)}
                 >
                   <img
                     src={category.image || parentImages[category.name] || parentImages.Hospitality}
                     alt={category.name}
-                    className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       // Fallback to static image if category image fails to load
                       if (e.target.src !== parentImages[category.name]) {
@@ -159,17 +168,26 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Place a Bulk Order?</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Get exclusive pricing and dedicated support for bulk orders. Contact us or login to your account.
+            Get exclusive pricing and dedicated support for bulk orders. Contact us or {isAuthenticated ? 'visit your profile' : 'login to your account'}.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/login" 
-              className="inline-block bg-white text-trana-orange px-8 py-3 rounded font-semibold hover:bg-gray-100 transition"
-            >
-              Login / Sign Up
-            </Link>
-            <Link 
-              to="/contact" 
+            {isAuthenticated ? (
+              <Link
+                to="/profile"
+                className="inline-block bg-white text-trana-orange px-8 py-3 rounded font-semibold hover:bg-gray-100 transition"
+              >
+                View Profile
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-block bg-white text-trana-orange px-8 py-3 rounded font-semibold hover:bg-gray-100 transition"
+              >
+                Login / Sign Up
+              </Link>
+            )}
+            <Link
+              to="/contact"
               className="inline-block bg-transparent border-2 border-white text-white px-8 py-3 rounded font-semibold hover:bg-white/10 transition"
             >
               Contact Sales

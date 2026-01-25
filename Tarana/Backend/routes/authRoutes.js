@@ -8,13 +8,17 @@ const {
   changePassword,
   addAddress,
   updateAddress,
-  deleteAddress
+  deleteAddress,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/auth');
 const { cache } = require('../middlewares/cache');
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:resettoken', resetPassword);
 router.get('/me', protect, cache(300), getMe);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);

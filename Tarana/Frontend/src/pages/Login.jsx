@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { login, register, clearError } from '../store/slices/authSlice';
+import { login, register, clearError, forgotPassword } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState('login');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginData, setLoginData] = useState({
-    email: '',
+    email: localStorage.getItem('rememberedEmail') || '',
     password: '',
-    rememberMe: false
+    rememberMe: !!localStorage.getItem('rememberedEmail')
   });
   const [registerData, setRegisterData] = useState({
     name: '',
@@ -61,10 +66,31 @@ const Login = () => {
       password: loginData.password
     }));
     if (login.fulfilled.match(result)) {
+      if (loginData.rememberMe) {
+        localStorage.setItem('rememberedEmail', loginData.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
       toast.success('Login successful!');
       navigate('/profile');
     } else {
       toast.error(result.payload || 'Login failed');
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      toast.error('Please enter your email');
+      return;
+    }
+    const result = await dispatch(forgotPassword(forgotEmail));
+    if (forgotPassword.fulfilled.match(result)) {
+      toast.success('Reset link sent to your email!');
+      setShowForgotPassword(false);
+      setForgotEmail('');
+    } else {
+      toast.error(result.payload || 'Failed to send reset link');
     }
   };
 
@@ -149,26 +175,26 @@ const Login = () => {
               <button
                 onClick={() => {
                   setActiveTab('login');
+                  setShowForgotPassword(false);
                   dispatch(clearError());
                 }}
-                className={`flex-1 py-3 text-center font-semibold transition ${
-                  activeTab === 'login'
-                    ? 'text-trana-orange border-b-2 border-trana-orange'
-                    : 'text-gray-600 hover:text-trana-orange'
-                }`}
+                className={`flex-1 py-3 text-center font-semibold transition ${activeTab === 'login'
+                  ? 'text-trana-orange border-b-2 border-trana-orange'
+                  : 'text-gray-600 hover:text-trana-orange'
+                  }`}
               >
                 Login
               </button>
               <button
                 onClick={() => {
                   setActiveTab('register');
+                  setShowForgotPassword(false);
                   dispatch(clearError());
                 }}
-                className={`flex-1 py-3 text-center font-semibold transition ${
-                  activeTab === 'register'
-                    ? 'text-trana-orange border-b-2 border-trana-orange'
-                    : 'text-gray-600 hover:text-trana-orange'
-                }`}
+                className={`flex-1 py-3 text-center font-semibold transition ${activeTab === 'register'
+                  ? 'text-trana-orange border-b-2 border-trana-orange'
+                  : 'text-gray-600 hover:text-trana-orange'
+                  }`}
               >
                 Register
               </button>
@@ -189,12 +215,12 @@ const Login = () => {
                 {error}
               </div>
             )}
-            {registerData.password && registerData.confirmPassword && 
-             registerData.password !== registerData.confirmPassword && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-                Passwords do not match
-              </div>
-            )}
+            {registerData.password && registerData.confirmPassword &&
+              registerData.password !== registerData.confirmPassword && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                  Passwords do not match
+                </div>
+              )}
             {registerData.password && registerData.password.length < 6 && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
                 Password must be at least 6 characters
@@ -202,55 +228,113 @@ const Login = () => {
             )}
 
             {activeTab === 'login' ? (
-              <form onSubmit={handleLoginSubmit} className="space-y-6">
-                <h2 className="text-2xl font-bold text-center mb-6">Account Login</h2>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={loginData.email}
-                    onChange={handleLoginChange}
-                    placeholder="your.email@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={loginData.password}
-                    onChange={handleLoginChange}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
-                  />
-                </div>
-                <div className="flex justify-between items-center">
-                  <label className="flex items-center">
+              showForgotPassword ? (
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
+                  <h2 className="text-2xl font-bold text-center mb-6">Reset Password</h2>
+                  <p className="text-sm text-gray-600 text-center mb-6">
+                    Enter your email address and we'll send you a link to reset your password.
+                  </p>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Email Address</label>
                     <input
-                      type="checkbox"
-                      name="rememberMe"
-                      checked={loginData.rememberMe}
-                      onChange={handleLoginChange}
-                      className="w-4 h-4 text-trana-orange border-gray-300 rounded focus:ring-trana-orange"
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="your.email@example.com"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
                     />
-                    <span className="ml-2 text-sm text-gray-600">Remember me</span>
-                  </label>
-                  <a href="#" className="text-sm text-trana-orange hover:underline">
-                    Forgot password?
-                  </a>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
-                >
-                  {loading ? 'Logging in...' : 'Login'}
-                </button>
-              </form>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(false)}
+                      className="text-sm text-gray-600 hover:text-trana-orange hover:underline focus:outline-none"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleLoginSubmit} className="space-y-6">
+                  <h2 className="text-2xl font-bold text-center mb-6">Account Login</h2>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                      placeholder="your.email@example.com"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showLoginPassword ? "text" : "password"}
+                        name="password"
+                        value={loginData.password}
+                        onChange={handleLoginChange}
+                        placeholder="Enter your password"
+                        required
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        {showLoginPassword ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={loginData.rememberMe}
+                        onChange={handleLoginChange}
+                        className="w-4 h-4 text-trana-orange border-gray-300 rounded focus:ring-trana-orange"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-trana-orange hover:underline focus:outline-none"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50"
+                  >
+                    {loading ? 'Logging in...' : 'Login'}
+                  </button>
+                </form>
+              )
             ) : (
               <form onSubmit={handleRegisterSubmit} className="space-y-6">
                 <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
@@ -302,27 +386,63 @@ const Login = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Password <span className="text-red-500">*</span></label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={registerData.password}
-                    onChange={handleRegisterChange}
-                    placeholder="Create a password"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showRegisterPassword ? "text" : "password"}
+                      name="password"
+                      value={registerData.password}
+                      onChange={handleRegisterChange}
+                      placeholder="Create a password"
+                      required
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showRegisterPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Confirm Password <span className="text-red-500">*</span></label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={registerData.confirmPassword}
-                    onChange={handleRegisterChange}
-                    placeholder="Confirm your password"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={registerData.confirmPassword}
+                      onChange={handleRegisterChange}
+                      placeholder="Confirm your password"
+                      required
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <button
                   type="submit"

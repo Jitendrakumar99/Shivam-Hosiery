@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store/store';
 import Header from './components/Header';
@@ -19,6 +20,102 @@ import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import OrderDetail from './pages/OrderDetail';
+import ResetPassword from './pages/ResetPassword';
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [transitionStage, setTransitionStage] = useState("page-enter");
+
+  useEffect(() => {
+    if (location !== displayLocation) {
+      setTransitionStage("page-exit");
+    }
+  }, [location, displayLocation]);
+
+  const handleTransitionEnd = () => {
+    if (transitionStage === "page-exit") {
+      setTransitionStage("page-enter");
+      setDisplayLocation(location);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  return (
+    <div
+      className={`${transitionStage} ${transitionStage === "page-enter" ? "page-enter-active" : "page-exit-active"}`}
+      onTransitionEnd={handleTransitionEnd}
+    >
+      <Routes location={displayLocation}>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/customize" element={<Customize />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/shivam-hosiery" element={<div className="min-h-screen bg-white py-12"><div className="max-w-7xl mx-auto px-4 md:px-8"><h1 className="text-4xl font-bold mb-4">Shivam Hosiery</h1><p className="text-lg text-gray-600">Shivam Hosiery page content coming soon...</p></div></div>} />
+      </Routes>
+    </div>
+  );
+};
 
 function App() {
   return (
@@ -50,73 +147,8 @@ function App() {
       <Router>
         <div className="min-h-screen flex flex-col">
           <Header />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:id" element={<ProductDetail />} />
-              <Route path="/customize" element={<Customize />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders"
-                element={
-                  <ProtectedRoute>
-                    <Orders />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <OrderDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/wishlist"
-                element={
-                  <ProtectedRoute>
-                    <Wishlist />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/notifications"
-                element={
-                  <ProtectedRoute>
-                    <Notifications />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/cart"
-                element={
-                  <ProtectedRoute>
-                    <Cart />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/shivam-hosiery" element={<div className="min-h-screen bg-white py-12"><div className="max-w-7xl mx-auto px-4 md:px-8"><h1 className="text-4xl font-bold mb-4">Shivam Hosiery</h1><p className="text-lg text-gray-600">Shivam Hosiery page content coming soon...</p></div></div>} />
-            </Routes>
+          <main className="flex-grow overflow-hidden">
+            <AnimatedRoutes />
           </main>
           <Footer />
         </div>

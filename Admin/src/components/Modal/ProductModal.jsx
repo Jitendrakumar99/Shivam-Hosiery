@@ -9,6 +9,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
   const { categories } = useSelector((state) => state.categories);
   const { loading } = useSelector((state) => state.products);
   const [activeTab, setActiveTab] = useState('basic');
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -46,21 +47,23 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
   }, [dispatch]);
 
   useEffect(() => {
-    if (product && mode === 'edit') {
+    if (product && mode === 'edit' && !hasInitialized) {
       // Find parent and subcategory from product category
-      const productCategory = categories.find(c => c._id === product.category || c.name === product.category);
+      const catId = product.category?.id || product.category;
+      const catName = product.category?.name || product.category;
+      const productCategory = categories.find(c => c._id === catId || c.name === catName);
       let parentCategory = '';
       let subCategory = '';
-      
+
       if (productCategory) {
         if (productCategory.parent) {
           // This is a subcategory, find its parent
-          const parent = categories.find(c => c._id === productCategory.parent);
-          parentCategory = parent?._id || '';
-          subCategory = productCategory._id || '';
+          const parent = categories.find(c => c._id === productCategory.parent || (typeof productCategory.parent === 'object' && c._id === productCategory.parent._id));
+          parentCategory = parent?._id || parent?.id || '';
+          subCategory = productCategory._id || productCategory.id || '';
         } else {
           // This is a parent category
-          parentCategory = productCategory._id || '';
+          parentCategory = productCategory._id || productCategory.id || '';
           subCategory = '';
         }
       }
@@ -71,7 +74,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         shortDescription: product.shortDescription || '',
         parentCategory,
         subCategory,
-        category: product.category?.name || product.category || '',
+        category: catName || '',
         pricing: {
           price: product.pricing?.price || product.price || '',
           compareAtPrice: product.pricing?.compareAtPrice || '',
@@ -87,7 +90,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           size: v.size,
           color: v.color,
           price: v.price,
-          quantity: v.inventory?.quantity
+          quantity: v.inventory?.quantity ?? v.quantity ?? 0
 
         })) || [],
         seo: {
@@ -98,7 +101,13 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         status: product.status || 'active',
         minOrderQuantity: product.minOrderQuantity || 0,
       });
-    } else {
+
+      // If categories are loaded, we can mark as initialized
+      // If they are not loaded, we'll try again next time they change
+      if (categories.length > 0) {
+        setHasInitialized(true);
+      }
+    } else if (isOpen && mode === 'add' && !hasInitialized) {
       // Reset form
       setFormData({
         title: '',
@@ -115,8 +124,16 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         status: 'active',
         minOrderQuantity: 0,
       });
+      setHasInitialized(true);
     }
-  }, [product, mode, isOpen, categories]);
+  }, [product, mode, isOpen, categories, hasInitialized]);
+
+  // Reset initialization when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setHasInitialized(false);
+    }
+  }, [isOpen]);
 
   // Helper functions for category selection
   const getParentCategories = () => {
@@ -206,17 +223,17 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     // Determine the category to use (subcategory if selected, otherwise parent)
     const selectedCategoryId = formData.subCategory || formData.parentCategory;
     const selectedCategory = categories.find(c => (c._id === selectedCategoryId || c.id === selectedCategoryId));
-    
+
     const payload = {
       title: formData.title,
       description: formData.description,
       shortDescription: formData.shortDescription,
       category: {
-        id: selectedCategoryId,
-        name: selectedCategory?.name || '',
+        ...(selectedCategoryId && /^[0-9a-fA-F]{24}$/.test(selectedCategoryId) ? { id: selectedCategoryId } : {}),
+        name: selectedCategory?.name || formData.category || '',
       },
       pricing: {
-        price: parseFloat(formData.pricing.price),
+        price: parseFloat(formData.pricing.price) || 0,
         compareAtPrice: parseFloat(formData.pricing.compareAtPrice) || 0,
         currency: 'INR'
       },
@@ -225,13 +242,13 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       variants: formData.variants.map(v => ({
         size: v.size,
         color: v.color,
-        price: parseFloat(v.price),
-        inventory: { quantity: parseInt(v.quantity) }
+        price: parseFloat(v.price) || 0,
+        inventory: { quantity: parseInt(v.quantity) || 0 }
       })),
       seo: {
         title: formData.seo.title,
         description: formData.seo.description,
-        keywords: formData.seo.keywords.split(',').map(k => k.trim()).filter(Boolean)
+        keywords: formData.seo.keywords ? formData.seo.keywords.split(',').map(k => k.trim()).filter(Boolean) : []
       },
       status: formData.status,
       minOrderQuantity: parseInt(formData.minOrderQuantity) || 0,
