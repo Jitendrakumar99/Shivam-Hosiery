@@ -9,6 +9,7 @@ const Home = () => {
   const navigate = useNavigate();
   const { categories, loading } = useAppSelector((state) => state.categories);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   useEffect(() => {
     // Fetch only top-level (parent) categories that are active
@@ -220,7 +221,7 @@ const Home = () => {
                 const discountPercentage = product.pricing?.compareAtPrice > product.pricing?.price
                   ? Math.round(((product.pricing.compareAtPrice - product.pricing.price) / product.pricing.compareAtPrice) * 100)
                   : 0;
-                
+
                 return (
                   <Link
                     key={product._id || product.id}
@@ -230,10 +231,10 @@ const Home = () => {
                     <div className="h-64 bg-gray-200 relative overflow-hidden">
                       {product.images && product.images.length > 0 ? (
                         <>
-                          <img 
-                            src={product.images[0]} 
-                            alt={product.title || product.name} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                          <img
+                            src={product.images[0]}
+                            alt={product.title || product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {discountPercentage > 0 && (
                             <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">

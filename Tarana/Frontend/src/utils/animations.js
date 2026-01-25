@@ -4,12 +4,18 @@
 export const createFlyingAnimation = (imageSrc, startElement, endElement = null) => {
   if (!imageSrc || !startElement) return;
 
-  // If endElement not provided, find cart icon in header (right side)
+  // If endElement not provided, find profile icon in header (right side)
+  // Since cart is inside profile dropdown, we animate to the profile icon
   let targetElement = endElement;
   if (!targetElement) {
-    targetElement = document.getElementById('cart-icon-header');
+    // Try to find the profile icon first (cart is inside this dropdown)
+    targetElement = document.getElementById('header-profile-icon');
     if (!targetElement) {
-      // Fallback: try to find any cart icon link
+      // Fallback: try the cart icon if it exists separately
+      targetElement = document.getElementById('header-cart-icon');
+    }
+    if (!targetElement) {
+      // Final fallback: try to find any cart icon link
       targetElement = document.querySelector('a[href="/cart"]');
     }
   }
@@ -60,14 +66,17 @@ export const createFlyingAnimation = (imageSrc, startElement, endElement = null)
 export const triggerCartBounce = (cartIconElement = null) => {
   let targetElement = cartIconElement;
   if (!targetElement) {
-    targetElement = document.getElementById('cart-icon-header');
+    targetElement = document.getElementById('header-profile-icon');
+    if (!targetElement) {
+      targetElement = document.getElementById('header-cart-icon');
+    }
     if (!targetElement) {
       targetElement = document.querySelector('a[href="/cart"]');
     }
   }
-  
+
   if (!targetElement) return;
-  
+
   targetElement.classList.add('animate-bounce');
   setTimeout(() => {
     targetElement.classList.remove('animate-bounce');
@@ -77,7 +86,7 @@ export const triggerCartBounce = (cartIconElement = null) => {
 // Trigger wishlist heart animation
 export const triggerWishlistAnimation = (heartElement) => {
   if (!heartElement) return;
-  
+
   heartElement.classList.add('animate-pulse', 'scale-125');
   setTimeout(() => {
     heartElement.classList.remove('animate-pulse', 'scale-125');

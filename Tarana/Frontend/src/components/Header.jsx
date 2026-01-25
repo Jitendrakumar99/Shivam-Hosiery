@@ -63,54 +63,54 @@ const Header = () => {
 
   return (
     <>
-     
+
       <header className="bg-[#f54a00] text-white sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center py-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-2xl font-bold text-white no-underline"
               onClick={closeMobileMenu}
             >
               Trana Safety
             </Link>
-            
+
             <div className="flex items-center gap-4">
               {/* Desktop Navigation */}
               <nav className="hidden md:flex gap-4 lg:gap-8 items-center text-sm md:text-base">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/' ? 'font-bold underline' : ''}`}
                 >
                   Home
                 </Link>
-                <Link 
-                  to="/products" 
+                <Link
+                  to="/products"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/products' ? 'font-bold underline' : ''}`}
                 >
                   Products
                 </Link>
-                <Link 
-                  to="/customize" 
+                <Link
+                  to="/customize"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/customize' ? 'font-bold underline' : ''}`}
                 >
                   Customize
                 </Link>
-                <Link 
-                  to="/about" 
+                <Link
+                  to="/about"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
                 >
                   About
                 </Link>
-                <Link 
-                  to="/contact" 
+                <Link
+                  to="/contact"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/contact' ? 'font-bold underline' : ''}`}
                 >
                   Contact
                 </Link>
 
-                <Link 
-                  to="/shivam-hosiery" 
+                <Link
+                  to="/shivam-hosiery"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/shivam-hosiery' ? 'font-bold underline' : ''}`}
                 >
                   Visit Shivam Hosiery
@@ -120,6 +120,7 @@ const Header = () => {
               {/* Profile Icon with Dropdown */}
               <div className="relative" ref={profileDropdownRef}>
                 <button
+                  id="header-profile-icon"
                   onClick={() => {
                     if (!isAuthenticated) {
                       navigate('/login');
@@ -254,50 +255,49 @@ const Header = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <nav 
-            className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-              isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-            }`}
+          <nav
+            className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              }`}
           >
             <div className="flex flex-col gap-4 py-4 border-t border-orange-400">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/' ? 'font-bold underline' : ''}`}
               >
                 Home
               </Link>
-              
-              <Link 
-                to="/products" 
+
+              <Link
+                to="/products"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/products' ? 'font-bold underline' : ''}`}
               >
                 Products
               </Link>
-              <Link 
-                to="/customize" 
+              <Link
+                to="/customize"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/customize' ? 'font-bold underline' : ''}`}
               >
                 Customize
               </Link>
-              <Link 
-                to="/about" 
+              <Link
+                to="/about"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/about' ? 'font-bold underline' : ''}`}
               >
                 About
               </Link>
-              <Link 
-                to="/contact" 
+              <Link
+                to="/contact"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/contact' ? 'font-bold underline' : ''}`}
               >
                 Contact
               </Link>
-              <Link 
-                to="/shivam-hosiery" 
+              <Link
+                to="/shivam-hosiery"
                 onClick={closeMobileMenu}
                 className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/shivam-hosiery' ? 'font-bold underline' : ''}`}
               >
@@ -305,29 +305,29 @@ const Header = () => {
               </Link>
               {isAuthenticated && (
                 <>
-                  <Link 
-                    to="/orders" 
+                  <Link
+                    to="/orders"
                     onClick={closeMobileMenu}
                     className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/orders' ? 'font-bold underline' : ''}`}
                   >
                     Orders
                   </Link>
-                  <Link 
-                    to="/cart" 
+                  <Link
+                    to="/cart"
                     onClick={closeMobileMenu}
                     className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/cart' ? 'font-bold underline' : ''}`}
                   >
                     Cart
                   </Link>
-                  <Link 
-                    to="/wishlist" 
+                  <Link
+                    to="/wishlist"
                     onClick={closeMobileMenu}
                     className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/wishlist' ? 'font-bold underline' : ''}`}
                   >
                     Wishlist
                   </Link>
-                  <Link 
-                    to="/notifications" 
+                  <Link
+                    to="/notifications"
                     onClick={closeMobileMenu}
                     className={`text-white no-underline transition hover:opacity-80 py-2 ${location.pathname === '/notifications' ? 'font-bold underline' : ''}`}
                   >

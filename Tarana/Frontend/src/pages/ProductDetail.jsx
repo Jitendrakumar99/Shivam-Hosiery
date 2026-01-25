@@ -14,7 +14,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { product, loading, error } = useAppSelector((state) => state.products);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { items: cartItems } = useAppSelector((state) => state.cart);
   const { wishlist } = useAppSelector((state) => state.wishlist);
   const { reviews, loading: reviewsLoading } = useAppSelector((state) => state.reviews);
@@ -26,6 +26,7 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [useCustomColor, setUseCustomColor] = useState(false);
@@ -36,7 +37,7 @@ const ProductDetail = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchProduct(id));
-      dispatch(fetchProductReviews({ productId: id, params: { status: 'approved' } }));
+      dispatch(fetchProductReviews({ productId: id, params: {} }));
     }
   }, [dispatch, id]);
 
@@ -135,10 +136,10 @@ const ProductDetail = () => {
       : { size: selectedSize, color: finalColor, price: product.pricing?.price || product.price, inventory: { quantity: 9999 } };
 
     setIsAdding(true);
-    
+
     // Get product image for animation
     const productImage = productImageRef.current;
-    
+
     // Trigger flying animation - will automatically target cart icon in header (right side)
     if (productImage && product.images && product.images.length > 0) {
       createFlyingAnimation(product.images[0] || product.images[selectedImage], productImage);
@@ -147,13 +148,13 @@ const ProductDetail = () => {
         triggerCartBounce();
       }, 300);
     }
-    
+
     dispatch(addToCart({
       product,
       quantity,
       variant: finalVariant
     }));
-    
+
     toast.success(`${quantity} x ${product.title || product.name} added to cart!`, {
       duration: 2000,
       position: 'bottom-right',
@@ -272,11 +273,11 @@ const ProductDetail = () => {
                 <div className="flex-1">
                   <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
                     {images.length > 0 ? (
-                      <img 
+                      <img
                         ref={productImageRef}
-                        src={images[selectedImage]} 
-                        alt={productTitle} 
-                        className="w-full h-full object-contain p-4" 
+                        src={images[selectedImage]}
+                        alt={productTitle}
+                        className="w-full h-full object-contain p-4"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -321,15 +322,15 @@ const ProductDetail = () => {
               {/* Price */}
               <div className="flex items-center gap-4 mb-6 flex-wrap">
                 <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-trana-orange">₹{productPrice}</span>
-                {compareAtPrice > productPrice && (
+                  <span className="text-3xl font-bold text-trana-orange">₹{productPrice}</span>
+                  {compareAtPrice > productPrice && (
                     <>
-                  <span className="text-xl text-gray-500 line-through">₹{compareAtPrice}</span>
+                      <span className="text-xl text-gray-500 line-through">₹{compareAtPrice}</span>
                       <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded">
                         {Math.round(((compareAtPrice - productPrice) / compareAtPrice) * 100)}% OFF
                       </span>
                     </>
-                )}
+                  )}
                 </div>
                 {minOrderQuantity > 1 && (
                   <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
@@ -577,7 +578,7 @@ const ProductDetail = () => {
                 productId={id}
                 onSuccess={() => {
                   setShowReviewForm(false);
-                  dispatch(fetchProductReviews({ productId: id, params: { status: 'approved' } }));
+                  dispatch(fetchProductReviews({ productId: id, params: {} }));
                 }}
               />
             </div>
@@ -592,35 +593,72 @@ const ProductDetail = () => {
               </div>
             ) : reviews && reviews.length > 0 ? (
               reviews.map((review) => (
-                <div key={review._id} className="border-b border-gray-200 pb-6 last:border-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">{review.user.name}</span>
-                        {review.verifiedPurchase && (
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Verified Purchase</span>
+                <div key={review._id} className="border-b border-gray-200 pb-6 last:border-0 relative">
+                  {editingReviewId === review._id ? (
+                    <div className="mt-4">
+                      <ReviewForm
+                        productId={id}
+                        initialData={review}
+                        onSuccess={() => {
+                          setEditingReviewId(null);
+                          dispatch(fetchProductReviews({ productId: id, params: {} }));
+                        }}
+                      />
+                      <button
+                        onClick={() => setEditingReviewId(null)}
+                        className="mt-2 text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        Cancel Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{review.user.name}</span>
+                            {review.verifiedPurchase && (
+                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Verified Purchase</span>
+                            )}
+                            {review.status !== 'approved' && (
+                              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded border border-yellow-200">Awaiting Approval</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <svg key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <span className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Edit Button - Only show if it's user's own review */}
+                        {isAuthenticated && user && String(review.user?._id || review.user) === String(user._id || user.id) && (
+                          <button
+                            onClick={() => setEditingReviewId(review._id)}
+                            className="text-trana-orange hover:text-orange-700 text-sm font-semibold flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit
+                          </button>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <svg key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <h4 className="font-semibold mb-2">{review.title}</h4>
-                  <p className="text-gray-700 mb-3">{review.comment}</p>
+                      <h4 className="font-semibold mb-2">{review.title}</h4>
+                      <p className="text-gray-700 mb-3">{review.comment}</p>
 
-                  {review.adminReply && review.adminReply.message && (
-                    <div className="bg-gray-50 border-l-4 border-trana-orange p-4 mt-4">
-                      <p className="text-sm font-semibold mb-1">Response from Trana Safety:</p>
-                      <p className="text-sm text-gray-700">{review.adminReply.message}</p>
-                    </div>
+                      {review.adminReply && review.adminReply.message && (
+                        <div className="bg-gray-50 border-l-4 border-trana-orange p-4 mt-4">
+                          <p className="text-sm font-semibold mb-1">Response from Trana Safety:</p>
+                          <p className="text-sm text-gray-700">{review.adminReply.message}</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))
