@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { updateProfile, getMe, changePassword, addAddress, updateAddress, deleteAddress } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Profile = () => {
   const dispatch = useAppDispatch();
@@ -12,7 +13,9 @@ const Profile = () => {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
   const defaultAddress = user?.addresses?.find?.((a) => a.isDefault) || (user?.addresses && user.addresses[0]) || null;
-  
+  const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,6 +60,47 @@ const Profile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+
+    try {
+      setUploading(true);
+      const response = await api.post('/upload', formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      const data = response.data;
+
+      if (data.success) {
+        const fullAvatarPath = `${import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3000'}${data.file.path}`;
+        const result = await dispatch(updateProfile({ ...formData, avatar: fullAvatarPath }));
+        if (updateProfile.fulfilled.match(result)) {
+          toast.success('Profile picture updated!');
+          setAvatarPreview(null);
+        }
+      } else {
+        toast.error('Upload failed');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error uploading image');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -259,63 +303,68 @@ const Profile = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
-                <div className="w-16 h-16 bg-trana-orange rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                <div className="relative group">
+                  <div className="w-16 h-16 bg-trana-orange rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                    {avatarPreview || user?.avatar ? (
+                      <img src={avatarPreview || user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name?.charAt(0).toUpperCase() || 'U'
+                    )}
+                  </div>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-xs opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity">
+                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    {uploading ? '...' : 'Edit'}
+                  </label>
                 </div>
                 <div>
                   <h2 className="font-bold text-lg">{user?.name}</h2>
-                  <p className="text-sm text-gray-600">{user?.email}</p>
+                  <p className="text-sm text-gray-600 truncate max-w-[150px]">{user?.email}</p>
                 </div>
               </div>
 
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab('profile')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                    activeTab === 'profile'
-                      ? 'bg-trana-orange text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'profile'
+                    ? 'bg-trana-orange text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Profile Information
                 </button>
                 <button
                   onClick={() => setActiveTab('password')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                    activeTab === 'password'
-                      ? 'bg-trana-orange text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'password'
+                    ? 'bg-trana-orange text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Change Password
                 </button>
                 <button
                   onClick={() => setActiveTab('addresses')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                    activeTab === 'addresses'
-                      ? 'bg-trana-orange text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'addresses'
+                    ? 'bg-trana-orange text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Addresses
                 </button>
                 <button
                   onClick={() => setActiveTab('notifications')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                    activeTab === 'notifications'
-                      ? 'bg-trana-orange text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'notifications'
+                    ? 'bg-trana-orange text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Notifications
                 </button>
                 <button
                   onClick={() => setActiveTab('cards')}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition ${
-                    activeTab === 'cards'
-                      ? 'bg-trana-orange text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'cards'
+                    ? 'bg-trana-orange text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Saved Cards
                 </button>
@@ -388,8 +437,9 @@ const Profile = () => {
                         type="email"
                         name="email"
                         value={formData.email}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                        readOnly
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                        title="Email cannot be changed"
                       />
                     ) : (
                       <p className="text-gray-900">{user?.email || 'Not provided'}</p>

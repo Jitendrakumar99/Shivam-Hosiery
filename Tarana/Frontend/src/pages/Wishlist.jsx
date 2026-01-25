@@ -34,7 +34,7 @@ const Wishlist = () => {
       return;
     }
     dispatch(addToCart({ product, quantity: 1 }));
-    toast.success(`${product.name || product.title} added to cart!`);
+    toast.success(`${product.title || product.name} added to cart!`);
   };
 
   if (!isAuthenticated) {
@@ -76,13 +76,29 @@ const Wishlist = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => {
               const product = item.product;
-              const inStock = product?.availability?.inStock !== false;
+              
+              // If product is null, it means it's been deleted or is unavailable
+              if (!product) {
+                return (
+                  <div key={item._id} className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
+                    <p className="text-gray-500 mb-4">Product no longer available</p>
+                    <button
+                      onClick={() => handleRemoveFromWishlist(item._id)}
+                      className="text-red-600 hover:text-red-800 font-medium underline"
+                    >
+                      Remove from Wishlist
+                    </button>
+                  </div>
+                );
+              }
+
+              const inStock = product.availability?.inStock !== false;
               const hasVariants = product.variants && product.variants.length > 0;
 
               return (
-                <div key={item._id || item.product?._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  <div className="h-48 bg-gray-200 flex items-center justify-center">
-                    {product?.images && product.images.length > 0 ? (
+                <div key={item._id || product._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="h-48 bg-gray-200 flex items-center justify-center relative">
+                    {product.images && product.images.length > 0 ? (
                       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-gray-500 flex flex-col items-center">
@@ -91,9 +107,9 @@ const Wishlist = () => {
                     )}
                   </div>
                   <div className="p-6">
-                    <h3 className="text-xl font-bold mb-2">{product?.name || product?.title}</h3>
+                    <h3 className="text-xl font-bold mb-2">{product.name || product.title}</h3>
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-2xl font-bold text-trana-orange">₹{product?.pricing?.price || product?.price || 0}</span>
+                      <span className="text-2xl font-bold text-trana-orange">₹{product.pricing?.price || product.price || 0}</span>
                       {inStock ? (
                         <span className="text-sm text-green-600 font-semibold">In Stock</span>
                       ) : (

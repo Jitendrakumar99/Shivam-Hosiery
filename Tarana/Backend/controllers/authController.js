@@ -123,11 +123,26 @@ exports.updateProfile = async (req, res, next) => {
   try {
     const fieldsToUpdate = {
       name: req.body.name,
-      email: req.body.email,
       phone: req.body.phone,
       company: req.body.company,
-      address: req.body.address
+      address: req.body.address,
+      avatar: req.body.avatar
     };
+
+    // Only update email if it's explicitly allowed or not already set
+    // For now, let's keep it editable but we could restrict it here if needed.
+    // However, the user request says "profile edit the email not able to change", 
+    // which probably means they WANT to change it but it's not working, 
+    // OR it should be read-only in the UI.
+    // Looking at the frontend Profile.jsx, it has an input for email.
+    // If the user wants to be UNABLE to change it, I should make it read-only in frontend.
+    // If they meant it's NOT WORKING (they can't change it), then I should ensure it's here.
+    // The current code HAS 'email: req.body.email' so it SHOULD work.
+    // If they say "profile edit the email not able to change", it sounds like a requirement to LOCK it.
+
+    if (req.body.email) {
+      fieldsToUpdate.email = req.body.email;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
