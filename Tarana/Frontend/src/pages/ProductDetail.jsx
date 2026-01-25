@@ -234,6 +234,11 @@ const ProductDetail = () => {
   const uniqueSizes = product.variants ? [...new Set(product.variants.map(v => v.size))] : [];
   const uniqueColors = product.variants ? [...new Set(product.variants.map(v => v.color).filter(Boolean))] : [];
 
+  // Check if current user has already reviewed this product
+  const hasUserReviewed = isAuthenticated && user && reviews && reviews.some(review =>
+    String(review.user?.id || review.user?._id || review.user) === String(user._id || user.id)
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -561,14 +566,23 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Write Review Button */}
+          {/* Write Review Button - Only show if user hasn't reviewed yet */}
           <div className="mb-6">
-            <button
-              onClick={() => setShowReviewForm(!showReviewForm)}
-              className="bg-trana-orange text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
-            >
-              {showReviewForm ? 'Cancel' : 'Write a Review'}
-            </button>
+            {!hasUserReviewed ? (
+              <button
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="bg-trana-orange text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+              >
+                {showReviewForm ? 'Cancel' : 'Write a Review'}
+              </button>
+            ) : (
+              <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium">You have already reviewed this product. You can find and edit your review below.</p>
+              </div>
+            )}
           </div>
 
           {/* Review Form */}
@@ -637,7 +651,7 @@ const ProductDetail = () => {
                         </div>
 
                         {/* Edit Button - Only show if it's user's own review */}
-                        {isAuthenticated && user && String(review.user?._id || review.user) === String(user._id || user.id) && (
+                        {isAuthenticated && user && String(review.user?.id || review.user?._id || review.user) === String(user._id || user.id) && (
                           <button
                             onClick={() => setEditingReviewId(review._id)}
                             className="text-trana-orange hover:text-orange-700 text-sm font-semibold flex items-center gap-1"
