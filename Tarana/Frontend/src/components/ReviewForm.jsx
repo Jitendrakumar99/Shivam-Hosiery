@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { createReview } from '../store/slices/reviewSlice';
+import { createReview, updateReview } from '../store/slices/reviewSlice';
 import toast from 'react-hot-toast';
 
-const ReviewForm = ({ productId, onSuccess }) => {
+const ReviewForm = ({ productId, onSuccess, initialData = null }) => {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [formData, setFormData] = useState({
-    rating: 5,
-    title: '',
-    comment: '',
-    images: []
+    rating: initialData?.rating || 5,
+    title: initialData?.title || '',
+    comment: initialData?.comment || '',
+    images: initialData?.images || []
   });
   const [hoveredRating, setHoveredRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -36,25 +36,37 @@ const ReviewForm = ({ productId, onSuccess }) => {
     setSubmitting(true);
 
     try {
-      const result = await dispatch(createReview({
-        productId,
-        ...formData
-      }));
+      let result;
+      if (initialData?._id) {
+        // Update existing review
+        result = await dispatch(updateReview({
+          id: initialData._id,
+          reviewData: formData
+        }));
+      } else {
+        // Create new review
+        result = await dispatch(createReview({
+          productId,
+          ...formData
+        }));
+      }
 
-      if (createReview.fulfilled.match(result)) {
-        toast.success('Review submitted successfully! It will be visible after approval.');
-        setFormData({
-          rating: 5,
-          title: '',
-          comment: '',
-          images: []
-        });
+      if (createReview.fulfilled.match(result) || (initialData && updateReview.fulfilled.match(result))) {
+        toast.success(initialData ? 'Review updated successfully!' : 'Review submitted successfully! It will be visible after approval.');
+        if (!initialData) {
+          setFormData({
+            rating: 5,
+            title: '',
+            comment: '',
+            images: []
+          });
+        }
         if (onSuccess) onSuccess();
       } else {
-        toast.error(result.payload || 'Failed to submit review');
+        toast.error(result.payload || `Failed to ${initialData ? 'update' : 'submit'} review`);
       }
     } catch (error) {
-      toast.error('Failed to submit review');
+      toast.error(`Failed to ${initialData ? 'update' : 'submit'} review`);
     } finally {
       setSubmitting(false);
     }
@@ -71,7 +83,7 @@ const ReviewForm = ({ productId, onSuccess }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <h3 className="text-xl font-bold mb-4">Write a Review</h3>
-      
+
       <form onSubmit={handleSubmit}>
         {/* Rating */}
         <div className="mb-4">
@@ -87,11 +99,10 @@ const ReviewForm = ({ productId, onSuccess }) => {
                 className="focus:outline-none transition-transform hover:scale-110"
               >
                 <svg
-                  className={`w-8 h-8 ${
-                    star <= (hoveredRating || formData.rating)
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
+                  className={`w-8 h-8 ${star <= (hoveredRating || formData.rating)
+                    ? 'text-yellow-400'
+                    : 'text-gray-300'
+                    }`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >

@@ -14,7 +14,7 @@ const CartIcon = () => {
       return () => clearTimeout(timer);
     }
   }, [itemCount]);
-  const itemCount = items.length; // Count unique products, not total quantity
+  // const itemCount = items.length; // Count unique products, not total quantity
 
   return (
     <Link
@@ -22,8 +22,8 @@ const CartIcon = () => {
       id="header-cart-icon"
       className={`relative flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 ${isBouncing ? 'animate-cart-bounce shadow-[0_0_15px_rgba(255,255,255,0.4)]' : ''
         }`}
-      id="cart-icon-header"
-      className="relative flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full transition"
+      // id="cart-icon-header"
+      // className="relative flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full transition"
       aria-label="Shopping cart"
     >
       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

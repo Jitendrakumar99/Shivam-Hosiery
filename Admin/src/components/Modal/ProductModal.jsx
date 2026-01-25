@@ -51,7 +51,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       // Extract category ID from product.category object
       // product.category can be: { id: ObjectId, name: String, parent: String } or just a string/ID
       const categoryId = product.category?.id || product.category?._id || product.category;
-      
+
       let parentCategory = '';
       let subCategory = '';
 
@@ -63,7 +63,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           const pId = categoryId?._id || categoryId;
           return String(cId) === String(pId);
         });
-        
+
         // If not found by ID, try by name
         if (!productCategory && product.category?.name) {
           productCategory = categories.find(c => c.name === product.category.name);
@@ -73,7 +73,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           // Check if this category has a parent (it's a subcategory)
           // parent can be: populated object { _id, name, slug } or just ObjectId
           const parentId = productCategory.parent?._id || productCategory.parent || product.category?.parent;
-          
+
           if (parentId) {
             // This is a subcategory
             const parentIdStr = String(parentId?._id || parentId);
@@ -82,7 +82,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
               const cId = c._id || c.id;
               return String(cId) === parentIdStr;
             });
-            
+
             if (parent) {
               parentCategory = String(parent._id || parent.id);
               subCategory = String(productCategory._id || productCategory.id);
@@ -103,7 +103,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
             const cParentId = c.parent?._id || c.parent;
             return cParentId && String(cParentId) === String(categoryId);
           });
-          
+
           if (hasChildren) {
             // It's a parent category (has children)
             parentCategory = String(categoryId);
@@ -115,7 +115,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
               const cParentId = c.parent?._id || c.parent;
               return String(cId) === String(categoryId) && cParentId;
             });
-            
+
             if (subCat) {
               // It's a subcategory
               const parentId = subCat.parent?._id || subCat.parent;
@@ -132,7 +132,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         // Categories not loaded yet, but we have the category ID
         // Use product.category.parent if available to determine if it's a subcategory
         const productParentId = product.category?.parent;
-        
+
         if (productParentId) {
           // It's a subcategory
           parentCategory = String(productParentId);
@@ -150,7 +150,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         shortDescription: product.shortDescription || '',
         parentCategory,
         subCategory,
-        category: catName || '',
+        category: product.category?.name || '',
         pricing: {
           price: product.pricing?.price || product.price || '',
           compareAtPrice: product.pricing?.compareAtPrice || '',
