@@ -16,6 +16,7 @@ const Sidebar = () => {
     { path: '/delivery', label: 'Delivery', icon: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0' },
     { path: '/admin-users', label: 'Admin Users', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
     { path: '/reports', label: 'Reports', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    { path: '/invoice-settings', label: 'Invoices', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
   ];
 
   return (
@@ -41,9 +42,8 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:fixed inset-y-0 left-0 z-40 w-56 lg:w-64 bg-gray-50 p-3 lg:p-4 transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed md:fixed inset-y-0 left-0 z-40 w-56 lg:w-64 bg-gray-50 p-3 lg:p-4 transform transition-transform duration-300 ease-in-out flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
       >
         <div className="flex items-center justify-between mb-3 lg:mb-4 md:hidden">
           <h2 className="text-base font-semibold text-gray-800">Navigation</h2>
@@ -65,10 +65,9 @@ const Sidebar = () => {
               to={item.path}
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg transition text-sm lg:text-base ${
-                  isActive
-                    ? 'bg-[#1a1a2e] text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
+                `flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 rounded-lg transition text-sm lg:text-base ${isActive
+                  ? 'bg-[#1a1a2e] text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
                 }`
               }
             >

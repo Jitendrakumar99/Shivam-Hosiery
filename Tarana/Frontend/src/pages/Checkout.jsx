@@ -334,7 +334,10 @@ const Checkout = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.product.name}</h3>
+                      <h3 className="font-semibold text-gray-900 mb-1">{item.product.title || item.product.name}</h3>
+                      {item.product.sku && (
+                        <p className="text-xs text-gray-500 mb-1 font-mono">SKU: {item.product.sku}</p>
+                      )}
                       {item.customization && (
                         <p className="text-xs text-gray-500 mb-1">
                           {Object.entries(item.customization).map(([key, value]) => value && `${key}: ${value}`).filter(Boolean).join(', ')}
@@ -663,10 +666,14 @@ const Checkout = () => {
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-sm mb-1">{product.name}</h3>
+                        <h3 className="font-semibold text-sm mb-1">{product.title || product.name}</h3>
+                        {product.sku && (
+                          <p className="text-xs text-gray-500 mb-1 font-mono">SKU: {product.sku}</p>
+                        )}
                         {item.variant && (
                           <p className="text-xs text-gray-500 mb-1">
                             Size: {item.variant.size} {item.variant.color && `| Color: ${item.variant.color}`}
+                            {item.variant.sku && ` | V-SKU: ${item.variant.sku}`}
                           </p>
                         )}
                         <p className="text-xs text-gray-600">Qty: {item.quantity}</p>

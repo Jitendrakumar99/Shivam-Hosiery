@@ -40,9 +40,9 @@ export const fetchOrder = createAsyncThunk(
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
-  async ({ id, status, deliveryAgent, paymentStatus }, { rejectWithValue }) => {
+  async ({ id, status, deliveryAgent, paymentStatus, trackingNumber }, { rejectWithValue }) => {
     try {
-      const data = await orderService.updateOrderStatus(id, status, deliveryAgent, paymentStatus);
+      const data = await orderService.updateOrderStatus(id, status, deliveryAgent, paymentStatus, trackingNumber);
       return data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to update order status';
