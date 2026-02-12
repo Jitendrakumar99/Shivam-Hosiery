@@ -114,9 +114,18 @@ exports.updateCategory = async (req, res, next) => {
     }
 
     const prevName = category.name;
+    const wasParentCategory = !category.parent;
+    
     // Enforce rule: subcategories must not store image
     if (category.parent) {
       req.body.image = '';
+    }
+    
+    // If this was a parent category, ensure parent stays null (don't allow converting parent to subcategory)
+    // Only allow parent field changes if explicitly set to null or if it was already a subcategory
+    if (wasParentCategory && req.body.parent !== null && req.body.parent !== undefined) {
+      // Don't allow changing a parent category to a subcategory
+      delete req.body.parent;
     }
 
     category = await Category.findByIdAndUpdate(req.params.id, req.body, {
