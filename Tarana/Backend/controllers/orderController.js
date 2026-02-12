@@ -308,13 +308,13 @@ exports.updateOrderStatus = async (req, res, next) => {
     
     if (statusChanged) {
       try {
-        await Notification.create({
-          user: order.user,
-          type: 'order',
-          title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-          message: `Your order #${order._id} status has been updated to ${status}.`,
-          link: `/orders/${order._id}`
-        });
+    await Notification.create({
+      user: order.user,
+      type: 'order',
+      title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      message: `Your order #${order._id} status has been updated to ${status}.`,
+      link: `/orders/${order._id}`
+    });
       } catch (notifError) {
         // Log notification error but don't fail the order update
         console.error('Error creating order status notification:', notifError);
@@ -347,7 +347,7 @@ exports.updateOrderStatus = async (req, res, next) => {
 
     // Convert Mongoose document to plain object for JSON response
     const orderData = order.toObject ? order.toObject() : order;
-    
+
     res.json({
       success: true,
       data: orderData

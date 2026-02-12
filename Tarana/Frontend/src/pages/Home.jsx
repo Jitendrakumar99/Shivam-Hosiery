@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchCategories } from '../store/slices/categorySlice';
 import { fetchProducts } from '../store/slices/productSlice';
+import './ProductRangeCarousel.css';
 
 const Home = () => {
   const dispatch = useAppDispatch();
@@ -10,6 +11,9 @@ const Home = () => {
   const { categories, loading } = useAppSelector((state) => state.categories);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const sectionRef = useRef(null);
+  const autoPlayRef = useRef(null);
 
   useEffect(() => {
     // Fetch only top-level (parent) categories that are active
@@ -32,26 +36,90 @@ const Home = () => {
     navigate(`/products?parentSlug=${slug}`);
   };
 
-  // No slider needed; render as a single row without scroll
+  // Get all active parent categories (categories without a parent)
+  const parentCategories = (categories || []).filter(cat => {
+    // Filter out categories that have a parent (subcategories)
+    const hasParent = cat.parent && (cat.parent._id || cat.parent);
+    return !hasParent && cat.status === 'active';
+  });
 
-  // Only show the required parent categories in the specified order
-  const parentOrder = [
-    'Healthcare',
-    'Hospitality',
-    'Industry',
-    'Police and defence'
-  ];
-  const parentCategories = parentOrder
-    .map(name => categories.find(c => c.name === name))
-    .filter(Boolean);
+  const n = parentCategories.length;
+  const isAutoPlaying = true;
 
-  // Static hero images for the 4 parent tiles
-  const parentImages = {
-    Hospitality: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop',
-    Healthcare: 'https://images.unsplash.com/photo-1584985592272-72f33dfdd0ec?q=80&w=1600&auto=format&fit=crop',
-    Industry: 'https://images.unsplash.com/photo-1503852460964-8e8a1f1c1a47?q=80&w=1600&auto=format&fit=crop',
-    'Police and defence': 'https://images.unsplash.com/photo-1565548064290-1c1fb9fd1eb1?q=80&w=1600&auto=format&fit=crop'
+  // Reset index when categories change
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [parentCategories.length]);
+
+  // Update CSS custom property
+  useEffect(() => {
+    if (sectionRef.current) {
+      sectionRef.current.style.setProperty('--k', currentIndex.toString());
+      sectionRef.current.style.setProperty('--n', n.toString());
+    }
+  }, [currentIndex, n]);
+
+  const handleNavigation = (direction) => {
+    setCurrentIndex((prev) => (prev + direction + n) % n);
+    resetAutoPlay();
   };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+    resetAutoPlay();
+  };
+
+  // Auto-play functionality
+  const startAutoPlay = () => {
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+    }
+    if (n > 0) {
+      autoPlayRef.current = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % n);
+      }, 4000); // Change slide every 4 seconds
+    }
+  };
+
+  const resetAutoPlay = () => {
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+    }
+    if (isAutoPlaying && n > 0) {
+      startAutoPlay();
+    }
+  };
+
+  useEffect(() => {
+    if (isAutoPlaying && n > 0) {
+      startAutoPlay();
+    } else {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    }
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    };
+  }, [isAutoPlaying, n]);
+
+  // Pause auto-play on hover
+  const handleMouseEnter = () => {
+    if (isAutoPlaying && autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isAutoPlaying) {
+      startAutoPlay();
+    }
+  };
+
+  // Default fallback image for categories without images
+  const defaultCategoryImage = 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop';
 
   return (
     <div className="home-page">
@@ -67,15 +135,15 @@ const Home = () => {
         </div>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-trana-orange to-transparent opacity-10 z-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-r to-transparent opacity-50"></div>
 
         {/* Content */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full text-center md:text-left">
-          <h1 className="text-4xl md:text-7xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight">
             Trana <span className="text-white">Safety</span> <br className="hidden md:block" />
             Garments
           </h1>
-          <p className="text-2xl md:text-4xl mb-4 animate-fade-in-up delay-200 font-medium opacity-90">
+          <p className="text-2xl md:text-2xl mb-4 animate-fade-in-up delay-200 font-medium opacity-90">
             सुरक्षा, हमारी प्राथमिकता.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-2xl animate-fade-in-up delay-400 text-white/80 font-light">
@@ -134,42 +202,109 @@ const Home = () => {
       </section>
 
       {/* Product Range Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Our Product Range</h2>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+      <section className="py-1 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <h2 className="text-4xl md:text-4xl font-bold text-center mb-2">Our Product Range</h2>
+          <p className="text-center text-gray-600 mb-1 max-w-xl mx-auto">
             Comprehensive safety garment solutions for every industrial need.
           </p>
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="text-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-trana-orange mx-auto mb-3"></div>
               <p className="text-gray-600">Loading categories...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {parentCategories.map((category) => (
+            <div className="relative">
+              {/* Carousel Container */}
+              {parentCategories.length > 0 && (
                 <div
-                  key={category._id || category.id}
-                  className="relative rounded-lg overflow-hidden group cursor-pointer h-64 md:h-80"
-                  onClick={() => handleCategoryClick(category)}
+                  ref={sectionRef}
+                  className="product-range-carousel-container"
+                  style={{
+                    '--n': n.toString(),
+                    '--k': currentIndex.toString(),
+                  }}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  <img
-                    src={category.image || parentImages[category.name] || parentImages.Hospitality}
-                    alt={category.name}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      // Fallback to static image if category image fails to load
-                      if (e.target.src !== parentImages[category.name]) {
-                        e.target.src = parentImages[category.name] || parentImages.Hospitality;
-                      }
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/35" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold drop-shadow-md">{category.name === 'Police and defence' ? 'Police' : category.name}</span>
+                  {/* Product Cards Stack */}
+                  <div className="product-range-stack">
+                    {parentCategories.map((category, i) => {
+                      const isActive = i === currentIndex;
+                      const isNext = i === (currentIndex + 1) % n;
+                      const isPrev = i === (currentIndex - 1 + n) % n;
+
+                      // Only show active card and adjacent cards
+                      if (n > 3 && !isActive && !isNext && !isPrev) return null;
+
+                      return (
+                        <div
+                          key={category._id || category.id}
+                          className={`category-card ${isActive ? 'active' : isNext ? 'next' : 'prev'}`}
+                          onClick={() => handleCategoryClick(category)}
+                        >
+                          {/* Category Image Container */}
+                          <div className="category-image-container">
+                            <div className="category-image-wrapper">
+                              <img
+                                src={category.image || defaultCategoryImage}
+                                alt={category.name}
+                                className="category-image"
+                                onError={(e) => {
+                                  e.target.src = defaultCategoryImage;
+                                }}
+                              />
+                              <div className="category-image-overlay"></div>
+                            </div>
+                          </div>
+
+                          {/* Category Name */}
+                          <div className="category-name-container">
+                            <span className="category-name">{category.name}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {n > 1 && (
+                      <div className="carousel-nav-buttons">
+                        <button
+                          className="carousel-nav-button"
+                          onClick={() => handleNavigation(-1)}
+                          aria-label="previous category"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                          </svg>
+                        </button>
+
+                        <button
+                          className="carousel-nav-button"
+                          onClick={() => handleNavigation(1)}
+                          aria-label="next category"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="9,18 15,12 9,6"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Dot Indicators */}
+                  {n > 1 && (
+                    <div className="carousel-dots">
+                      {parentCategories.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => goToSlide(index)}
+                          className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
+                          aria-label={`Go to category ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -307,3 +442,4 @@ const Home = () => {
 };
 
 export default Home;
+

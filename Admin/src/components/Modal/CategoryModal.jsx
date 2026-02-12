@@ -43,8 +43,17 @@ const CategoryModal = ({ isOpen, onClose, category = null, mode = 'add', default
 
     try {
       if (mode === 'edit' && category) {
-        // Prevent editing parent in edit mode
-        delete payload.parent;
+        // For parent categories (no parent), explicitly set parent to null
+        // For subcategories, preserve the existing parent
+        const isParentCategory = !category.parent || (!category.parent._id && !category.parent);
+        if (isParentCategory) {
+          // This is a parent category - ensure parent stays null
+          payload.parent = null;
+        } else {
+          // This is a subcategory - preserve the existing parent
+          payload.parent = category.parent?._id || category.parent || null;
+        }
+        
         dispatch(updateCategory({
           id: category._id || category.id,
           categoryData: payload,
