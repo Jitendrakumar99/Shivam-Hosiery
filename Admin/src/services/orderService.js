@@ -13,18 +13,14 @@ export const orderService = {
     return response.data;
   },
 
-  // Update order status (and optional delivery agent and payment status)
-  updateOrderStatus: async (id, status, deliveryAgent, paymentStatus) => {
+  // Update order status (and optional delivery agent, tracking number, and payment status)
+  updateOrderStatus: async (id, status, deliveryAgent, paymentStatus, trackingNumber) => {
     const payload = {};
-    if (status !== undefined) {
-      payload.status = status;
-    }
-    if (deliveryAgent !== undefined) {
-      payload.deliveryAgent = deliveryAgent;
-    }
-    if (paymentStatus !== undefined) {
-      payload.paymentStatus = paymentStatus;
-    }
+    if (status) payload.status = status;
+    if (deliveryAgent !== undefined) payload.deliveryAgent = deliveryAgent;
+    if (paymentStatus) payload.paymentStatus = paymentStatus;
+    if (trackingNumber) payload.trackingNumber = trackingNumber;
+
     const response = await api.put(`/orders/${id}/status`, payload);
     return response.data;
   },

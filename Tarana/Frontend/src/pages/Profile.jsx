@@ -4,6 +4,11 @@ import { updateProfile, getMe, changePassword, addAddress, updateAddress, delete
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
+// Derived configuration for handling image URLs
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const BASE_URL = API_URL.endsWith('/api') ? API_URL.replace(/\/api$/, '') : API_URL;
+const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || BASE_URL;
+
 const Profile = () => {
   const dispatch = useAppDispatch();
   const { user, loading, isAuthenticated } = useAppSelector((state) => state.auth);
@@ -66,6 +71,15 @@ const Profile = () => {
     }));
   };
 
+  const getAvatarUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+      return path;
+    }
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${UPLOAD_URL}${normalizedPath}`;
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -91,7 +105,7 @@ const Profile = () => {
       const data = response.data;
 
       if (data.success) {
-        const fullAvatarPath = `${import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3000'}${data.file.path}`;
+        const fullAvatarPath = `${UPLOAD_URL}${data.file.path}`;
         const result = await dispatch(updateProfile({ ...formData, avatar: fullAvatarPath }));
         if (updateProfile.fulfilled.match(result)) {
           toast.success('Profile picture updated!');
@@ -310,7 +324,7 @@ const Profile = () => {
                 <div className="relative group">
                   <div className="w-16 h-16 bg-trana-orange rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                     {avatarPreview || user?.avatar ? (
-                      <img src={avatarPreview || user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={avatarPreview || getAvatarUrl(user.avatar)} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       user?.name?.charAt(0).toUpperCase() || 'U'
                     )}

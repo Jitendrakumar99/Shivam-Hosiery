@@ -21,6 +21,14 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    sku: {
+      type: String,
+      trim: true
+    },
+    variantSKU: {
+      type: String,
+      trim: true
+    },
     customization: {
       type: Map,
       of: String
@@ -32,7 +40,7 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled'],
     default: 'pending'
   },
   shippingAddress: {

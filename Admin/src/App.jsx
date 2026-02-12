@@ -16,6 +16,7 @@ import Payments from './pages/Payments';
 import Delivery from './pages/Delivery';
 import AdminUsers from './pages/AdminUsers';
 import Reports from './pages/Reports';
+import InvoiceSettings from './pages/InvoiceSettings';
 import './App.css';
 
 function App() {
@@ -150,6 +151,16 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Reports />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/invoice-settings"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <InvoiceSettings />
                 </MainLayout>
               </ProtectedRoute>
             }

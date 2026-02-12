@@ -13,6 +13,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
   const [formData, setFormData] = useState({
     title: '',
+    sku: '',
     description: '',
     shortDescription: '',
     parentCategory: '',
@@ -146,6 +147,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
       setFormData({
         title: product.title || product.name || '',
+        sku: product.sku || '',
         description: product.description || '',
         shortDescription: product.shortDescription || '',
         parentCategory,
@@ -166,8 +168,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           size: v.size,
           color: v.color,
           price: v.price,
-          quantity: v.inventory?.quantity ?? v.quantity ?? 0
-
+          quantity: v.inventory?.quantity ?? v.quantity ?? 0,
+          sku: v.sku || ''
         })) || [],
         seo: {
           title: product.seo?.title || '',
@@ -181,6 +183,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       // Reset form for add mode or when product is cleared
       setFormData({
         title: '',
+        sku: '',
         description: '',
         shortDescription: '',
         parentCategory: '',
@@ -296,6 +299,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
     const payload = {
       title: formData.title,
+      sku: formData.sku,
       description: formData.description,
       shortDescription: formData.shortDescription,
       category: {
@@ -313,7 +317,8 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         size: v.size,
         color: v.color,
         price: parseFloat(v.price) || 0,
-        inventory: { quantity: parseInt(v.quantity) || 0 }
+        inventory: { quantity: parseInt(v.quantity) || 0 },
+        sku: v.sku || ''
       })),
       seo: {
         title: formData.seo.title,
@@ -377,16 +382,28 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         {/* BASIC INFO TAB */}
         {activeTab === 'basic' && (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Title *</label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
-                placeholder="Product Title"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+                  placeholder="Product Title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">SKU</label>
+                <input
+                  type="text"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+                  placeholder="Stock Keeping Unit"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">

@@ -77,11 +77,15 @@ const Cart = () => {
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold mb-2">{product.name}</h3>
+                        <h3 className="text-lg font-bold mb-2">{product.title || product.name}</h3>
+                        {product.sku && (
+                          <p className="text-xs text-gray-500 mb-2 font-mono">SKU: {product.sku}</p>
+                        )}
                         {item.variant && (
                           <div className="text-sm text-gray-500 mb-2">
                             <span className="mr-3">Size: {item.variant.size}</span>
                             {item.variant.color && <span>Color: {item.variant.color}</span>}
+                            {item.variant.sku && <span className="ml-3 text-xs font-mono">V-SKU: {item.variant.sku}</span>}
                           </div>
                         )}
                         <p className="text-gray-600 mb-2">₹{item.price} each</p>
