@@ -6,7 +6,7 @@ import InvoiceTemplate from './Invoice/InvoiceTemplate';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || API_URL.replace('/api', '/uploads');
-
+//order page 
 const OrderCard = ({ order }) => {
     const dispatch = useDispatch();
     const [deliveryAgentName, setDeliveryAgentName] = useState(order?.deliveryAgent || '');
@@ -86,6 +86,7 @@ const OrderCard = ({ order }) => {
     };
 
     const handlePaymentStatusChange = async (e) => {
+        
         const newPaymentStatus = e.target.value;
         const previousPaymentStatus = paymentStatus;
         setPaymentStatus(newPaymentStatus);
