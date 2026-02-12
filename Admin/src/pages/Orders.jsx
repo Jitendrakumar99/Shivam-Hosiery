@@ -1,45 +1,23 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchOrders, updateOrderStatus } from '../store/slices/orderSlice';
-import { fetchStats } from '../store/slices/reportSlice';
+import { fetchOrders } from '../store/slices/orderSlice';
 import { useState, useEffect } from 'react';
-import OrderDetailsModal from '../components/Modal/OrderDetailsModal';
+import OrderCard from '../components/OrderCard';
 
 const Orders = () => {
   const { orders, loading } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  // Update selectedOrder when orders list updates
-  useEffect(() => {
-    if (selectedOrder && orders.length > 0) {
-      const updatedOrder = orders.find(
-        o => (o._id || o.id) === (selectedOrder._id || selectedOrder.id)
-      );
-      if (updatedOrder) {
-        // Only update if there are actual changes to avoid infinite loops
-        const orderChanged = 
-          updatedOrder.status !== selectedOrder.status ||
-          updatedOrder.paymentStatus !== selectedOrder.paymentStatus ||
-          updatedOrder.deliveryAgent !== selectedOrder.deliveryAgent;
-        if (orderChanged) {
-          setSelectedOrder(updatedOrder);
-        }
-      }
-    }
-  }, [orders]);
-
   const filteredOrders = orders.filter(order => {
     const orderId = (order._id || order.id || '').toString();
     const customerName = (order.user?.name || order.customer || '').toLowerCase();
     const email = (order.user?.email || order.email || '').toLowerCase();
-    const matchesSearch = 
+    const matchesSearch =
       orderId.includes(searchTerm.toLowerCase()) ||
       customerName.includes(searchTerm.toLowerCase()) ||
       email.includes(searchTerm.toLowerCase());
@@ -172,7 +150,7 @@ const Orders = () => {
         </div>
       )}
 
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-6">
         {filteredOrders.map((order) => (
           <div key={order._id || order.id} className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -249,12 +227,6 @@ const Orders = () => {
           </div>
         ))}
       </div>
-
-      <OrderDetailsModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        order={selectedOrder}
-      />
     </div>
   );
 };

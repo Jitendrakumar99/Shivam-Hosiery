@@ -26,7 +26,7 @@ exports.getOrders = async (req, res, next) => {
 
     const orders = await Order.find(query)
       .populate('user', 'name email')
-      .populate('items.product', 'name pricing.price images')
+      .populate('items.product', 'title pricing.price images featuredImage sku')
       .skip(startIndex)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -65,7 +65,7 @@ exports.getOrder = async (req, res, next) => {
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email phone')
-      .populate('items.product', 'name pricing.price images')
+      .populate('items.product', 'title pricing.price images featuredImage sku')
       .lean(); // Use lean() to get plain JavaScript object instead of Mongoose document
 
     if (!order) {
@@ -205,6 +205,8 @@ exports.createOrder = async (req, res, next) => {
       validatedItems.push({
         ...item,
         price: price, // Ensure correct price is saved
+        sku: item.sku || product.sku || '', // Product SKU
+        variantSKU: variant?.sku || item.variantSKU || '', // Variant SKU
       });
     }
 

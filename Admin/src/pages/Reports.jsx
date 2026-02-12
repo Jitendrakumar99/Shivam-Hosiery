@@ -4,6 +4,7 @@ import { fetchStats } from '../store/slices/reportSlice';
 import { fetchOrders } from '../store/slices/orderSlice';
 import { fetchProducts } from '../store/slices/productSlice';
 import { fetchCategories } from '../store/slices/categorySlice';
+import * as XLSX from 'xlsx';
 
 const monthLabel = (date) =>
   date.toLocaleString('en-US', { month: 'short' });
@@ -11,11 +12,11 @@ const monthLabel = (date) =>
 function calculateTotalRevenue(orders) {
   // Only count delivered/shipped orders with paymentStatus 'paid' for revenue
   // Include shipping costs to match Payments page calculation
-  const paidOrders = orders.filter(o => 
+  const paidOrders = orders.filter(o =>
     (o.status === 'delivered' || o.status === 'shipped') &&
     (o.paymentStatus === 'paid')
   );
-  
+
   return paidOrders.reduce((total, order) => {
     const totalAmount = Number(order.totalAmount ?? order.total ?? 0);
     const shippingCost = Number(order.shippingCost ?? 0);
@@ -32,10 +33,10 @@ function buildRevenueTrendFromOrders(orders) {
     months.push({ y: d.getFullYear(), m: d.getMonth(), label: monthLabel(d) });
   }
   const trend = months.map((m) => ({ month: m.label, revenue: 0, previousRevenue: 0 }));
-  
+
   // Only count delivered/shipped orders with paymentStatus 'paid' for revenue
   // Include shipping costs to match Payments page calculation
-  const revenueOrders = orders.filter(o => 
+  const revenueOrders = orders.filter(o =>
     (o.status === 'delivered' || o.status === 'shipped') &&
     (o.paymentStatus === 'paid')
   );
@@ -177,7 +178,7 @@ function RevenueLineChart({ data, maxValue }) {
   });
 
   // Create path for the line
-  const linePath = points.map((point, index) => 
+  const linePath = points.map((point, index) =>
     `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
   ).join(' ');
 
@@ -200,8 +201,8 @@ function RevenueLineChart({ data, maxValue }) {
 
   return (
     <div className="relative">
-      <svg 
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+      <svg
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         className="w-full h-64"
         preserveAspectRatio="none"
       >
@@ -254,8 +255,8 @@ function RevenueLineChart({ data, maxValue }) {
         {points.map((point, index) => {
           const revenue = Number(point.revenue || 0);
           const previousRevenue = Number(point.previousRevenue || 0);
-          const growthPercent = previousRevenue > 0 
-            ? ((revenue - previousRevenue) / previousRevenue) * 100 
+          const growthPercent = previousRevenue > 0
+            ? ((revenue - previousRevenue) / previousRevenue) * 100
             : (revenue > 0 ? 100 : 0);
           const isPositive = growthPercent >= 0;
 
@@ -407,6 +408,135 @@ const Reports = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
+  const exportToExcel = (data, fileName) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    XLSX.writeFile(workbook, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportSalesReport = () => {
+    const reportData = (orders || []).map(order => ({
+      'Order ID': order._id?.toString().toUpperCase() || 'N/A',
+      'Short ID': `#${order._id?.toString().slice(-8).toUpperCase()}` || 'N/A',
+      'Date': new Date(order.createdAt).toLocaleString(),
+      'Customer Name': order.shippingAddress?.name || order.user?.name || 'N/A',
+      'Customer Email': order.user?.email || 'N/A',
+      'Customer Phone': order.shippingAddress?.phone || 'N/A',
+      'Total Items Quantity': (order.items || []).reduce((sum, it) => sum + (it.quantity || 0), 0),
+      'Detailed Items': order.items?.map(it => {
+        const name = it.product?.title || it.product?.name || 'Item';
+        const sku = it.sku || it.product?.sku || 'N/A';
+        const qty = it.quantity || 0;
+        const price = it.price || 0;
+        const subtotal = qty * price;
+        const custom = it.customization
+          ? Object.entries(it.customization).map(([k, v]) => `${k}: ${v}`).filter(([k, v]) => v).join(', ')
+          : '';
+        return `${name} [SKU: ${sku}] (Qty: ${qty} x ₹${price.toLocaleString()} = ₹${subtotal.toLocaleString()})${custom ? ' { ' + custom + ' }' : ''}`;
+      }).join(' | '),
+      'Net Amount': order.totalAmount || 0,
+      'Shipping Cost': order.shippingCost || 0,
+      'Total Paid': (order.totalAmount || 0) + (order.shippingCost || 0),
+      'Payment Method': order.paymentMethod || 'N/A',
+      'Order Status': (order.status || 'pending').toUpperCase(),
+      'Payment Status': (order.paymentStatus || 'pending').toUpperCase(),
+      'Tracking Number': order.trackingNumber || 'Not Shipped',
+      'Delivery Agent': order.deliveryAgent || 'N/A',
+      'Shipping Address': `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.state || ''} - ${order.shippingAddress?.pincode || ''}`
+    }));
+    exportToExcel(reportData, 'Full_Sales_Report');
+  };
+
+  const exportCustomerReport = () => {
+    const customersMap = {};
+    (orders || []).forEach(order => {
+      const email = order.user?.email || 'Guest';
+      if (!customersMap[email]) {
+        customersMap[email] = {
+          'Customer Name': order.shippingAddress?.name || order.user?.name || 'N/A',
+          'Primary Email': email,
+          'Phone Number': order.shippingAddress?.phone || 'N/A',
+          'Total Orders Placed': 0,
+          'Total Lifetime Spend': 0,
+          'Last Order Date': new Date(order.createdAt).toLocaleDateString()
+        };
+      }
+      customersMap[email]['Total Orders Placed'] += 1;
+      customersMap[email]['Total Lifetime Spend'] += (order.totalAmount || 0) + (order.shippingCost || 0);
+
+      const orderDate = new Date(order.createdAt);
+      const lastDate = new Date(customersMap[email]['Last Order Date']);
+      if (orderDate > lastDate) {
+        customersMap[email]['Last Order Date'] = orderDate.toLocaleDateString();
+      }
+    });
+    exportToExcel(Object.values(customersMap), 'All_Customers_Report');
+  };
+
+  const exportInventoryReport = () => {
+    const reportData = (products || []).map(product => ({
+      'Product Title': product.title || product.name || 'N/A',
+      'SKU ID': product.sku || 'N/A',
+      'Main Category': product.category?.name || product.category || 'N/A',
+      'Current Price (₹)': product.price || 0,
+      'Stock Quantity': product.stock || 0,
+      'Availability': product.stock > 10 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock'),
+      'Description': product.description?.replace(/<[^>]*>?/gm, '').slice(0, 100) || 'N/A'
+    }));
+    exportToExcel(reportData, 'Full_Inventory_Status');
+  };
+
+  const exportPaymentReport = () => {
+    const reportData = (orders || []).map(order => ({
+      'Order Reference': order._id?.toString().toUpperCase() || 'N/A',
+      'Transaction Date': new Date(order.createdAt).toLocaleString(),
+      'Settled Amount (₹)': (order.totalAmount || 0) + (order.shippingCost || 0),
+      'Payment Gateway/Method': order.paymentMethod || 'N/A',
+      'Verification Status': (order.paymentStatus || 'pending').toUpperCase(),
+      'Payer Name': order.shippingAddress?.name || 'N/A',
+      'Customer Email': order.user?.email || 'N/A'
+    }));
+    exportToExcel(reportData, 'Financial_Payments_Report');
+  };
+
+  const exportAll = () => {
+    exportSalesReport();
+    exportCustomerReport();
+    exportInventoryReport();
+    exportPaymentReport();
+  };
+
+  const exportRevenueTrendReport = () => {
+    const reportData = revenueTrend.map(item => ({
+      'Reporting Month': item.month,
+      'Revenue Generated (₹)': item.revenue,
+      'Previous Month Revenue (₹)': item.previousRevenue,
+      'Growth Index (%)': item.previousRevenue > 0
+        ? (((item.revenue - item.previousRevenue) / item.previousRevenue) * 100).toFixed(2)
+        : (item.revenue > 0 ? '100.00' : '0.00')
+    }));
+    exportToExcel(reportData, 'Monthly_Revenue_Trend');
+  };
+
+  const exportStatusDistributionReport = () => {
+    const reportData = Object.entries(orderStatusDistribution).map(([status, count]) => ({
+      'Operational Status': status.toUpperCase(),
+      'Total Orders in Pipeline': count,
+      'Distribution Percentage (%)': ((count / (orders?.length || 1)) * 100).toFixed(2)
+    }));
+    exportToExcel(reportData, 'Pipeline_Status_Distribution');
+  };
+
+  const exportCategoryDistributionReport = () => {
+    const reportData = Object.entries(categoryDistribution).map(([cat, percent]) => ({
+      'Product Category': cat,
+      'Catalog Share (%)': percent,
+      'Total Products in Category': (products || []).filter(p => (p.category?.name || p.category) === cat).length
+    }));
+    exportToExcel(reportData, 'Inventory_Share_By_Category');
+  };
+
   const revenueTrend = buildRevenueTrendFromOrders(orders || []);
   const orderStatusDistribution = buildOrderStatusDistribution(orders || []);
   const categoryDistribution = buildParentCategoryDistribution(products || [], categories || []);
@@ -420,12 +550,6 @@ const Reports = () => {
           <h1 className="text-3xl font-bold text-gray-800">Reports & Analytics</h1>
           <p className="text-gray-600 mt-1">Comprehensive business insights and reports</p>
         </div>
-        <button className="bg-[#1a1a2e] hover:bg-[#16213e] text-white px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export All Reports
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -515,7 +639,10 @@ const Reports = () => {
               <h3 className="text-lg font-semibold text-gray-800">Revenue Trend</h3>
               <p className="text-sm text-gray-600">Last 6 months performance</p>
             </div>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={exportRevenueTrendReport}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -524,7 +651,7 @@ const Reports = () => {
           {revenueTrend.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
               <p>No revenue data available</p>
-              </div>
+            </div>
           ) : (
             <RevenueLineChart data={revenueTrend} maxValue={revenueMax} />
           )}
@@ -536,7 +663,10 @@ const Reports = () => {
               <h3 className="text-lg font-semibold text-gray-800">Order Status Distribution</h3>
               <p className="text-sm text-gray-600">Current order pipeline</p>
             </div>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={exportStatusDistributionReport}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -553,7 +683,10 @@ const Reports = () => {
               <h3 className="text-lg font-semibold text-gray-800">Parent Category Distribution</h3>
               <p className="text-sm text-gray-600">Products by parent category</p>
             </div>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={exportCategoryDistributionReport}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -562,7 +695,7 @@ const Reports = () => {
           {Object.keys(categoryDistribution).length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
               <p>No category data available</p>
-              </div>
+            </div>
           ) : (
             <PieChart data={categoryDistribution} colors={['#1e40af', '#ea580c', '#0d9488', '#a855f7', '#ef4444', '#14b8a6']} />
           )}
@@ -574,7 +707,10 @@ const Reports = () => {
               <h3 className="text-lg font-semibold text-gray-800">Coupon Performance</h3>
               <p className="text-sm text-gray-600">Coupon usage statistics</p>
             </div>
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={() => alert('Coupon statistics not available')}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
@@ -585,12 +721,12 @@ const Reports = () => {
               <div className="text-center py-8 text-gray-500">
                 <p>Coupon system not yet implemented</p>
                 <p className="text-sm mt-2">Coupon performance data will appear here once coupons are added</p>
-                </div>
+              </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p>Coupon system not yet implemented</p>
                 <p className="text-sm mt-2">Coupon performance data will appear here once coupons are added</p>
-                </div>
+              </div>
             )}
           </div>
         </div>
@@ -600,15 +736,23 @@ const Reports = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Export Reports</h3>
         <p className="text-sm text-gray-600 mb-4">Download detailed reports in various formats</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {['Sales Report', 'Customer Report', 'Inventory Report', 'Payment Report', 'Coupon Usage Report', 'Performance Report'].map((report) => (
+          {[
+            { name: 'Sales Report', action: exportSalesReport },
+            { name: 'Customer Report', action: exportCustomerReport },
+            { name: 'Inventory Report', action: exportInventoryReport },
+            { name: 'Payment Report', action: exportPaymentReport },
+            { name: 'Coupon Usage Report', action: () => alert('Coupon system data not yet available') },
+            { name: 'Performance Report', action: exportAll }
+          ].map((report) => (
             <button
-              key={report}
-              className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+              key={report.name}
+              onClick={report.action}
+              className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition min-w-[120px]"
             >
               <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              <span className="text-sm text-gray-700 text-center">{report}</span>
+              <span className="text-sm text-gray-700 text-center">{report.name}</span>
             </button>
           ))}
         </div>

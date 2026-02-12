@@ -155,7 +155,7 @@ const Orders = () => {
                   <div key={order._id || order.id} className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                       <div>
-                        <h3 className="text-xl font-bold mb-2">Order #{order._id?.slice(-6) || order.id}</h3>
+                        <h3 className="text-xl font-bold mb-2">Order #{order._id?.slice(-8) || order.id}</h3>
                         <p className="text-gray-600">
                           Placed on {new Date(order.createdAt || order.date).toLocaleDateString()}
                         </p>

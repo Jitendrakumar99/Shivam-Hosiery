@@ -25,6 +25,11 @@ const variantSchema = new mongoose.Schema({
   image: {
     type: String,
     default: ''
+  },
+  sku: {
+    type: String,
+    default: '',
+    trim: true
   }
 });
 
@@ -38,6 +43,13 @@ const productSchema = new mongoose.Schema({
     type: String,
     unique: true,
     lowercase: true
+  },
+  sku: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    sparse: true,
+    index: true
   },
   shortDescription: {
     type: String,

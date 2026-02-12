@@ -42,7 +42,8 @@ exports.register = async (req, res, next) => {
         phone: user.phone,
         company: user.company,
         address: user.address,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar
       }
     });
   } catch (error) {
@@ -94,7 +95,8 @@ exports.login = async (req, res, next) => {
         phone: user.phone,
         company: user.company,
         address: user.address,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar
       }
     });
   } catch (error) {

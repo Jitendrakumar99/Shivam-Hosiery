@@ -233,7 +233,7 @@ const OrderDetail = () => {
                 <span className="font-semibold text-blue-900">Tracking Number</span>
               </div>
               <p className="text-2xl font-bold text-blue-700">{order.trackingNumber}</p>
-              <p className="text-sm text-blue-600 mt-1">Use this number to track your shipment</p>
+              <p className="text-sm text-blue-600 mt-1">Use this number to track your shipment | visit the official website of <span className="font-bold text-blue-900">{order.deliveryAgent}</span> to track your shipment</p>
             </div>
           )}
         </div>
