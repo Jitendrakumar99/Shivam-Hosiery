@@ -39,14 +39,19 @@ const About = () => {
                 </p>
               </div>
             </div>
-            <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-              <span className="text-gray-500">Safety Gloves Image</span>
-            </div>
+            <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+  <img 
+    src="https://media.istockphoto.com/id/523629776/photo/textile-industry-sock.jpg?s=612x612&w=0&k=20&c=fGjcIB4nYJwzqwVsA7-5HA832r4xaSbzuVBRME7JAuU="
+    alt="Safety Gloves"
+    className="w-full h-full object-cover"
+  />
+  <span className="text-gray-500 absolute">Safety Gloves Image</span>
+</div>
           </div>
         </div>
       </section>
 
-      {/* Mission, Promise, Commitment Section */}
+      {/* Mission, Promise*/}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
