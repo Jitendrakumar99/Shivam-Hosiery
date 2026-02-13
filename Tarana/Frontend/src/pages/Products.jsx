@@ -198,7 +198,7 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-trana-orange text-white py-12">
+      <section className="bg-trana-primary text-white py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Products</h1>
           <p className="text-lg md:text-xl">
@@ -219,7 +219,7 @@ const Products = () => {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                 />
                 <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -236,7 +236,7 @@ const Products = () => {
                     onClick={() => handleCategoryChange(category)}
                     className={`px-4 py-2 rounded-lg transition ${(selectedCategory === 'all' && category === 'All') ||
                       category === selectedCategory
-                      ? 'bg-trana-orange text-white'
+                      ? 'bg-trana-primary text-white'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
                       }`}
                   >
@@ -254,7 +254,7 @@ const Products = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
               <p className="text-gray-600">Loading products...</p>
             </div>
           ) : error ? (
@@ -262,7 +262,7 @@ const Products = () => {
               <p className="text-red-600 mb-4">{error}</p>
               <button
                 onClick={() => dispatch(fetchProducts())}
-                className="bg-trana-orange text-white px-6 py-2 rounded hover:bg-orange-600 transition"
+                className="bg-trana-primary text-white px-6 py-2 rounded hover:bg-green-700 transition"
               >
                 Retry
               </button>
@@ -283,7 +283,7 @@ const Products = () => {
                     <div className="h-72 bg-gray-200 flex items-center justify-center relative group">
                       <Link to={`/products/${product._id || product.id}`} className="absolute inset-0 z-0 ">
                         {product.images && product.images.length > 0 ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-fit product-image-zoom transition-transform duration-500" />
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain product-image-zoom transition-transform duration-500" />
                         ) : (
                           <span className="text-gray-500">{product.name} Image</span>
                         )}
@@ -298,7 +298,7 @@ const Products = () => {
                         className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform duration-200 z-10"
                         title="Customize this product"
                       >
-                        <svg className="w-5 h-5 text-trana-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-5 h-5 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
@@ -306,7 +306,7 @@ const Products = () => {
                     <div className="p-6">
                       <p className="text-sm text-gray-500 mb-1">{product.category?.name || product.category}</p>
                       <Link to={`/products/${product._id || product.id}`}>
-                        <h3 className="text-xl font-bold mb-2 hover:text-trana-orange transition-colors duration-300 cursor-pointer">{product.title || product.name}</h3>
+                        <h3 className="text-xl font-bold mb-2 hover:text-trana-primary transition-colors duration-300 cursor-pointer">{product.title || product.name}</h3>
                       </Link>
 
                       {/* Rating */}
@@ -335,7 +335,7 @@ const Products = () => {
                       <div className="flex justify-between items-center mb-0 transition-all duration-300">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-lg font-bold text-trana-orange">
+                            <p className="text-lg font-bold text-trana-primary">
                               ₹{product.pricing?.price || product.price}
                             </p>
                             {product.pricing?.compareAtPrice > 0 && product.pricing.compareAtPrice > product.pricing.price && (
@@ -355,7 +355,7 @@ const Products = () => {
                         {isInCart(product) ? (
                           <Link
                             to="/cart"
-                            className="flex-1 bg-trana-orange text-white py-2 rounded hover:bg-orange-600 transition text-center"
+                            className="flex-1 bg-trana-primary text-white py-2 rounded hover:bg-green-700 transition text-center"
                           >
                             View Cart
                           </Link>
@@ -388,7 +388,7 @@ const Products = () => {
                                   position: 'bottom-right',
                                 });
                               }}
-                              className="flex-1 bg-trana-orange text-white py-2 rounded-full font-semibold hover:bg-orange-600 transition shadow-md hover:shadow-lg active:scale-95"
+                              className="flex-1 bg-trana-primary text-white py-2 rounded-full font-semibold hover:bg-green-700 transition shadow-md hover:shadow-lg active:scale-95"
                             >
                               Add to Cart
                             </button>
@@ -430,7 +430,7 @@ const Products = () => {
                           }}
                           className={`px-4 py-2 border rounded transition ${isInWishlist(product._id || product.id)
                             ? 'border-green-500 text-green-600 bg-green-50'
-                            : 'border-trana-orange text-trana-orange hover:bg-orange-50'
+                            : 'border-trana-primary text-trana-primary hover:bg-green-50'
                             }`}
                           title={isInWishlist(product._id || product.id) ? 'Already in wishlist' : 'Add to wishlist'}
                         >
@@ -463,7 +463,7 @@ const Products = () => {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded ${page === currentPage
-                        ? 'bg-trana-orange text-white'
+                        ? 'bg-trana-primary text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
                     >
@@ -494,13 +494,13 @@ const Products = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/contact"
-              className="bg-trana-orange text-white px-8 py-3 rounded font-semibold hover:bg-orange-600 transition"
+              className="bg-trana-dark text-white px-8 py-3 rounded font-semibold hover:bg-green-900 transition"
             >
               Request Bulk Quote
             </Link>
             <Link
               to="/contact"
-              className="bg-trana-orange text-white px-8 py-3 rounded font-semibold hover:bg-orange-600 transition"
+              className="bg-trana-primary text-white px-8 py-3 rounded font-semibold hover:bg-green-700 transition"
             >
               Contact Sales Team
             </Link>

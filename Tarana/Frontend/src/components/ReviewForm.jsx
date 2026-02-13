@@ -129,7 +129,7 @@ const ReviewForm = ({ productId, onSuccess, initialData = null }) => {
             onChange={handleChange}
             placeholder="Sum up your experience"
             maxLength={100}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
             required
           />
         </div>
@@ -147,7 +147,7 @@ const ReviewForm = ({ productId, onSuccess, initialData = null }) => {
             placeholder="Share your experience with this product"
             rows={5}
             maxLength={1000}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange resize-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary resize-none"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -159,7 +159,7 @@ const ReviewForm = ({ productId, onSuccess, initialData = null }) => {
         <button
           type="submit"
           disabled={submitting || !isAuthenticated}
-          className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Submitting...' : 'Submit Review'}
         </button>

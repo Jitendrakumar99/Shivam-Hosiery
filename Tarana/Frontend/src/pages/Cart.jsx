@@ -33,7 +33,7 @@ const Cart = () => {
           <p className="text-gray-600 mb-4">Please login to view your cart.</p>
           <Link
             to="/login"
-            className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+            className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
           >
             Login
           </Link>
@@ -55,7 +55,7 @@ const Cart = () => {
             <p className="text-gray-600 text-lg mb-4">Your cart is empty</p>
             <Link
               to="/products"
-              className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+              className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
             >
               Continue Shopping
             </Link>
@@ -112,7 +112,7 @@ const Cart = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-trana-orange">
+                        <p className="text-xl font-bold text-trana-primary">
                           ₹{item.price * item.quantity}
                         </p>
                       </div>
@@ -157,7 +157,7 @@ const Cart = () => {
                   </div>
                   <Link
                     to="/profile"
-                    className="block text-center mt-4 text-trana-orange hover:underline text-sm"
+                    className="block text-center mt-4 text-trana-primary hover:underline text-sm"
                   >
                     Manage Addresses
                   </Link>
@@ -177,18 +177,18 @@ const Cart = () => {
                   </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-trana-orange">₹{total.toLocaleString()}</span>
+                    <span className="text-trana-primary">₹{total.toLocaleString()}</span>
                   </div>
                 </div>
                 <Link
                   to="/checkout"
-                  className="block w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="block w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Proceed to Checkout
                 </Link>
                 <Link
                   to="/products"
-                  className="block text-center mt-4 text-trana-orange hover:underline"
+                  className="block text-center mt-4 text-trana-primary hover:underline"
                 >
                   Continue Shopping
                 </Link>

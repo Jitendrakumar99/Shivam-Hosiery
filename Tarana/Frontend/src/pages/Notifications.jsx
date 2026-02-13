@@ -65,7 +65,7 @@ const Notifications = () => {
         );
       default:
         return (
-          <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
         );
@@ -94,7 +94,7 @@ const Notifications = () => {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="text-trana-orange hover:underline"
+              className="text-trana-primary hover:underline"
             >
               Mark all as read
             </button>
@@ -107,11 +107,10 @@ const Notifications = () => {
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${
-                filter === type
-                  ? 'bg-trana-orange text-white'
+              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${filter === type
+                  ? 'bg-trana-primary text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
+                }`}
             >
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
@@ -121,7 +120,7 @@ const Notifications = () => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading notifications...</p>
           </div>
         )}
@@ -139,9 +138,8 @@ const Notifications = () => {
             {filteredNotifications.map((notification) => (
               <div
                 key={notification._id || notification.id}
-                className={`bg-white rounded-lg shadow-md p-6 ${
-                  !notification.read ? 'border-l-4 border-trana-orange' : ''
-                }`}
+                className={`bg-white rounded-lg shadow-md p-6 ${!notification.read ? 'border-l-4 border-trana-primary' : ''
+                  }`}
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">{getNotificationIcon(notification.type)}</div>
@@ -149,7 +147,7 @@ const Notifications = () => {
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-bold">{notification.title}</h3>
                       {!notification.read && (
-                        <span className="w-2 h-2 bg-trana-orange rounded-full"></span>
+                        <span className="w-2 h-2 bg-trana-primary rounded-full"></span>
                       )}
                     </div>
                     <p className="text-gray-600 mb-2">{notification.message}</p>
@@ -159,7 +157,7 @@ const Notifications = () => {
                     {notification.link && (
                       <Link
                         to={notification.link}
-                        className="text-trana-orange hover:underline text-sm mt-2 inline-block"
+                        className="text-trana-primary hover:underline text-sm mt-2 inline-block"
                       >
                         View Details →
                       </Link>
@@ -169,7 +167,7 @@ const Notifications = () => {
                     {!notification.read && (
                       <button
                         onClick={() => handleMarkAsRead(notification._id || notification.id)}
-                        className="text-sm text-trana-orange hover:underline"
+                        className="text-sm text-trana-primary hover:underline"
                       >
                         Mark as read
                       </button>

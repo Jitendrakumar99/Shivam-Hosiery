@@ -4,7 +4,7 @@ import { fetchStats } from '../store/slices/reportSlice';
 import { fetchOrders } from '../store/slices/orderSlice';
 import { fetchProducts } from '../store/slices/productSlice';
 import { fetchCategories } from '../store/slices/categorySlice';
-import * as XLSX from 'xlsx';
+// import * as XLSX from 'xlsx';
 
 const monthLabel = (date) =>
   date.toLocaleString('en-US', { month: 'short' });

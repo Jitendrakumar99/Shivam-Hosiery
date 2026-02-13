@@ -21,7 +21,7 @@ function buildRevenueTrendFromOrders(orders) {
 
   // Only count delivered/shipped orders with paymentStatus 'paid' for revenue
   // Include shipping costs to match Payments page calculation
-  const revenueOrders = orders.filter(o => 
+  const revenueOrders = orders.filter(o =>
     (o.status === 'delivered' || o.status === 'shipped') &&
     (o.paymentStatus === 'paid')
   );
@@ -32,7 +32,7 @@ function buildRevenueTrendFromOrders(orders) {
 
     const orderYear = createdAt.getFullYear();
     const orderMonth = createdAt.getMonth();
-    
+
     // Find current month index
     const idx = months.findIndex((m) => m.y === orderYear && m.m === orderMonth);
     if (idx === -1) return;
@@ -79,11 +79,11 @@ function buildPaymentStatusDistribution(orders) {
 function calculateTotalRevenue(orders) {
   // Only count delivered/shipped orders with paymentStatus 'paid' for revenue
   // Include shipping costs to match Payments page calculation
-  const paidOrders = orders.filter(o => 
+  const paidOrders = orders.filter(o =>
     (o.status === 'delivered' || o.status === 'shipped') &&
     (o.paymentStatus === 'paid')
   );
-  
+
   return paidOrders.reduce((total, order) => {
     const totalAmount = Number(order.totalAmount ?? order.total ?? 0);
     const shippingCost = Number(order.shippingCost ?? 0);
@@ -107,7 +107,7 @@ function RevenueLineChart({ data, maxValue }) {
   });
 
   // Create path for the line
-  const linePath = points.map((point, index) => 
+  const linePath = points.map((point, index) =>
     `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
   ).join(' ');
 
@@ -130,8 +130,8 @@ function RevenueLineChart({ data, maxValue }) {
 
   return (
     <div className="relative">
-      <svg 
-        viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+      <svg
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         className="w-full h-64"
         preserveAspectRatio="none"
       >
@@ -184,8 +184,8 @@ function RevenueLineChart({ data, maxValue }) {
         {points.map((point, index) => {
           const revenue = Number(point.revenue || 0);
           const previousRevenue = Number(point.previousRevenue || 0);
-          const growthPercent = previousRevenue > 0 
-            ? ((revenue - previousRevenue) / previousRevenue) * 100 
+          const growthPercent = previousRevenue > 0
+            ? ((revenue - previousRevenue) / previousRevenue) * 100
             : (revenue > 0 ? 100 : 0);
           const isPositive = growthPercent >= 0;
 
@@ -327,7 +327,7 @@ function PieChart({ data, colors }) {
           };
           const displayLabel = labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
           const percentage = ((Number(value) / total) * 100).toFixed(1);
-          
+
           return (
             <div key={key} className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
@@ -348,7 +348,7 @@ function PieChart({ data, colors }) {
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { products, loading: productsLoading } = useSelector((state) => state.products);
+  const { products, pagination, loading: productsLoading } = useSelector((state) => state.products);
   const { orders, loading: ordersLoading } = useSelector((state) => state.orders);
   const { customers, loading: customersLoading } = useSelector((state) => state.customers);
   const { metrics, revenueTrend, orderStatusDistribution, loading: statsLoading } = useSelector((state) => state.reports);
@@ -363,14 +363,14 @@ const Dashboard = () => {
   // Calculate total revenue from orders (more accurate than backend stats which may be cached)
   const calculatedTotalRevenue = calculateTotalRevenue(orders || []);
   const totalRevenue = calculatedTotalRevenue > 0 ? calculatedTotalRevenue : (metrics.totalRevenue || 0);
-  
+
   // Calculate average order value from paid orders
-  const paidOrders = (orders || []).filter(o => 
+  const paidOrders = (orders || []).filter(o =>
     (o.status === 'delivered' || o.status === 'shipped') &&
     (o.paymentStatus === 'paid')
   );
-  const calculatedAvgOrderValue = paidOrders.length > 0 
-    ? calculateTotalRevenue(orders || []) / paidOrders.length 
+  const calculatedAvgOrderValue = paidOrders.length > 0
+    ? calculateTotalRevenue(orders || []) / paidOrders.length
     : 0;
   const avgOrderValue = calculatedAvgOrderValue > 0 ? calculatedAvgOrderValue : (metrics.avgOrderValue || 0);
 
@@ -458,7 +458,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Products</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{metrics.totalProducts || products.length}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{pagination?.totalDocs || metrics.totalProducts || products.length}</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,7 +476,7 @@ const Dashboard = () => {
           {revenueBars.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-gray-500">
               <p>No revenue data available</p>
-              </div>
+            </div>
           ) : (
             <RevenueLineChart data={revenueBars} maxValue={revenueMax} />
           )}
@@ -514,9 +514,9 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                   <span className={`px-2 py-1 rounded text-xs ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
-                          'bg-yellow-100 text-yellow-800'
+                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'processing' ? 'bg-purple-100 text-purple-800' :
+                        'bg-yellow-100 text-yellow-800'
                     }`}>
                     {order.status}
                   </span>

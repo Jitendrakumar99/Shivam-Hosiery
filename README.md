@@ -280,3 +280,20 @@ Response format: { success: boolean, data?: any, message?: string, pagination?: 
 # Licensing & Ownership
 
 Internal project for Shivam Hosiery. All rights reserved.
+
+
+step:-1 (first time)
+git clone https://github.com/Jitendrakumar99/Shivam-Hosiery.git
+cd Shivam-Hosiery
+git checkout main
+git pull origin main
+git checkout -b <your_name>
+step:-2 (when some changes done)
+git add .
+git commit -m "Added login page UI"
+git push origin <your_name>
+step:-3(when your previous code merge in main branch the pull the changes from there)
+git checkout main
+git pull origin main
+git checkout <your_name>
+git merge main
