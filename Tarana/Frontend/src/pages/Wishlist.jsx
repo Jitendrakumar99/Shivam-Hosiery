@@ -56,7 +56,7 @@ const Wishlist = () => {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading wishlist...</p>
           </div>
         ) : items.length === 0 ? (
@@ -67,7 +67,7 @@ const Wishlist = () => {
             <p className="text-gray-600 text-lg mb-4">Your wishlist is empty</p>
             <Link
               to="/products"
-              className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+              className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
             >
               Browse Products
             </Link>
@@ -76,7 +76,7 @@ const Wishlist = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => {
               const product = item.product;
-              
+
               // If product is null, it means it's been deleted or is unavailable
               if (!product) {
                 return (
@@ -109,7 +109,7 @@ const Wishlist = () => {
                   <div className="p-6">
                     <h3 className="text-xl font-bold mb-2">{product.name || product.title}</h3>
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-2xl font-bold text-trana-orange">₹{product.pricing?.price || product.price || 0}</span>
+                      <span className="text-2xl font-bold text-trana-primary">₹{product.pricing?.price || product.price || 0}</span>
                       {inStock ? (
                         <span className="text-sm text-green-600 font-semibold">In Stock</span>
                       ) : (
@@ -120,7 +120,7 @@ const Wishlist = () => {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={!inStock}
-                        className={`flex-1 ${hasVariants ? 'bg-[#1a1a2e] hover:bg-[#16213e]' : 'bg-trana-orange hover:bg-orange-600'} text-white py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`flex-1 ${hasVariants ? 'bg-[#1a1a2e] hover:bg-[#16213e]' : 'bg-trana-primary hover:bg-green-700'} text-white py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {hasVariants ? 'View Options' : 'Add to Cart'}
                       </button>

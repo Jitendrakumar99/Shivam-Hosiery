@@ -31,13 +31,13 @@ const Customize = () => {
 
   const handleGeneratePreview = async () => {
     setError(null);
-    
+
     // Validate required fields
     if (!formData.productType) {
       toast.error('Please select a product type');
       return;
     }
-    
+
     if (!productImage) {
       toast.error('Please select a product image first');
       return;
@@ -73,7 +73,7 @@ const Customize = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-[#f54a00] text-white py-12">
+      <section className="bg-trana-primary text-white py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Customize Your Safety Garment</h1>
           <p className="text-lg md:text-xl">
@@ -89,7 +89,7 @@ const Customize = () => {
             {/* Customization Options */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Customization Options</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
@@ -99,7 +99,7 @@ const Customize = () => {
                     name="productType"
                     value={formData.productType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     required
                   >
                     <option value="">Select product type</option>
@@ -117,7 +117,7 @@ const Customize = () => {
                     name="primaryColor"
                     value={formData.primaryColor}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     required
                   >
                     <option value="Orange (Hi-Vis)">Orange (Hi-Vis)</option>
@@ -135,7 +135,7 @@ const Customize = () => {
                     name="size"
                     value={formData.size}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     required
                   >
                     <option value="">Select size</option>
@@ -154,7 +154,7 @@ const Customize = () => {
                     id="reflectiveTape"
                     checked={formData.reflectiveTape}
                     onChange={handleChange}
-                    className="w-4 h-4 text-trana-orange border-gray-300 rounded focus:ring-trana-orange"
+                    className="w-4 h-4 text-trana-primary border-gray-300 rounded focus:ring-trana-primary"
                   />
                   <label htmlFor="reflectiveTape" className="ml-2 text-sm font-semibold">
                     Add 360° Reflective Tape
@@ -171,7 +171,7 @@ const Customize = () => {
                     value={formData.companyLogo}
                     onChange={handleChange}
                     placeholder="Enter text for logo or company name"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave blank if no logo required.</p>
                 </div>
@@ -184,7 +184,7 @@ const Customize = () => {
                     name="logoPlacement"
                     value={formData.logoPlacement}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                   >
                     <option value="Front Center">Front Center</option>
                     <option value="Back Center">Back Center</option>
@@ -204,7 +204,7 @@ const Customize = () => {
                     onChange={handleChange}
                     rows="4"
                     placeholder="Describe any other specific customization requests (e.g., 'add a yellow stripe', 'change collar style')"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary resize-none"
                   />
                   <p className="text-xs text-gray-500 mt-1">Use this to describe AI-powered edits.</p>
                 </div>
@@ -219,14 +219,14 @@ const Customize = () => {
                     value={formData.quantity}
                     onChange={handleChange}
                     min="1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                   />
                   <p className="text-xs text-gray-500 mt-1">Minimum order: 1 unit.</p>
                 </div>
 
                 <button
                   onClick={handleGeneratePreview}
-                  className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                  className="w-full bg-trana-dark text-white py-3 rounded-lg font-semibold hover:bg-green-900 transition flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -239,7 +239,7 @@ const Customize = () => {
             {/* Preview Section */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Preview</h2>
-              
+
               <div className="border-2 border-dashed border-gray-300 rounded-lg h-96 mb-6 flex items-center justify-center bg-gray-50 relative overflow-hidden">
                 {generatedImageBase64 ? (
                   <img src={generatedImageBase64} alt="Generated Preview" className="w-full h-full object-contain p-4" />
@@ -257,7 +257,7 @@ const Customize = () => {
                 {loading && (
                   <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
                       <p className="text-gray-600 font-semibold">Generating AI preview...</p>
                       <p className="text-sm text-gray-500 mt-2">This may take a moment</p>
                     </div>
@@ -276,7 +276,7 @@ const Customize = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Estimated Price:</span>
-                  <span className="text-xl font-bold text-trana-orange">₹500</span>
+                  <span className="text-xl font-bold text-trana-primary">₹500</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Delivery Time:</span>
@@ -284,13 +284,13 @@ const Customize = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+              <button className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
                 Add to Cart
               </button>
 
-              <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                   </svg>
                   <div>

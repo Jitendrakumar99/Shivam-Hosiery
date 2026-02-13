@@ -198,7 +198,7 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading product...</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ const ProductDetail = () => {
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
             <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist.'}</p>
-            <Link to="/products" className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition">
+            <Link to="/products" className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
               Browse Products
             </Link>
           </div>
@@ -245,9 +245,9 @@ const ProductDetail = () => {
         {/* Breadcrumb */}
         <nav className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-600">
-            <li><Link to="/" className="hover:text-trana-orange">Home</Link></li>
+            <li><Link to="/" className="hover:text-trana-primary">Home</Link></li>
             <li>/</li>
-            <li><Link to="/products" className="hover:text-trana-orange">Products</Link></li>
+            <li><Link to="/products" className="hover:text-trana-primary">Products</Link></li>
             <li>/</li>
             <li className="text-gray-900 font-semibold">{productTitle}</li>
           </ol>
@@ -265,7 +265,7 @@ const ProductDetail = () => {
                         <button
                           key={idx}
                           onClick={() => setSelectedImage(idx)}
-                          className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-trana-orange scale-105' : 'border-gray-200 hover:border-gray-400'
+                          className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === idx ? 'border-trana-primary scale-105' : 'border-gray-200 hover:border-gray-400'
                             }`}
                         >
                           <img src={img} alt={`${productTitle} ${idx + 1}`} className="w-full h-full object-cover" />
@@ -327,7 +327,7 @@ const ProductDetail = () => {
               {/* Price */}
               <div className="flex items-center gap-4 mb-6 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl font-bold text-trana-orange">₹{productPrice}</span>
+                  <span className="text-3xl font-bold text-trana-primary">₹{productPrice}</span>
                   {compareAtPrice > productPrice && (
                     <>
                       <span className="text-xl text-gray-500 line-through">₹{compareAtPrice}</span>
@@ -356,7 +356,7 @@ const ProductDetail = () => {
                     <label className="text-sm font-semibold">Size</label>
                     <button
                       onClick={() => setShowSizeChart(true)}
-                      className="text-trana-orange text-sm font-semibold hover:underline flex items-center gap-1"
+                      className="text-trana-primary text-sm font-semibold hover:underline flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -370,8 +370,8 @@ const ProductDetail = () => {
                         key={size}
                         onClick={() => handleVariantChange(size, selectedColor)}
                         className={`px-4 py-2 border-2 rounded-lg font-semibold transition ${selectedSize === size
-                          ? 'border-trana-orange bg-trana-orange text-white'
-                          : 'border-gray-300 hover:border-trana-orange'
+                          ? 'border-trana-primary bg-trana-primary text-white'
+                          : 'border-gray-300 hover:border-trana-primary'
                           }`}
                       >
                         {size}
@@ -398,8 +398,8 @@ const ProductDetail = () => {
                         handleVariantChange(selectedSize, color);
                       }}
                       className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${!useCustomColor && selectedColor === color
-                        ? 'border-trana-orange ring-2 ring-trana-orange ring-offset-2 scale-110'
-                        : 'border-gray-300 hover:border-trana-orange hover:scale-105'
+                        ? 'border-trana-primary ring-2 ring-trana-primary ring-offset-2 scale-110'
+                        : 'border-gray-300 hover:border-trana-primary hover:scale-105'
                         }`}
                       style={{ backgroundColor: color.toLowerCase() }}
                       title={color}
@@ -410,8 +410,8 @@ const ProductDetail = () => {
                   <div className="relative group">
                     <button
                       className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden ${useCustomColor
-                        ? 'border-trana-orange ring-2 ring-trana-orange ring-offset-2 scale-110'
-                        : 'border-gray-300 hover:border-trana-orange hover:scale-105'
+                        ? 'border-trana-primary ring-2 ring-trana-primary ring-offset-2 scale-110'
+                        : 'border-gray-300 hover:border-trana-primary hover:scale-105'
                         }`}
                       title="Pick Custom Color"
                     >
@@ -471,14 +471,14 @@ const ProductDetail = () => {
                 <button
                   onClick={handleAddToCart}
                   disabled={isAdding}
-                  className="flex-1 bg-trana-orange text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-trana-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAdding ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   ref={wishlistButtonRef}
                   onClick={handleAddToWishlist}
-                  className={`px-6 py-3 border-2 rounded-lg font-semibold transition ${inWishlist ? 'border-green-500 text-green-600 bg-green-50' : 'border-trana-orange text-trana-orange hover:bg-orange-50'
+                  className={`px-6 py-3 border-2 rounded-lg font-semibold transition ${inWishlist ? 'border-green-500 text-green-600 bg-green-50' : 'border-trana-primary text-trana-primary hover:bg-green-50'
                     }`}
                 >
                   {inWishlist ? (
@@ -538,7 +538,7 @@ const ProductDetail = () => {
           {product.rating && product.rating.count > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-200">
               <div className="text-center">
-                <div className="text-5xl font-bold text-trana-orange mb-2">{product.rating.average.toFixed(1)}</div>
+                <div className="text-5xl font-bold text-trana-primary mb-2">{product.rating.average.toFixed(1)}</div>
                 <div className="flex items-center justify-center mb-2">
                   {[...Array(5)].map((_, i) => (
                     <svg key={i} className={`w-6 h-6 ${i < Math.round(product.rating.average) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -571,7 +571,7 @@ const ProductDetail = () => {
             {!hasUserReviewed ? (
               <button
                 onClick={() => setShowReviewForm(!showReviewForm)}
-                className="bg-trana-orange text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                className="bg-trana-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
               >
                 {showReviewForm ? 'Cancel' : 'Write a Review'}
               </button>
@@ -602,7 +602,7 @@ const ProductDetail = () => {
           <div className="space-y-6">
             {reviewsLoading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading reviews...</p>
               </div>
             ) : reviews && reviews.length > 0 ? (
@@ -654,7 +654,7 @@ const ProductDetail = () => {
                         {isAuthenticated && user && String(review.user?.id || review.user?._id || review.user) === String(user._id || user.id) && (
                           <button
                             onClick={() => setEditingReviewId(review._id)}
-                            className="text-trana-orange hover:text-orange-700 text-sm font-semibold flex items-center gap-1"
+                            className="text-trana-primary hover:text-green-700 text-sm font-semibold flex items-center gap-1"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -667,7 +667,7 @@ const ProductDetail = () => {
                       <p className="text-gray-700 mb-3">{review.comment}</p>
 
                       {review.adminReply && review.adminReply.message && (
-                        <div className="bg-gray-50 border-l-4 border-trana-orange p-4 mt-4">
+                        <div className="bg-gray-50 border-l-4 border-trana-primary p-4 mt-4">
                           <p className="text-sm font-semibold mb-1">Response from Trana Safety:</p>
                           <p className="text-sm text-gray-700">{review.adminReply.message}</p>
                         </div>
@@ -705,7 +705,7 @@ const ProductDetail = () => {
                   <div className="p-4">
                     <p className="text-xs text-gray-500 mb-1">{relatedProduct.category?.name || relatedProduct.category}</p>
                     <h3 className="font-semibold text-sm mb-2 line-clamp-2">{relatedProduct.title || relatedProduct.name}</h3>
-                    <p className="text-trana-orange font-bold">₹{relatedProduct.pricing?.price || relatedProduct.price}</p>
+                    <p className="text-trana-primary font-bold">₹{relatedProduct.pricing?.price || relatedProduct.price}</p>
                   </div>
                 </Link>
               ))}
@@ -748,7 +748,7 @@ const ProductDetail = () => {
                         { s: 'XXXL', c: '46-48', w: '40-42', l: '31' },
                       ].map((item, idx) => (
                         <tr key={idx} className="hover:bg-gray-50 transition">
-                          <td className="p-4 border-b font-semibold text-trana-orange">{item.s}</td>
+                          <td className="p-4 border-b font-semibold text-trana-primary">{item.s}</td>
                           <td className="p-4 border-b text-gray-600">{item.c}</td>
                           <td className="p-4 border-b text-gray-600">{item.w}</td>
                           <td className="p-4 border-b text-gray-600">{item.l}</td>

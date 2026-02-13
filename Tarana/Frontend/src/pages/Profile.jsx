@@ -298,7 +298,7 @@ const Profile = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading profile...</p>
           </div>
         </div>
@@ -322,7 +322,7 @@ const Profile = () => {
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
                 <div className="relative group">
-                  <div className="w-16 h-16 bg-trana-orange rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                  <div className="w-16 h-16 bg-trana-primary rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                     {avatarPreview || user?.avatar ? (
                       <img src={avatarPreview || getAvatarUrl(user.avatar)} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -344,7 +344,7 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('profile')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'profile'
-                    ? 'bg-trana-orange text-white'
+                    ? 'bg-trana-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
@@ -353,7 +353,7 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('password')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'password'
-                    ? 'bg-trana-orange text-white'
+                    ? 'bg-trana-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
@@ -362,7 +362,7 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('addresses')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'addresses'
-                    ? 'bg-trana-orange text-white'
+                    ? 'bg-trana-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
@@ -371,7 +371,7 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('notifications')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'notifications'
-                    ? 'bg-trana-orange text-white'
+                    ? 'bg-trana-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
@@ -380,7 +380,7 @@ const Profile = () => {
                 <button
                   onClick={() => setActiveTab('cards')}
                   className={`w-full text-left px-4 py-3 rounded-lg transition ${activeTab === 'cards'
-                    ? 'bg-trana-orange text-white'
+                    ? 'bg-trana-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
@@ -400,7 +400,7 @@ const Profile = () => {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
                     >
                       Edit Profile
                     </button>
@@ -424,7 +424,7 @@ const Profile = () => {
                       <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                       >
                         {loading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -441,7 +441,7 @@ const Profile = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                       />
                     ) : (
                       <p className="text-gray-900">{user?.name || 'Not provided'}</p>
@@ -472,7 +472,7 @@ const Profile = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                       />
                     ) : (
                       <p className="text-gray-900">{user?.phone || 'Not provided'}</p>
@@ -487,7 +487,7 @@ const Profile = () => {
                         name="company"
                         value={formData.company}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                       />
                     ) : (
                       <p className="text-gray-900">{user?.company || 'Not provided'}</p>
@@ -524,7 +524,7 @@ const Profile = () => {
                     <p className="text-gray-600 mb-4">Click the button below to change your password.</p>
                     <button
                       onClick={() => setIsEditingPassword(true)}
-                      className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
                     >
                       Change Password
                     </button>
@@ -539,7 +539,7 @@ const Profile = () => {
                           name="currentPassword"
                           value={passwordData.currentPassword}
                           onChange={handlePasswordChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                         <button
                           type="button"
@@ -567,7 +567,7 @@ const Profile = () => {
                           name="newPassword"
                           value={passwordData.newPassword}
                           onChange={handlePasswordChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                         <button
                           type="button"
@@ -595,7 +595,7 @@ const Profile = () => {
                           name="confirmPassword"
                           value={passwordData.confirmPassword}
                           onChange={handlePasswordChange}
-                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                         <button
                           type="button"
@@ -618,7 +618,7 @@ const Profile = () => {
                     <button
                       onClick={handlePasswordSave}
                       disabled={loading}
-                      className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                     >
                       {loading ? 'Changing...' : 'Change Password'}
                     </button>
@@ -635,7 +635,7 @@ const Profile = () => {
                   {!isAddingAddress && !editingAddressId && (
                     <button
                       onClick={() => setIsAddingAddress(true)}
-                      className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
                     >
                       Add New Address
                     </button>
@@ -653,7 +653,7 @@ const Profile = () => {
                           name="name"
                           value={addressData.name}
                           onChange={handleAddressChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                       </div>
                       <div>
@@ -663,7 +663,7 @@ const Profile = () => {
                           name="phone"
                           value={addressData.phone}
                           onChange={handleAddressChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -673,7 +673,7 @@ const Profile = () => {
                           value={addressData.address}
                           onChange={handleAddressChange}
                           rows="2"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange resize-none"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary resize-none"
                         />
                       </div>
                       <div>
@@ -683,7 +683,7 @@ const Profile = () => {
                           name="city"
                           value={addressData.city}
                           onChange={handleAddressChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                       </div>
                       <div>
@@ -693,7 +693,7 @@ const Profile = () => {
                           name="state"
                           value={addressData.state}
                           onChange={handleAddressChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                       </div>
                       <div>
@@ -703,7 +703,7 @@ const Profile = () => {
                           name="pincode"
                           value={addressData.pincode}
                           onChange={handleAddressChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -713,7 +713,7 @@ const Profile = () => {
                             name="isDefault"
                             checked={addressData.isDefault}
                             onChange={handleAddressChange}
-                            className="w-4 h-4 text-trana-orange border-gray-300 rounded focus:ring-trana-orange"
+                            className="w-4 h-4 text-trana-primary border-gray-300 rounded focus:ring-trana-primary"
                           />
                           <span className="text-sm text-gray-700">Set as default address</span>
                         </label>
@@ -728,7 +728,7 @@ const Profile = () => {
                         <button
                           onClick={editingAddressId ? handleUpdateAddress : handleAddAddress}
                           disabled={loading}
-                          className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+                          className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                         >
                           {loading ? 'Saving...' : editingAddressId ? 'Update Address' : 'Add Address'}
                         </button>
@@ -758,7 +758,7 @@ const Profile = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => startEditAddress(address)}
-                              className="text-trana-orange hover:text-orange-600 px-3 py-1"
+                              className="text-trana-primary hover:text-green-700 px-3 py-1"
                             >
                               Edit
                             </button>
@@ -777,7 +777,7 @@ const Profile = () => {
                       <p className="text-gray-600 mb-4">No addresses saved yet.</p>
                       <button
                         onClick={() => setIsAddingAddress(true)}
-                        className="bg-trana-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition"
+                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
                       >
                         Add Your First Address
                       </button>

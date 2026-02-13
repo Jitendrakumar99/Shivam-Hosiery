@@ -44,7 +44,7 @@ const RelatedProductsSection = ({ orderedItems }) => {
               </div>
             )}
             <h3 className="font-semibold text-sm mb-2">{product.name || product.title}</h3>
-            <p className="text-trana-orange font-bold">₹{product.pricing?.price || product.price || 0}</p>
+            <p className="text-trana-primary font-bold">₹{product.pricing?.price || product.price || 0}</p>
           </Link>
         ))}
       </div>
@@ -310,7 +310,7 @@ const Checkout = () => {
             <div className="bg-gray-50 rounded-lg p-6 mb-6">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">Tracking ID</p>
-                <p className="text-2xl font-bold text-trana-orange mb-4">{trackingId || 'N/A'}</p>
+                <p className="text-2xl font-bold text-trana-dark mb-4">{trackingId || 'N/A'}</p>
                 <p className="text-sm text-gray-600">
                   Save this tracking ID to track your order status
                 </p>
@@ -351,14 +351,14 @@ const Checkout = () => {
                       <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-trana-orange">₹{item.price * item.quantity}</p>
+                      <p className="font-semibold text-trana-primary">₹{item.price * item.quantity}</p>
                       <p className="text-xs text-gray-500">₹{item.price} each</p>
                     </div>
                   </div>
                 ))}
                 <div className="border-t border-gray-200 pt-4 mt-4 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">₹{orderTotal.toLocaleString()}</span>
+                  <span className="text-trana-primary">₹{orderTotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -367,7 +367,7 @@ const Checkout = () => {
               {orderId && (
                 <Link
                   to={`/orders/${orderId}`}
-                  className="inline-block bg-trana-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                  className="inline-block bg-trana-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
                 >
                   View Order
                 </Link>
@@ -391,7 +391,7 @@ const Checkout = () => {
           <RelatedProductsSection orderedItems={orderedItems} />
 
           {/* Recommendations & Ads Section */}
-          <div className="bg-gradient-to-r from-trana-orange to-orange-600 rounded-lg shadow-md p-8 text-white mb-8">
+          <div className="bg-gradient-to-r from-trana-primary to-trana-dark rounded-lg shadow-md p-8 text-white mb-8">
             <h2 className="text-2xl font-bold mb-6">Special Offers & Recommendations</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm hover:bg-white/20 transition">
@@ -483,7 +483,7 @@ const Checkout = () => {
                         key={address._id}
                         onClick={() => setSelectedAddressId(address._id)}
                         className={`border-2 rounded-lg p-4 cursor-pointer transition ${selectedAddressId === address._id
-                          ? 'border-trana-orange bg-orange-50'
+                          ? 'border-trana-primary bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
                           }`}
                       >
@@ -503,7 +503,7 @@ const Checkout = () => {
                   </div>
                   <Link
                     to="/profile"
-                    className="text-trana-orange hover:underline text-sm"
+                    className="text-trana-primary hover:underline text-sm"
                   >
                     Manage Addresses →
                   </Link>
@@ -523,7 +523,7 @@ const Checkout = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     />
                   </div>
                   <div>
@@ -538,7 +538,7 @@ const Checkout = () => {
                       required
                       minLength="10"
                       maxLength="10"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     />
                   </div>
                 </div>
@@ -552,7 +552,7 @@ const Checkout = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                   />
                 </div>
 
@@ -566,7 +566,7 @@ const Checkout = () => {
                     onChange={handleChange}
                     required
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary resize-none"
                   />
                 </div>
 
@@ -581,7 +581,7 @@ const Checkout = () => {
                       value={formData.city}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     />
                   </div>
                   <div>
@@ -594,7 +594,7 @@ const Checkout = () => {
                       value={formData.state}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     />
                   </div>
                   <div>
@@ -610,7 +610,7 @@ const Checkout = () => {
                       minLength="6"
                       maxLength="6"
                       pattern="[0-9]{6}"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                     />
                   </div>
                 </div>
@@ -624,7 +624,7 @@ const Checkout = () => {
                     value={formData.paymentMethod}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-orange"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trana-primary"
                   >
                     <option value="Cash on Delivery">Cash on Delivery</option>
                     <option value="UPI">UPI</option>
@@ -637,7 +637,7 @@ const Checkout = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-trana-orange text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Placing Order...' : 'Place Order'}
                 </button>
@@ -677,7 +677,7 @@ const Checkout = () => {
                           </p>
                         )}
                         <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
-                        <p className="text-sm font-semibold text-trana-orange">
+                        <p className="text-sm font-semibold text-trana-primary">
                           ₹{item.price * item.quantity}
                         </p>
                       </div>
@@ -698,7 +698,7 @@ const Checkout = () => {
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">
+                  <span className="text-trana-primary">
                     ₹{(total + (shippingCost || 0)).toLocaleString()}
                   </span>
                 </div>
@@ -708,7 +708,7 @@ const Checkout = () => {
               </div>
               <Link
                 to="/cart"
-                className="block text-center mt-4 text-trana-orange hover:underline text-sm"
+                className="block text-center mt-4 text-trana-primary hover:underline text-sm"
               >
                 ← Back to Cart
               </Link>

@@ -118,7 +118,7 @@ const Orders = () => {
               key={status}
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${filter === status
-                ? 'bg-trana-orange text-white'
+                ? 'bg-trana-primary text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
             >
@@ -130,7 +130,7 @@ const Orders = () => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading orders...</p>
           </div>
         )}
@@ -204,7 +204,7 @@ const Orders = () => {
                                 <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                               </div>
                               <div className="text-right">
-                                <p className="font-semibold text-trana-orange">
+                                <p className="font-semibold text-trana-primary">
                                   ₹{(item.price || product.price || 0) * item.quantity}
                                 </p>
                                 <p className="text-xs text-gray-500">₹{item.price || product.price || 0} each</p>
@@ -215,7 +215,7 @@ const Orders = () => {
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                         <span className="text-lg font-bold">Total Amount</span>
-                        <span className="text-xl font-bold text-trana-orange">₹{order.totalAmount?.toLocaleString() || order.total?.toLocaleString()}</span>
+                        <span className="text-xl font-bold text-trana-primary">₹{order.totalAmount?.toLocaleString() || order.total?.toLocaleString()}</span>
                       </div>
                     </div>
 

@@ -79,20 +79,26 @@ const Header = () => {
   return (
     <>
 
-      <header className="bg-[#f54a00] text-white sticky top-0 z-40 shadow-md">
+      <header className="bg-trana-primary text-white sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-2">
             <Link
               to="/"
-              className="text-2xl font-bold text-white no-underline"
+              className="flex items-center gap-2 no-underline group"
               onClick={closeMobileMenu}
             >
-              Trana Safety
+              <div className="bg-white rounded-lg p-1 shadow-md hover:shadow-lg transition-transform hover:scale-105 duration-300 logo-enter h-19 w-20 flex items-center justify-center overflow-hidden">
+                <img
+                  src="/trana_logo2.jpeg"
+                  alt="Trana Safety"
+                  className="w-auto h-full object-contain"
+                />
+              </div>
             </Link>
 
             <div className="flex items-center gap-4">
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex gap-4 lg:gap-8 items-center text-sm md:text-base">
+              <nav className="hidden md:flex gap-4 lg:gap-8 items-center text-base md:text-lg font-medium">
                 <Link
                   to="/"
                   className={`text-white no-underline transition hover:opacity-80 ${location.pathname === '/' ? 'font-bold underline' : ''}`}

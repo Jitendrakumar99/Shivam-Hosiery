@@ -135,7 +135,7 @@ const OrderDetail = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-orange mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading order details...</p>
           </div>
         </div>
@@ -155,7 +155,7 @@ const OrderDetail = () => {
             <p className="text-gray-600 mb-6">{error || 'The order you are looking for does not exist.'}</p>
             <Link
               to="/orders"
-              className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+              className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
             >
               Back to Orders
             </Link>
@@ -180,7 +180,7 @@ const OrderDetail = () => {
             <p className="text-gray-600 mb-6">You are not authorized to view this order.</p>
             <Link
               to="/orders"
-              className="inline-block bg-trana-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition"
+              className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
             >
               Back to Orders
             </Link>
@@ -196,9 +196,9 @@ const OrderDetail = () => {
         {/* Breadcrumb */}
         <nav className="mb-6">
           <ol className="flex items-center space-x-2 text-sm text-gray-600">
-            <li><Link to="/" className="hover:text-trana-orange">Home</Link></li>
+            <li><Link to="/" className="hover:text-trana-primary">Home</Link></li>
             <li>/</li>
-            <li><Link to="/orders" className="hover:text-trana-orange">Orders</Link></li>
+            <li><Link to="/orders" className="hover:text-trana-primary">Orders</Link></li>
             <li>/</li>
             <li className="text-gray-900 font-semibold">Order #{order._id?.slice(-8).toUpperCase()}</li>
           </ol>
@@ -278,7 +278,7 @@ const OrderDetail = () => {
                             <p className="text-sm text-gray-600">Price: <span className="font-semibold">₹{item.price || product?.price || 0}</span> each</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-lg font-bold text-trana-orange">
+                            <p className="text-lg font-bold text-trana-primary">
                               ₹{(item.price || product?.price || 0) * item.quantity}
                             </p>
                           </div>
@@ -415,22 +415,21 @@ const OrderDetail = () => {
                   </p>
                   <p>
                     <span className="font-semibold">Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                      order.paymentStatus === 'paid'
-                        ? 'bg-green-100 text-green-800'
-                        : order.paymentStatus === 'failed'
+                    <span className={`ml-2 px-2 py-1 rounded text-xs ${order.paymentStatus === 'paid'
+                      ? 'bg-green-100 text-green-800'
+                      : order.paymentStatus === 'failed'
                         ? 'bg-red-100 text-red-800'
                         : order.paymentStatus === 'refunded'
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.paymentStatus === 'paid' 
-                        ? 'Paid' 
-                        : order.paymentStatus === 'failed' 
-                        ? 'Failed' 
-                        : order.paymentStatus === 'refunded'
-                        ? 'Refunded'
-                        : 'Pending'}
+                          ? 'bg-orange-100 text-orange-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {order.paymentStatus === 'paid'
+                        ? 'Paid'
+                        : order.paymentStatus === 'failed'
+                          ? 'Failed'
+                          : order.paymentStatus === 'refunded'
+                            ? 'Refunded'
+                            : 'Pending'}
                     </span>
                   </p>
                 </div>
@@ -458,7 +457,7 @@ const OrderDetail = () => {
                 </div>
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-trana-orange">
+                  <span className="text-trana-primary">
                     ₹{(
                       (order.totalAmount || order.total || 0) +
                       (order.shippingCost || 0)
