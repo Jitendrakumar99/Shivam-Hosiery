@@ -2,15 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* PRIMARY BRAND - Yellow Palette */
+  --trana-primary: #ffde32;
+  /* Brand Yellow */
+  --trana-primary-rgb: 255, 222, 50;
+  --trana-dark: #e7e702;
+  /* Darker Yellow for hover states */
+  --trana-middle: #ffde32;
+  /* Same Yellow */
+  --trana-light: #eaf4c2;
+  /* Very Light Yellow tint */
+  --trana-accent: #ffde32;
+  /* Brand Yellow */
+
+  /* BACKGROUNDS - Two Colors Only: Yellow & White */
+  --neutral-bg: #ffde32;
+  --page-bg: #ffffff;
+  --header-bg: #ffde32;
+  /* Navbar -> Yellow */
+  --page-header-bg: #ffde32;
+  /* Hero / page-top banners -> Yellow */
+  --card-bg: #ffffff;
+  /* Product cards, form panels -> White */
+  --section-bg: #ffde32;
+  /* Alternating sections -> Yellow */
+  --footer-bg: #ffde32;
+  /* Footer -> Yellow */
+  --dropdown-bg: rgba(255, 255, 255, 0.95);
+
+  /* TEXT - Black & White only */
+  --text-primary: #111111;
+  --text-secondary: #333333;
+
+  /* DIVIDERS */
+  --section-divider: rgba(0, 0, 0, 0.12);
+
+  /* CTA */
+  --action-orange: #8aa018;
+  --action-orange-rgb: 161, 188, 30;
+  --btn-text: #ffffff;
+
+  /* EFFECTS */
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --premium-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+
+  /* FONT */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+
 body {
   margin: 0;
-  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #FFFFFF;
-  /* Neutral Background */
-  color: #2C2C2C;
-  /* Text Primary */
+  /* background-color: var(--neutral-bg); */
+  color: var(--text-primary);
   overflow-x: hidden;
 }
 
@@ -20,8 +68,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: #2D5718;
-  /* Brand Dark */
+  color: inherit;
   font-weight: 700;
 }
 
@@ -77,8 +124,7 @@ h6 {
 
   .product-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 25px -5px rgba(87, 165, 45, 0.1), 0 10px 10px -5px rgba(87, 165, 45, 0.04);
-    /* Brand Shadow */
+    box-shadow: 0 20px 25px -5px rgba(var(--trana-primary-rgb), 0.1), 0 10px 10px -5px rgba(var(--trana-primary-rgb), 0.04);
   }
 
   .product-image-zoom {
@@ -100,6 +146,10 @@ h6 {
     transform: translateY(0);
   }
 
+  .themed-shadow {
+    box-shadow: 0 4px 6px -1px rgba(var(--trana-primary-rgb), 0.1), 0 2px 4px -1px rgba(var(--trana-primary-rgb), 0.06);
+  }
+
   /* CTA Button Pulsing */
   .pulse-hover:hover {
     animation: subtlePulse 2s infinite;
@@ -107,8 +157,7 @@ h6 {
 
   @keyframes subtlePulse {
     0% {
-      box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.4);
-      /* Action Orange Pulse */
+      box-shadow: 0 0 0 0 rgba(var(--action-orange-rgb), 0.4);
     }
 
     70% {
@@ -191,10 +240,8 @@ h6 {
 
   /* Global Loader */
   .loader-spin {
-    border: 3px solid rgba(87, 165, 45, 0.1);
-    /* Brand Primary light */
-    border-top: 3px solid #57A52D;
-    /* Brand Primary */
+    border: 3px solid rgba(var(--trana-primary-rgb), 0.1);
+    border-top: 3px solid var(--trana-primary);
     border-radius: 50%;
     width: 24px;
     height: 24px;

@@ -72,7 +72,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-trana-primary text-white py-12">
+      <section className="bg-page-header-bg text-black pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Trana</h1>
           <p className="text-lg md:text-xl">
@@ -114,14 +114,14 @@ const Contact = () => {
       </section>
 
       {/* Main Content - Form and FAQ */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-page-bg">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Form */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
               {successMessage && (
-                <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                <div className="mb-4 p-4 bg-trana-light border border-trana-primary text-trana-dark rounded-lg">
                   {successMessage}
                 </div>
               )}
@@ -208,7 +208,7 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-trana-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Message'}
                 </button>
@@ -241,7 +241,7 @@ const Contact = () => {
                       Our customer support team is available to help you with urgent inquiries.
                       Request a callback and we'll get back to you as soon as possible.
                     </p>
-                    <button className="bg-white text-trana-primary border-2 border-trana-primary px-6 py-2 rounded-lg font-semibold hover:bg-green-50 transition">
+                    <button className="bg-white text-trana-primary border-2 border-trana-primary px-6 py-2 rounded-lg font-semibold hover:bg-trana-light transition">
                       Request Callback
                     </button>
                   </div>

@@ -94,22 +94,33 @@ const Orders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Orders</h1>
-          <button
-            onClick={handleRefresh}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            title="Refresh orders"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="bg-page-header-bg text-black pt-32 pb-12 mb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">My Orders</h1>
+              <p className="text-lg opacity-90">
+                Track your orders and view your purchase history.
+              </p>
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition backdrop-blur-sm flex items-center gap-2 disabled:opacity-50"
+              title="Refresh orders"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
         </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
 
         {/* Filter Tabs */}
         <div className="flex gap-4 mb-6 overflow-x-auto">

@@ -23,14 +23,14 @@ const RelatedProductsSection = ({ orderedItems }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+    <div className="bg-card-bg rounded-lg shadow-md p-8 mb-8">
       <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {relatedProducts.map((product) => (
           <Link
             key={product._id || product.id}
             to={`/products/${product._id || product.id}`}
-            className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition"
+            className="bg-page-bg rounded-lg p-4 hover:shadow-md transition"
           >
             {product.images && product.images.length > 0 ? (
               <img
@@ -294,12 +294,12 @@ const Checkout = () => {
   if (orderPlaced) {
     const orderId = order?._id || null;
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-page-bg py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 md:p-12 text-center mb-8">
+          <div className="bg-card-bg rounded-lg shadow-lg p-8 md:p-12 text-center mb-8">
             <div className="mb-6">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-20 h-20 bg-trana-light rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-12 h-12 text-trana-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -307,7 +307,7 @@ const Checkout = () => {
               <p className="text-gray-600">Thank you for your order. We'll process it shortly.</p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <div className="bg-page-bg rounded-lg p-6 mb-6">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">Tracking ID</p>
                 <p className="text-2xl font-bold text-trana-dark mb-4">{trackingId || 'N/A'}</p>
@@ -367,7 +367,7 @@ const Checkout = () => {
               {orderId && (
                 <Link
                   to={`/orders/${orderId}`}
-                  className="inline-block bg-trana-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+                  className="inline-block bg-trana-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-trana-dark transition"
                 >
                   View Order
                 </Link>
@@ -463,14 +463,19 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="min-h-screen bg-page-bg">
+      {/* Header */}
+      <div className="bg-page-header-bg border-b border-gray-200 pt-32 pb-8 mb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <h1 className="text-3xl font-bold">Checkout</h1>
+        </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Checkout Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
+            <div className="bg-card-bg rounded-lg shadow-md p-6 md:p-8">
               <h2 className="text-2xl font-bold mb-6">Shipping Information</h2>
 
               {/* Saved Addresses Selection */}
@@ -483,12 +488,12 @@ const Checkout = () => {
                         key={address._id}
                         onClick={() => setSelectedAddressId(address._id)}
                         className={`border-2 rounded-lg p-4 cursor-pointer transition ${selectedAddressId === address._id
-                          ? 'border-trana-primary bg-green-50'
+                          ? 'border-trana-primary bg-trana-light'
                           : 'border-gray-200 hover:border-gray-300'
                           }`}
                       >
                         {address.isDefault && (
-                          <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mb-2">
+                          <span className="inline-block bg-trana-light text-trana-dark text-xs font-semibold px-2 py-1 rounded mb-2">
                             DEFAULT
                           </span>
                         )}
@@ -637,7 +642,7 @@ const Checkout = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-trana-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Placing Order...' : 'Place Order'}
                 </button>
@@ -647,7 +652,7 @@ const Checkout = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="bg-card-bg rounded-lg shadow-md p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               <div className="space-y-4 mb-6">
                 {items.map((item) => {
@@ -692,7 +697,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className={shippingCost > 0 ? 'text-gray-800' : 'text-green-600'}>
+                  <span className={shippingCost > 0 ? 'text-gray-800' : 'text-trana-primary'}>
                     {shippingCost > 0 ? `₹${shippingCost.toLocaleString()}` : 'Free'}
                   </span>
                 </div>

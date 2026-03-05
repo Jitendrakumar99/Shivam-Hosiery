@@ -60,8 +60,8 @@
 .category-card:hover {
     transform: translateY(-8px) scale(1.02);
     /* Lift up and slightly scale */
-    box-shadow: 0 15px 30px rgba(87, 165, 45, 0.25);
-    border-color: #57A52D;
+    box-shadow: 0 15px 30px rgba(var(--trana-primary-rgb), 0.25);
+    border-color: var(--trana-primary);
     z-index: 10;
     /* Ensure it floats above */
 }
@@ -131,14 +131,14 @@
 .category-name {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #2C2C2C;
+    color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
 }
 
 .category-card:hover .category-name {
-    color: #57A52D;
+    color: var(--trana-primary);
 }
 
 /* Navigation Buttons */
@@ -166,7 +166,7 @@
     border-radius: 50%;
     background: white;
     border: 1px solid #e5e7eb;
-    color: #57A52D;
+    color: var(--trana-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,9 +177,9 @@
 }
 
 .carousel-nav-button:hover {
-    background: #57A52D;
+    background: var(--trana-primary);
     color: white;
-    border-color: #57A52D;
+    border-color: var(--trana-primary);
     transform: scale(1.1);
 }
 
@@ -203,6 +203,6 @@
 }
 
 .carousel-dot.active {
-    background-color: #57A52D;
+    background-color: var(--trana-primary);
     transform: scale(1.2);
 }

@@ -191,7 +191,20 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="bg-page-header-bg text-black pt-32 pb-12 mb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Order Details</h1>
+          <p className="text-lg opacity-90">
+            Order ID: <span className="font-semibold">{order._id?.slice(-8).toUpperCase()}</span>
+          </p>
+          <p className="text-sm opacity-75 mt-1">
+            Placed on {new Date(order.createdAt || order.date).toLocaleString()}
+          </p>
+        </div>
+      </section>
+
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         {/* Breadcrumb */}
         <nav className="mb-6">
@@ -208,13 +221,7 @@ const OrderDetail = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Order Details</h1>
-              <p className="text-gray-600">
-                Order ID: <span className="font-semibold">{order._id?.slice(-8).toUpperCase()}</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Placed on {new Date(order.createdAt || order.date).toLocaleString()}
-              </p>
+              <h2 className="text-2xl font-bold mb-2">Status Overview</h2>
             </div>
             <div className="mt-4 md:mt-0">
               <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border-2 ${getStatusColor(order.status)}`}>

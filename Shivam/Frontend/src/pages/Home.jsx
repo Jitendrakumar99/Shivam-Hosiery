@@ -48,7 +48,7 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 drop-shadow-lg">
-              Shivam Hosiery & Trana
+              Shivam Hosiery
             </h1>
             <p className="text-base md:text-lg lg:text-xl mb-6 text-gray-200 drop-shadow-md">
               Leading manufacturer of quality garments with a commitment to excellence, safety, and innovation.
@@ -263,16 +263,16 @@ const ClientMarquee = ({ items, speed = 60 }) => {
       }
       const width = (track.scrollWidth / 2) || 1; // half because content is duplicated
       if (!initRef.current) {
-        posRef.current = -width; // start fully offscreen left
+        posRef.current = 0; // start at 0
         lastTsRef.current = ts || 0;
         initRef.current = true;
       }
       const dt = Math.max(0, (ts || 0) - lastTsRef.current) / 1000; // seconds
       lastTsRef.current = ts || 0;
       const pixelsPerSecond = speed; // configurable smooth speed
-      posRef.current += pixelsPerSecond * dt;
-      if (posRef.current >= 0) {
-        posRef.current = -width; // seamless reset
+      posRef.current -= pixelsPerSecond * dt;
+      if (posRef.current <= -width) {
+        posRef.current = 0; // seamless reset
       }
       track.style.transform = `translateX(${posRef.current}px)`;
       rafRef.current = requestAnimationFrame(animate);

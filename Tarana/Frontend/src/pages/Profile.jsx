@@ -285,7 +285,7 @@ const Profile = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white py-12">
+      <div className="min-h-screen bg-page-bg py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <p className="text-center text-gray-600">Please login to view your profile.</p>
         </div>
@@ -295,7 +295,7 @@ const Profile = () => {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-page-bg py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
@@ -307,9 +307,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-page-bg">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-page-header-bg border-b border-gray-200 pt-32 pb-6">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
           <h1 className="text-3xl font-bold">My Account</h1>
         </div>
@@ -319,7 +319,7 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div className="bg-card-bg rounded-lg shadow-md p-6 sticky top-4">
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
                 <div className="relative group">
                   <div className="w-16 h-16 bg-trana-primary rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
@@ -400,7 +400,7 @@ const Profile = () => {
                   {!isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition"
                     >
                       Edit Profile
                     </button>
@@ -424,7 +424,7 @@ const Profile = () => {
                       <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition disabled:opacity-50"
                       >
                         {loading ? 'Saving...' : 'Save Changes'}
                       </button>
@@ -524,7 +524,7 @@ const Profile = () => {
                     <p className="text-gray-600 mb-4">Click the button below to change your password.</p>
                     <button
                       onClick={() => setIsEditingPassword(true)}
-                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition"
                     >
                       Change Password
                     </button>
@@ -618,7 +618,7 @@ const Profile = () => {
                     <button
                       onClick={handlePasswordSave}
                       disabled={loading}
-                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition disabled:opacity-50"
                     >
                       {loading ? 'Changing...' : 'Change Password'}
                     </button>
@@ -635,7 +635,7 @@ const Profile = () => {
                   {!isAddingAddress && !editingAddressId && (
                     <button
                       onClick={() => setIsAddingAddress(true)}
-                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                      className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition"
                     >
                       Add New Address
                     </button>
@@ -728,7 +728,7 @@ const Profile = () => {
                         <button
                           onClick={editingAddressId ? handleUpdateAddress : handleAddAddress}
                           disabled={loading}
-                          className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                          className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition disabled:opacity-50"
                         >
                           {loading ? 'Saving...' : editingAddressId ? 'Update Address' : 'Add Address'}
                         </button>
@@ -744,7 +744,7 @@ const Profile = () => {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             {address.isDefault && (
-                              <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mb-2">
+                              <span className="inline-block bg-trana-light text-trana-dark text-xs font-semibold px-2 py-1 rounded mb-2">
                                 DEFAULT
                               </span>
                             )}
@@ -758,7 +758,7 @@ const Profile = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => startEditAddress(address)}
-                              className="text-trana-primary hover:text-green-700 px-3 py-1"
+                              className="text-trana-primary hover:text-trana-dark px-3 py-1"
                             >
                               Edit
                             </button>
@@ -777,7 +777,7 @@ const Profile = () => {
                       <p className="text-gray-600 mb-4">No addresses saved yet.</p>
                       <button
                         onClick={() => setIsAddingAddress(true)}
-                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                        className="bg-trana-primary text-white px-6 py-2 rounded-lg hover:bg-trana-dark transition"
                       >
                         Add Your First Address
                       </button>
