@@ -43,9 +43,18 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="bg-page-header-bg text-black pt-32 pb-12 mb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Shopping Cart</h1>
+          <p className="text-lg opacity-90">
+            Review your items and proceed to secure checkout.
+          </p>
+        </div>
+      </section>
+
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
         {items.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">

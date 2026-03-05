@@ -128,7 +128,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-trana-primary text-white py-12">
+      <section className="bg-trana-primary text-white pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Login / Sign Up</h1>
           <p className="text-lg md:text-xl">
@@ -248,7 +248,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                    className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-trana-dark transition disabled:opacity-50"
                   >
                     {loading ? 'Sending...' : 'Send Reset Link'}
                   </button>
@@ -329,7 +329,7 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                    className="w-full bg-trana-primary text-white py-3 rounded-lg font-semibold hover:bg-trana-dark transition disabled:opacity-50"
                   >
                     {loading ? 'Logging in...' : 'Login'}
                   </button>

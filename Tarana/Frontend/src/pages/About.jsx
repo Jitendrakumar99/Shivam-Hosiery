@@ -1,8 +1,8 @@
 const About = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-page-bg">
       {/* Hero Section */}
-      <section className="bg-trana-primary text-white py-16 md:py-24">
+      <section className="bg-page-header-bg text-black pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">About Trana</h1>
           <p className="text-2xl md:text-3xl mb-4">सुरक्षा, हमारी प्राथमिकता.</p>
@@ -55,10 +55,10 @@ const About = () => {
       </section>
 
       {/* Mission, Promise*/}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-section-bg">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-full flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-trana-primary rounded-full"></div>
               </div>
@@ -68,7 +68,7 @@ const About = () => {
                 international safety standards.
               </p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-lg flex items-center justify-center">
                 <div className="w-12 h-12 border-2 border-trana-primary rounded-lg"></div>
               </div>
@@ -78,7 +78,7 @@ const About = () => {
                 and visible in hazardous environments.
               </p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-lg flex items-center justify-center">
                 <div className="w-10 h-10 border-2 border-trana-primary transform rotate-45"></div>
               </div>
@@ -157,32 +157,32 @@ const About = () => {
       </section>
 
       {/* Recognition & Certifications Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-section-bg">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Recognition & Certifications</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-full flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-trana-primary rounded-full"></div>
               </div>
               <h3 className="text-xl font-bold mb-2">ISO 9001:2015</h3>
               <p className="text-gray-600 text-sm">Quality Management</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-lg flex items-center justify-center">
                 <div className="w-12 h-12 border-2 border-trana-primary rounded-lg"></div>
               </div>
               <h3 className="text-xl font-bold mb-2">ANSI/ISEA 107</h3>
               <p className="text-gray-600 text-sm">Hi-Vis Standards</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-lg flex items-center justify-center">
                 <div className="w-10 h-10 border-2 border-trana-primary transform rotate-45"></div>
               </div>
               <h3 className="text-xl font-bold mb-2">CE Certified</h3>
               <p className="text-gray-600 text-sm">European Standards</p>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <div className="bg-card-bg border border-gray-200 rounded-lg p-6 text-center">
               <div className="w-16 h-16 mx-auto mb-4 border-4 border-trana-primary rounded-full flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-trana-primary rounded-full"></div>
               </div>

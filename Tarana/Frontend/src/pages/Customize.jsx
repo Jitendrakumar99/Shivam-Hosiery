@@ -73,7 +73,7 @@ const Customize = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="bg-trana-primary text-white py-12">
+      <section className="bg-page-header-bg text-black pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Customize Your Safety Garment</h1>
           <p className="text-lg md:text-xl">

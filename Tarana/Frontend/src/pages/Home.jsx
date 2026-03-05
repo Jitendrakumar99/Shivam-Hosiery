@@ -52,8 +52,8 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch only top-level (parent) categories that are active
-    dispatch(fetchCategories({ status: 'active', parent: 'null' }));
+    // Fetch all active categories (Header needs subcategories too)
+    dispatch(fetchCategories({ status: 'active' }));
     // Fetch products for "You may also like" section
     dispatch(fetchProducts({ limit: 20 }))
       .then((result) => {
@@ -158,9 +158,9 @@ const Home = () => {
   const defaultCategoryImage = 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop';
 
   return (
-    <div className="home-page">
+    <div className="home-page bg-page-bg">
       {/* Hero Section */}
-      <section className="bg-black text-white py-10 md:py-32 h-[90vh] md:h-screen relative overflow-hidden flex items-center">
+      <section className="bg-trana-primary text-black py-10 md:py-32 h-[90vh] md:h-screen relative overflow-hidden flex items-center">
         {/* Background Image Slider */}
         {heroImages.map((img, index) => (
           <div
@@ -173,33 +173,33 @@ const Home = () => {
               alt={`Hero Background ${index + 1}`}
               className="w-full h-full object-cover"
             />
-            {/* Dark gradient at the bottom/left to ensure text readability without obscuring the whole image */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent"></div>
+            {/* Gradient overlay for text readability - now subtle black on yellow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent"></div>
           </div>
         ))}
 
         {/* Content */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full text-center md:text-left drop-shadow-lg">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight text-white">
-            Trana <span className="text-trana-light">Safety</span> <br className="hidden md:block" />
+        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full text-center md:text-left drop-shadow-xl">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight text-black">
+            Trana <span className="text-trana-primary">Safety</span> <br className="hidden md:block" />
             Garments
           </h1>
-          <p className="text-2xl md:text-2xl mb-4 animate-fade-in-up delay-200 font-medium opacity-90 text-trana-light">
+          <p className="text-xl md:text-2xl mb-4 animate-fade-in-up delay-200 font-medium text-trana-light">
             सुरक्षा, हमारी प्राथमिकता.
           </p>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl animate-fade-in-up delay-400 text-white/90 font-light">
+          <p className="text-lg md:text-xl mb-8 max-w-2xl animate-fade-in-up delay-400 text-black/90 font-light">
             Premium safety garments designed for maximum protection and visibility in industrial environments.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-600 justify-center md:justify-start">
             <Link
               to="/products"
-              className="inline-block bg-white text-trana-primary px-10 py-4 rounded-md font-bold hover:bg-gray-100 active:scale-95 shadow-xl hover:shadow-2xl transition-all no-underline text-center"
+              className="inline-block bg-trana-primary text-slate-900 px-10 py-4 rounded-lg font-bold hover:bg-trana-middle active:scale-95 shadow-lg transition-all no-underline text-center"
             >
               Browse Products
             </Link>
             <Link
               to="/customize"
-              className="inline-block bg-transparent border-2 border-white text-white px-10 py-4 rounded-md font-bold hover:bg-white hover:text-trana-dark hover:scale-105 active:scale-95 transition-all no-underline text-center"
+              className="inline-block bg-black/10 backdrop-blur-sm border-2 border-black text-black px-10 py-4 rounded-lg font-bold hover:bg-black hover:text-white active:scale-95 transition-all no-underline text-center"
             >
               Customize Your Order
             </Link>
@@ -207,36 +207,44 @@ const Home = () => {
         </div>
       </section>
       {/* Features Section */}
-      <section className="py-16 bg-neutral-bg">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow" style={{ boxShadow: '0 4px 6px -1px rgba(87, 165, 45, 0.1), 0 2px 4px -1px rgba(87, 165, 45, 0.06)' }}>
-              <svg className="w-12 h-12 mx-auto mb-4 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2 text-trana-dark">Safety First</h3>
-              <p className="text-text-primary">ANSI/ISEA certified products</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
+                <svg className="w-8 h-8 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Safety First</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">ANSI/ISEA certified products for maximum industrial safety.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow" style={{ boxShadow: '0 4px 6px -1px rgba(87, 165, 45, 0.1), 0 2px 4px -1px rgba(87, 165, 45, 0.06)' }}>
-              <svg className="w-12 h-12 mx-auto mb-4 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2 text-trana-dark">Premium Quality</h3>
-              <p className="text-text-primary">Durable & long-lasting</p>
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
+                <svg className="w-8 h-8 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Premium Quality</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Durable materials and stitching built to last in tough conditions.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow" style={{ boxShadow: '0 4px 6px -1px rgba(87, 165, 45, 0.1), 0 2px 4px -1px rgba(87, 165, 45, 0.06)' }}>
-              <svg className="w-12 h-12 mx-auto mb-4 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2 text-trana-dark">Trusted Brand</h3>
-              <p className="text-text-primary">500+ satisfied clients</p>
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
+                <svg className="w-8 h-8 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Trusted Brand</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Serving over 500+ satisfied industrial clients worldwide.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow" style={{ boxShadow: '0 4px 6px -1px rgba(87, 165, 45, 0.1), 0 2px 4px -1px rgba(87, 165, 45, 0.06)' }}>
-              <svg className="w-12 h-12 mx-auto mb-4 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2 text-trana-dark">Customizable</h3>
-              <p className="text-text-primary">Tailored to your needs</p>
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
+                <svg className="w-8 h-8 text-trana-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Fully Customizable</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Tailored designs including logos and custom color schemes.</p>
             </div>
           </div>
         </div>
@@ -311,7 +319,7 @@ const Home = () => {
                           className="carousel-nav-button"
                           onClick={() => handleNavigation(-1)}
                           aria-label="previous category"
-                          style={{ color: '#57A52D' }}
+                          style={{ color: 'var(--trana-primary)' }}
                         >
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="15,18 9,12 15,6"></polyline>
@@ -322,7 +330,7 @@ const Home = () => {
                           className="carousel-nav-button"
                           onClick={() => handleNavigation(1)}
                           aria-label="next category"
-                          style={{ color: '#57A52D' }}
+                          style={{ color: 'var(--trana-primary)' }}
                         >
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="9,18 15,12 9,6"></polyline>
@@ -342,7 +350,7 @@ const Home = () => {
                             onClick={() => goToSlide(index)}
                             className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
                             aria-label={`Go to category ${index + 1}`}
-                            style={{ backgroundColor: index === currentIndex ? '#57A52D' : '#ccc' }}
+                            style={{ backgroundColor: index === currentIndex ? 'var(--trana-primary)' : '#ccc' }}
                           />
                         ))}
                       </div>
@@ -356,31 +364,32 @@ const Home = () => {
       </section>
 
       {/* Bulk Order Section */}
-      <section className="bg-trana-light text-trana-dark py-16">
+      <section className="bg-trana-light py-24">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Place a Bulk Order?</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto text-trana-dark/80">
-            Get exclusive pricing and dedicated support for bulk orders. Contact us or {isAuthenticated ? 'visit your profile' : 'login to your account'}.
+          <span className="text-trana-primary font-bold tracking-widest uppercase text-sm mb-4 block">Elevate Your Fleet</span>
+          <h2 className="text-4xl md:text-5xl font-black mb-6 text-text-primary">Ready to Place a Bulk Order?</h2>
+          <p className="text-lg mb-10 max-w-2xl mx-auto text-text-secondary leading-relaxed">
+            Get exclusive pricing, priority manufacturing, and dedicated support for large organization requirements.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
               <Link
                 to="/profile"
-                className="inline-block bg-trana-primary text-white px-8 py-3 rounded-md font-semibold hover:bg-green-700 transition shadow-md"
+                className="inline-block bg-trana-primary text-black px-10 py-4 rounded-lg font-bold hover:bg-trana-dark transition shadow-lg active:scale-95"
               >
                 View Profile
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="inline-block bg-trana-primary text-white px-8 py-3 rounded-md font-semibold hover:bg-green-700 transition shadow-md"
+                className="inline-block bg-trana-primary text-black px-10 py-4 rounded-lg font-bold hover:bg-trana-dark transition shadow-lg active:scale-95"
               >
                 Login / Sign Up
               </Link>
             )}
             <Link
               to="/contact"
-              className="inline-block bg-transparent border-2 border-trana-primary text-trana-primary px-8 py-3 rounded-md font-semibold hover:bg-trana-primary hover:text-white transition"
+              className="inline-block bg-white border-2 border-slate-200 text-text-primary px-10 py-4 rounded-lg font-bold hover:border-trana-primary hover:text-trana-primary transition active:scale-95"
             >
               Contact Sales
             </Link>
@@ -390,7 +399,7 @@ const Home = () => {
 
       {/* You May Also Like Section */}
       {featuredProducts.length > 0 && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-section-bg">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">You May Also Like</h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
@@ -406,7 +415,7 @@ const Home = () => {
                   <Link
                     key={product._id || product.id}
                     to={`/products/${product._id || product.id}`}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition group"
+                    className="bg-card-bg rounded-lg shadow-md overflow-hidden hover:shadow-lg transition group"
                   >
                     <div className="h-64 bg-gray-200 relative overflow-hidden">
                       {product.images && product.images.length > 0 ? (
@@ -417,7 +426,7 @@ const Home = () => {
                             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                           />
                           {discountPercentage > 0 && (
-                            <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            <span className="absolute top-2 left-2 bg-red-500 text-black text-xs font-bold px-2 py-1 rounded-full">
                               {discountPercentage}% OFF
                             </span>
                           )}
@@ -447,37 +456,45 @@ const Home = () => {
       )}
 
       {/* Why Choose Trana Section */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose Trana?</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="border border-gray-200 rounded-lg p-6">
-              <svg className="w-8 h-8 text-green-600 mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2">Durable Products</h3>
-              <p className="text-gray-600">Quality that stands the test of time.</p>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-center mb-16 text-text-primary">Why Choose Trana?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="group border border-slate-100 rounded-2xl p-8 hover:bg-slate-50 transition-all duration-300">
+              <div className="w-12 h-12 bg-amber-50 text-trana-dark rounded-xl flex items-center justify-center mb-6 group-hover:bg-trana-primary group-hover:text-slate-900 transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Durable Products</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Quality craftsmanship that stands the test of time in demanding conditions.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6">
-              <svg className="w-8 h-8 text-green-600 mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2">Fast Delivery</h3>
-              <p className="text-gray-600">Quick turnaround on bulk orders</p>
+            <div className="group border border-slate-100 rounded-2xl p-8 hover:bg-slate-50 transition-all duration-300">
+              <div className="w-12 h-12 bg-amber-50 text-trana-dark rounded-xl flex items-center justify-center mb-6 group-hover:bg-trana-primary group-hover:text-slate-900 transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Fast Delivery</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Swift turnaround times on bulk orders with localized logistics support.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6">
-              <svg className="w-8 h-8 text-green-600 mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2">Custom Branding</h3>
-              <p className="text-gray-600">Add your company logo and colors</p>
+            <div className="group border border-slate-100 rounded-2xl p-8 hover:bg-slate-50 transition-all duration-300">
+              <div className="w-12 h-12 bg-amber-50 text-trana-dark rounded-xl flex items-center justify-center mb-6 group-hover:bg-trana-primary group-hover:text-slate-900 transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Custom Branding</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Expertly integrate your company logo and brand colors into your safety gear.</p>
             </div>
-            <div className="border border-gray-200 rounded-lg p-6">
-              <svg className="w-8 h-8 text-green-600 mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-              </svg>
-              <h3 className="text-xl font-bold mb-2">Competitive Pricing</h3>
-              <p className="text-gray-600">Best value for quality products</p>
+            <div className="group border border-slate-100 rounded-2xl p-8 hover:bg-slate-50 transition-all duration-300">
+              <div className="w-12 h-12 bg-amber-50 text-trana-dark rounded-xl flex items-center justify-center mb-6 group-hover:bg-trana-primary group-hover:text-slate-900 transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-text-primary">Competitive Pricing</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">Exceptional value-for-money with tiered pricing for large scale orders.</p>
             </div>
           </div>
         </div>

@@ -6,13 +6,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        'trana-primary': '#57A52D', // Brand Primary (Green)
-        'trana-dark': '#2D5718',    // Brand Dark (Deep Forest)
-        'trana-light': '#E8F5E1',   // Brand Light (Mint Tint)
-        'text-primary': '#2C2C2C',  // Text Primary (Soft Charcoal)
-        'neutral-bg': '#FFFFFF',    // Neutral Background
-        'section-divider': '#F4F4F4', // Section Divider
-        'action-orange': '#FF8C00', // Primary CTA (Action Orange)
+        'trana-primary': 'var(--trana-primary)',
+        'trana-dark': 'var(--trana-dark)',
+        'trana-middle': 'var(--trana-middle)',
+        'trana-light': 'var(--trana-light)',
+        'text-primary': 'var(--text-primary)',
+        'neutral-bg': 'var(--neutral-bg)',
+        'section-divider': 'var(--section-divider)',
+        'action-orange': 'var(--action-orange)',
+        'page-bg': 'var(--page-bg)',
+        'header-bg': 'var(--header-bg)',
+        'page-header-bg': 'var(--page-header-bg)',
+        'card-bg': 'var(--card-bg)',
+        'section-bg': 'var(--section-bg)',
+        'footer-bg': 'var(--footer-bg)',
+        'dropdown-bg': 'var(--dropdown-bg)',
       },
     },
   },

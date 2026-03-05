@@ -87,19 +87,30 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 md:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Notifications</h1>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              className="text-trana-primary hover:underline"
-            >
-              Mark all as read
-            </button>
-          )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="bg-page-header-bg text-black pt-32 pb-12 mb-8">
+        <div className="max-w-4xl mx-auto px-4 md:px-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">Notifications</h1>
+              <p className="text-lg opacity-90">
+                Stay updated with your orders and account activity.
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition backdrop-blur-sm text-sm"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
         </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 md:px-8">
 
         {/* Filter Tabs */}
         <div className="flex gap-4 mb-6 overflow-x-auto">
@@ -108,8 +119,8 @@ const Notifications = () => {
               key={type}
               onClick={() => setFilter(type)}
               className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition ${filter === type
-                  ? 'bg-trana-primary text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-trana-primary text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
             >
               {type.charAt(0).toUpperCase() + type.slice(1)}

@@ -195,7 +195,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-page-bg py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trana-primary mx-auto mb-4"></div>
@@ -208,12 +208,12 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-page-bg py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <div className="bg-card-bg rounded-lg shadow-md p-12 text-center">
             <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
             <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist.'}</p>
-            <Link to="/products" className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+            <Link to="/products" className="inline-block bg-trana-primary text-white px-6 py-3 rounded-lg hover:bg-trana-dark transition">
               Browse Products
             </Link>
           </div>
@@ -240,20 +240,25 @@ const ProductDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="mb-6">
-          <ol className="flex items-center space-x-2 text-sm text-gray-600">
-            <li><Link to="/" className="hover:text-trana-primary">Home</Link></li>
-            <li>/</li>
-            <li><Link to="/products" className="hover:text-trana-primary">Products</Link></li>
-            <li>/</li>
-            <li className="text-gray-900 font-semibold">{productTitle}</li>
-          </ol>
-        </nav>
+    <div className="min-h-screen bg-page-bg">
+      {/* Page Header / Breadcrumbs Section */}
+      <section className="bg-page-header-bg text-black pt-32 pb-8 mb-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <nav>
+            <ol className="flex items-center space-x-2 text-sm opacity-80">
+              <li><Link to="/" className="hover:text-white transition">Home</Link></li>
+              <li>/</li>
+              <li><Link to="/products" className="hover:text-white transition">Products</Link></li>
+              <li>/</li>
+              <li className="text-white font-semibold truncate">{productTitle}</li>
+            </ol>
+          </nav>
+        </div>
+      </section>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+
+        <div className="bg-card-bg rounded-lg shadow-lg overflow-hidden mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8">
             {/* Product Images */}
             <div>
@@ -471,14 +476,14 @@ const ProductDetail = () => {
                 <button
                   onClick={handleAddToCart}
                   disabled={isAdding}
-                  className="flex-1 bg-trana-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-trana-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-trana-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAdding ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   ref={wishlistButtonRef}
                   onClick={handleAddToWishlist}
-                  className={`px-6 py-3 border-2 rounded-lg font-semibold transition ${inWishlist ? 'border-green-500 text-green-600 bg-green-50' : 'border-trana-primary text-trana-primary hover:bg-green-50'
+                  className={`px-6 py-3 border-2 rounded-lg font-semibold transition ${inWishlist ? 'border-trana-primary text-trana-dark bg-trana-light' : 'border-trana-primary text-trana-primary hover:bg-trana-light'
                     }`}
                 >
                   {inWishlist ? (
@@ -531,7 +536,7 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
+        <div className="bg-card-bg rounded-lg shadow-lg p-6 md:p-8 mb-8">
           <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
 
           {/* Rating Summary */}
@@ -571,7 +576,7 @@ const ProductDetail = () => {
             {!hasUserReviewed ? (
               <button
                 onClick={() => setShowReviewForm(!showReviewForm)}
-                className="bg-trana-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+                className="bg-trana-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-trana-dark transition"
               >
                 {showReviewForm ? 'Cancel' : 'Write a Review'}
               </button>
@@ -632,7 +637,7 @@ const ProductDetail = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold">{review.user.name}</span>
                             {review.verifiedPurchase && (
-                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Verified Purchase</span>
+                              <span className="bg-trana-light text-trana-dark text-xs px-2 py-1 rounded">Verified Purchase</span>
                             )}
                             {review.status !== 'approved' && (
                               <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded border border-yellow-200">Awaiting Approval</span>
@@ -693,19 +698,23 @@ const ProductDetail = () => {
                 <Link
                   key={relatedProduct._id || relatedProduct.id}
                   to={`/products/${relatedProduct._id || relatedProduct.id}`}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition group"
                 >
-                  <div className="h-48 bg-gray-200">
+                  <div className="h-48 bg-gray-50 flex items-center justify-center p-3">
                     {relatedProduct.images && relatedProduct.images.length > 0 ? (
-                      <img src={relatedProduct.images[0]} alt={relatedProduct.title || relatedProduct.name} className="w-full h-full object-cover" />
+                      <img
+                        src={relatedProduct.images[0]}
+                        alt={relatedProduct.title || relatedProduct.name}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image Available</div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <p className="text-xs text-gray-500 mb-1">{relatedProduct.category?.name || relatedProduct.category}</p>
-                    <h3 className="font-semibold text-sm mb-2 line-clamp-2">{relatedProduct.title || relatedProduct.name}</h3>
-                    <p className="text-trana-primary font-bold">₹{relatedProduct.pricing?.price || relatedProduct.price}</p>
+                  <div className="p-4 border-t border-gray-100">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1 font-bold">{relatedProduct.category?.name || relatedProduct.category}</p>
+                    <h3 className="font-bold text-sm mb-1 text-slate-800 line-clamp-1 group-hover:text-trana-primary transition-colors">{relatedProduct.title || relatedProduct.name}</h3>
+                    <p className="text-trana-primary font-extrabold text-base">₹{relatedProduct.pricing?.price || relatedProduct.price}</p>
                   </div>
                 </Link>
               ))}
@@ -715,7 +724,7 @@ const ProductDetail = () => {
         {/* Size Chart Modal */}
         {showSizeChart && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-card-bg rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
                 <h3 className="text-2xl font-bold text-gray-900">Size Guide</h3>
                 <button
