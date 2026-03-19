@@ -4,7 +4,7 @@ const About = () => {
       {/* Hero Section */}
       <section className="bg-page-header-bg text-black pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">About Trana</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">About Traan</h1>
           <p className="text-2xl md:text-3xl mb-4">सुरक्षा, हमारी प्राथमिकता.</p>
           <p className="text-lg md:text-xl max-w-3xl mx-auto">
             Safety, Our Priority - Committed to protecting workers through quality safety garments.
@@ -17,22 +17,22 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">The Trana Story</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">The Traan Story</h2>
               <div className="space-y-4 text-gray-700 leading-relaxed">
                 <p>
-                  Trana Safety was founded with a singular mission: to provide workers across industries with
+                  Traan Safety was founded with a singular mission: to provide workers across industries with
                   premium safety garments that don't compromise on protection, comfort, or visibility. Our journey
                   began with recognizing a critical need in the market for high-quality, certified safety wear that
                   meets international standards while remaining accessible.
                 </p>
                 <p>
-                  The name "Trana" embodies our core values - protection and security. Every product we design and
+                  The name "Traan" embodies our core values - protection and security. Every product we design and
                   manufacture reflects our unwavering commitment to worker safety. We understand that in hazardous
                   environments, the right safety garment can be the difference between life and death.
                 </p>
                 <p>
                   Through years of innovation, rigorous quality control, and a deep understanding of industrial
-                  safety requirements, Trana has become a trusted partner for businesses and workers who refuse to
+                  safety requirements, Traan has become a trusted partner for businesses and workers who refuse to
                   compromise on safety. We combine advanced materials, cutting-edge reflective technology, and
                   ergonomic design to create garments that provide maximum visibility and protection in the most
                   challenging work environments.
@@ -64,8 +64,7 @@ const About = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
               <p className="text-gray-600">
-                To provide world-class safety garments that protect workers while ensuring compliance with
-                international safety standards.
+                To engineer high-quality protective garments that safeguard workers in demanding environments while meeting strict industrial and international safety standards.
               </p>
             </div>
             <div className="bg-card-bg border border-gray-200 rounded-lg p-8 text-center">
@@ -74,8 +73,7 @@ const About = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Our Promise</h3>
               <p className="text-gray-600">
-                Every Trana product is designed, manufactured, and tested with one goal: keeping workers safe
-                and visible in hazardous environments.
+                Every Traan product is designed, manufactured, and tested with one goal: keeping workers safe — to deliver reliable protection and visibility for workers operating in hazardous conditions.
               </p>
             </div>
             <div className="bg-card-bg border border-gray-200 rounded-lg p-8 text-center">
@@ -85,17 +83,17 @@ const About = () => {
               <h3 className="text-2xl font-bold mb-4">Our Commitment</h3>
               <p className="text-gray-600">
                 Continuous innovation, uncompromising quality, and dedicated customer support drive everything
-                we do at Trana.
+                we do at Traan where safety matters most.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* What Makes Trana Different Section */}
+      {/* What Makes Traan Different Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What Makes Trana Different</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">What Makes Traan Different</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Column */}
             <div className="space-y-8">

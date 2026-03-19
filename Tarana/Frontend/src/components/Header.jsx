@@ -143,7 +143,7 @@ const Header = () => {
               <div className="rounded-lg p-1 shadow-md hover:shadow-lg transition-transform hover:scale-105 duration-300 logo-enter h-19 w-20 flex items-center justify-center overflow-hidden">
                 <img
                   src="/traan.jpeg"
-                  alt="Trana Safety"
+                  alt="Traan Safety"
                   className="w-auto h-full object-contain"
                 />
               </div>
