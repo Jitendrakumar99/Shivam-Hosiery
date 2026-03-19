@@ -181,7 +181,7 @@ const Home = () => {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full text-center md:text-left drop-shadow-xl">
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4 animate-fade-in-up tracking-tight leading-tight text-black">
-            Trana <span className="text-trana-primary">Safety</span> <br className="hidden md:block" />
+            Traan <span className="text-trana-primary">Safety</span> <br className="hidden md:block" />
             Garments
           </h1>
           <p className="text-xl md:text-2xl mb-4 animate-fade-in-up delay-200 font-medium text-trana-light">
@@ -217,7 +217,7 @@ const Home = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-3 text-text-primary">Safety First</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">ANSI/ISEA certified products for maximum industrial safety.</p>
+              <p className="text-text-secondary text-sm leading-relaxed">ANSI/ISEA compliant products for maximum industrial safety.</p>
             </div>
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
@@ -235,7 +235,7 @@ const Home = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-3 text-text-primary">Trusted Brand</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">Serving over 500+ satisfied industrial clients worldwide.</p>
+              <p className="text-text-secondary text-sm leading-relaxed">Serving over 50+ satisfied industrial clients worldwide.</p>
             </div>
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">

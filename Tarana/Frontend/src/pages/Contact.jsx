@@ -74,7 +74,7 @@ const Contact = () => {
       {/* Hero Section */}
       <section className="bg-page-header-bg text-black pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Trana</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Traan</h1>
           <p className="text-lg md:text-xl">
             Have questions? Our team is here to help with product inquiries, bulk orders, and customization requests.
           </p>
@@ -98,7 +98,7 @@ const Contact = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
               <h3 className="text-xl font-bold mb-2">Call Us</h3>
-              <a href="tel:+91XXXXXXXXXX" className="text-trana-primary mb-2 hover:underline block">+91 XXXX-XXXXXX</a>
+              <a href="tel:+91 88271 04318" className="text-trana-primary mb-2 hover:underline block">+91 88271 04318</a>
               <p className="text-sm text-gray-600">Mon-Sat, 9:00 AM - 6:00 PM</p>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
