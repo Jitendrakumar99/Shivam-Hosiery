@@ -22,7 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadDir));
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -55,9 +56,10 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 // File upload configuration
+const uploadPath = process.env.VERCEL ? '/tmp/uploads' : 'uploads/';
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
@@ -68,8 +70,12 @@ const upload = multer({ storage: storage });
 
 // Ensure uploads directory exists
 const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+if (!fs.existsSync(uploadPath)) {
+  try {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  } catch (err) {
+    console.error("Failed to create upload directory:", err);
+  }
 }
 
 // File upload route
