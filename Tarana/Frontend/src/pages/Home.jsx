@@ -253,7 +253,7 @@ const Home = () => {
       {/* Product Range Section */}
       <section className="py-1 bg-section-divider">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <h2 className="text-4xl md:text-4xl font-bold text-center mb-2 text-trana-dark">Our Product Range</h2>
+          <h2 className="text-4xl md:text-4xl font-bold text-center mb-2 text-black">Our Product Range</h2>
           <p className="text-center text-text-primary mb-1 max-w-xl mx-auto">
             Comprehensive safety garment solutions for every industrial need.
           </p>
@@ -366,7 +366,7 @@ const Home = () => {
       {/* Bulk Order Section */}
       <section className="bg-trana-light py-24">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <span className="text-trana-primary font-bold tracking-widest uppercase text-sm mb-4 block">Elevate Your Fleet</span>
+          <span className="text-black font-bold tracking-widest uppercase text-sm mb-4 block">Elevate Your Fleet</span>
           <h2 className="text-4xl md:text-5xl font-black mb-6 text-text-primary">Ready to Place a Bulk Order?</h2>
           <p className="text-lg mb-10 max-w-2xl mx-auto text-text-secondary leading-relaxed">
             Get exclusive pricing, priority manufacturing, and dedicated support for large organization requirements.

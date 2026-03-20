@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Section 1: Logo */}
           <div>
             <div className="flex items-center gap-2 mb-6">
-              <img src="/trana_logo2.jpeg" alt="Traan Safety" className="h-14 w-auto object-contain bg-white rounded-md p-1" />
+              <img src="/traan.jpeg" alt="Traan Safety" className="h-14 w-auto object-contain bg-white rounded-md" />
             </div>
             <p className="leading-relaxed opacity-80">
               Premium safety garments designed for maximum protection and comfort. Trusted by professionals worldwide.
