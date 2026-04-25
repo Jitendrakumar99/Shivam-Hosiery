@@ -57,8 +57,10 @@ exports.cache = (duration = 300) => {
 exports.clearCache = (pattern) => {
   if (pattern) {
     const keys = cache.keys();
+    console.log(`Clearing cache for pattern: ${pattern}. Total keys: ${keys.length}`);
     keys.forEach(key => {
       if (key.includes(pattern)) {
+        console.log(`Deleting cache key: ${key}`);
         cache.del(key);
       }
     });
