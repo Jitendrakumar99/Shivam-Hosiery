@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchOrder, cancelOrder } from '../store/slices/orderSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const OrderDetail = () => {
   const { id } = useParams();
@@ -67,6 +68,26 @@ const OrderDetail = () => {
 
     toast.success('All items added to cart!');
     navigate('/cart');
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!order) return;
+    try {
+      const orderId = order._id || order.id;
+      const response = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderId.slice(-6).toUpperCase()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Invoice Download Error:', err);
+      toast.error('Failed to download invoice');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -483,6 +504,15 @@ const OrderDetail = () => {
                     Cancel Order
                   </button>
                 )}
+                <button
+                  onClick={handleDownloadInvoice}
+                  className="w-full bg-trana-primary text-white py-2 rounded-lg font-semibold hover:bg-green-700 transition flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Invoice
+                </button>
                 {order.status === 'delivered' && (
                   <button
                     onClick={handleReorder}

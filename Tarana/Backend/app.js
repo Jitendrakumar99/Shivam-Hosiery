@@ -39,6 +39,7 @@ const clientRoutes = require('./routes/clientRoutes');
 const deliveryZoneRoutes = require('./routes/deliveryZoneRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const testRoutes = require('./routes/testRoutes');
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -54,6 +55,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/delivery-zones', deliveryZoneRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/test', testRoutes);
 
 // File upload configuration
 const uploadPath = process.env.VERCEL ? '/tmp/uploads' : 'uploads/';

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchOrders, cancelOrder } from '../store/slices/orderSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Orders = () => {
   const dispatch = useAppDispatch();
@@ -54,6 +55,24 @@ const Orders = () => {
   const handleRefresh = () => {
     dispatch(fetchOrders());
     toast.success('Orders refreshed');
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const response = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `invoice-${orderId.slice(-6).toUpperCase()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Invoice Download Error:', err);
+      toast.error('Failed to download invoice');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -237,6 +256,15 @@ const Orders = () => {
                       >
                         View Details
                       </Link>
+                      <button
+                        onClick={() => handleDownloadInvoice(order._id || order.id)}
+                        className="px-4 py-2 bg-trana-primary text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Invoice
+                      </button>
                       {order.status === 'delivered' && (
                         <button
                           onClick={() => {

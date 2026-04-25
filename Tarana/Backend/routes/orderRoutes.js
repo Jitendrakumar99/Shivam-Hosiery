@@ -5,7 +5,8 @@ const {
   getOrder,
   createOrder,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  getOrderInvoice
 } = require('../controllers/orderController');
 const { protect, authorize } = require('../middlewares/auth');
 const { paginate } = require('../middlewares/pagination');
@@ -18,6 +19,7 @@ router.use(protect);
 // Don't cache orders - they change frequently and need to be fresh
 router.get('/', paginate(Order), getOrders);
 router.get('/:id', getOrder);
+router.get('/:id/invoice', getOrderInvoice);
 router.post('/', createOrder);
 router.put('/:id/status', authorize('admin'), updateOrderStatus);
 router.put('/:id/cancel', cancelOrder);
