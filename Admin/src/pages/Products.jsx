@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
-import { fetchProducts, deleteProduct } from '../store/slices/productSlice';
+import { fetchProducts, deleteProduct, createProductsBulk } from '../store/slices/productSlice';
 import ProductModal from '../components/Modal/ProductModal';
 import * as XLSX from 'xlsx';
 
@@ -79,6 +79,7 @@ const Products = () => {
           const price = parseFloat(row.price || row.Price || 0);
           const compareAtPrice = parseFloat(row.compareAtPrice || row['Compare At Price'] || 0);
           const moq = parseInt(row.minOrderQuantity || row['Min Order Quantity'] || row.moq || row.MOQ || 0);
+          const gst = parseFloat(row.gst_percentage || row['GST Percentage'] || row.gst || row.GST || row['GST %'] || 0);
 
           return {
             title: row.title || row.Title || row.name || row.Name || 'Unnamed Product',
@@ -105,7 +106,8 @@ const Products = () => {
               keywords: (row.seoKeywords || row['SEO Keywords'] || '').toString().split(',').map(k => k.trim()).filter(Boolean)
             },
             minOrderQuantity: isNaN(moq) ? 0 : moq,
-            status: (row.status || row.Status || 'active').toString().toLowerCase()
+            status: (row.status || row.Status || 'active').toString().toLowerCase(),
+            gst_percentage: isNaN(gst) ? 0 : gst
           };
         });
 

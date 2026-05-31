@@ -382,7 +382,15 @@ exports.updateProduct = async (req, res, next) => {
   try {
     console.log('Update Product Request Received for ID:', req.params.id);
     
-    let product = await Product.findById(req.params.id);
+    let productData = req.body;
+
+    // If data is sent as a string (common with FormData), parse it
+    if (typeof req.body.data === 'string') {
+      console.log('Parsing product data from req.body.data');
+      productData = JSON.parse(req.body.data);
+    }
+
+    const gst_percentage = productData.gst_percentage;
 
     // Validate GST percentage if provided
     if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
@@ -400,13 +408,7 @@ exports.updateProduct = async (req, res, next) => {
       });
     }
 
-    let productData = req.body;
-
-    // If data is sent as a string (common with FormData), parse it
-    if (typeof req.body.data === 'string') {
-      console.log('Parsing product data from req.body.data');
-      productData = JSON.parse(req.body.data);
-    }
+    const previousTotal = getTotalStock(existingProduct);
 
     // If images were uploaded and processed by middleware
     if (req.body.images && req.body.images.length > 0) {
@@ -415,7 +417,7 @@ exports.updateProduct = async (req, res, next) => {
       productData.images = [...(productData.images || []), ...req.body.images];
     }
 
-    product = await Product.findByIdAndUpdate(req.params.id, productData, {
+    const product = await Product.findByIdAndUpdate(req.params.id, productData, {
       new: true,
       runValidators: true
     });
