@@ -52,6 +52,20 @@ export const createProduct = createAsyncThunk(
   }
 );
 
+export const createProductsBulk = createAsyncThunk(
+  'products/createProductsBulk',
+  async (productsData, { rejectWithValue }) => {
+    try {
+      const data = await productService.createProductsBulk(productsData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to create products in bulk'
+      );
+    }
+  }
+);
+
 export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, productData }, { rejectWithValue }) => {
@@ -132,6 +146,21 @@ const productSlice = createSlice({
         }
       })
       .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Create Products Bulk
+      .addCase(createProductsBulk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createProductsBulk.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.data && Array.isArray(action.payload.data)) {
+          state.products = [...action.payload.data, ...state.products];
+        }
+      })
+      .addCase(createProductsBulk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

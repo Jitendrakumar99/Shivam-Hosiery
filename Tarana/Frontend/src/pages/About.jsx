@@ -7,7 +7,7 @@ const About = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-4">About Traan</h1>
           <p className="text-2xl md:text-3xl mb-4">सुरक्षा, हमारी प्राथमिकता.</p>
           <p className="text-lg md:text-xl max-w-3xl mx-auto">
-            Safety, Our Priority - Committed to protecting workers through quality safety garments.
+            Safety, Our Priority -  Committed to protecting workers through quality safety garments.
           </p>
         </div>
       </section>
