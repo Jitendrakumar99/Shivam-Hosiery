@@ -75,6 +75,10 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => {
                 const product = item.product;
+                const gstPercentage = product?.gst_percentage || 0;
+                const gstAmount = parseFloat(((item.price * gstPercentage) / 100).toFixed(2));
+                const priceWithGst = parseFloat((item.price + gstAmount).toFixed(2));
+                const itemTotal = parseFloat((priceWithGst * item.quantity).toFixed(2));
                 return (
                   <div key={product._id || product.id} className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex gap-4">
@@ -97,7 +101,18 @@ const Cart = () => {
                             {item.variant.sku && <span className="ml-3 text-xs font-mono">V-SKU: {item.variant.sku}</span>}
                           </div>
                         )}
-                        <p className="text-gray-600 mb-2">₹{item.price} each</p>
+                        <div className="space-y-1 mb-4">
+                          <p className="text-gray-600">Price: ₹{item.price.toFixed(2)}</p>
+                          {gstPercentage > 0 && (
+                            <p className="text-gray-600 text-sm">GST ({gstPercentage}%): ₹{gstAmount.toFixed(2)}</p>
+                          )}
+                          <p className="text-lg font-semibold text-trana-primary">
+                            Total per item: ₹{priceWithGst.toFixed(2)}
+                          </p>
+                          <p className="text-lg font-bold text-gray-800">
+                            Subtotal (Qty × {item.quantity}): ₹{itemTotal.toFixed(2)}
+                          </p>
+                        </div>
                         <div className="flex items-center gap-4">
                           <label className="text-sm font-semibold">Quantity:</label>
                           <input
@@ -119,11 +134,6 @@ const Cart = () => {
                             Remove
                           </button>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-trana-primary">
-                          ₹{item.price * item.quantity}
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -178,7 +188,15 @@ const Cart = () => {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>₹{total.toLocaleString()}</span>
+                    <span>₹{items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total GST</span>
+                    <span>₹{parseFloat(items.reduce((sum, item) => {
+                      const gstPercentage = item.product?.gst_percentage || 0;
+                      const gstAmount = parseFloat(((item.price * gstPercentage) / 100).toFixed(2));
+                      return sum + (gstAmount * item.quantity);
+                    }, 0).toFixed(2))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -186,7 +204,7 @@ const Cart = () => {
                   </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-trana-primary">₹{total.toLocaleString()}</span>
+                    <span className="text-trana-primary">₹{total.toFixed(2)}</span>
                   </div>
                 </div>
                 <Link

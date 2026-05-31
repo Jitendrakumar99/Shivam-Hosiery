@@ -7,6 +7,11 @@ const Order = require('../models/Order');
 const Contact = require('../models/Contact');
 const { paginate } = require('../middlewares/pagination');
 const { cache } = require('../middlewares/cache');
+const {
+  getTotalStock,
+  isLowStock,
+  LOW_STOCK_THRESHOLD,
+} = require('../utils/inventory');
 
 // All admin routes
 router.use(protect);
@@ -56,6 +61,50 @@ router.get('/stats', cache(300), async (req, res, next) => {
         pendingOrders,
         newContacts
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @desc    Get products with low stock (admin only)
+// @route   GET /api/admin/low-stock
+// @access  Private/Admin
+router.get('/low-stock', async (req, res, next) => {
+  try {
+    const products = await Product.find({ status: 'active' })
+      .select('title sku category variants availability featuredImage images status')
+      .lean();
+
+    const lowStockProducts = products
+      .filter((product) => isLowStock(product))
+      .map((product) => {
+        const totalStock = getTotalStock(product);
+        return {
+          _id: product._id,
+          title: product.title,
+          sku: product.sku,
+          category: product.category,
+          featuredImage: product.featuredImage,
+          images: product.images,
+          totalStock,
+          lowStockVariants: (product.variants || [])
+            .filter((v) => (v.inventory?.quantity ?? 0) < LOW_STOCK_THRESHOLD)
+            .map((v) => ({
+              size: v.size,
+              color: v.color,
+              quantity: v.inventory?.quantity ?? 0,
+            })),
+          availability: product.availability,
+        };
+      })
+      .sort((a, b) => a.totalStock - b.totalStock);
+
+    res.json({
+      success: true,
+      threshold: LOW_STOCK_THRESHOLD,
+      count: lowStockProducts.length,
+      data: lowStockProducts,
     });
   } catch (error) {
     next(error);

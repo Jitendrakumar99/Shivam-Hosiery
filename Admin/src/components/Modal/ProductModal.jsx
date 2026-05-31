@@ -23,6 +23,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       price: '',
       compareAtPrice: '',
     },
+    gst_percentage: 0,
     images: [''],
     attributes: {
       gender: 'Unisex',
@@ -161,6 +162,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
           price: product.pricing?.price || product.price || '',
           compareAtPrice: product.pricing?.compareAtPrice || '',
         },
+        gst_percentage: product.gst_percentage || 0,
         images: product.images && product.images.length > 0 ? product.images : [''],
         attributes: {
           gender: product.attributes?.gender || 'Unisex',
@@ -194,6 +196,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         subCategory: '',
         category: '',
         pricing: { price: '', compareAtPrice: '' },
+        gst_percentage: 0,
         images: [''],
         attributes: { gender: 'Unisex', fabric: '', length: '', sleeve: '' },
         variants: [],
@@ -296,6 +299,15 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     });
   };
 
+  const handleVariantQuantityChange = (index, value) => {
+    const updatedVariants = [...formData.variants];
+    updatedVariants[index] = {
+      ...updatedVariants[index],
+      quantity: Math.max(0, parseInt(value, 10) || 0),
+    };
+    setFormData({ ...formData, variants: updatedVariants });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -318,6 +330,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         compareAtPrice: parseFloat(formData.pricing.compareAtPrice) || 0,
         currency: 'INR'
       },
+      gst_percentage: formData.gst_percentage,
       images: formData.images.filter(i => i.trim()),
       attributes: formData.attributes,
       variants: formData.variants.map(v => ({
@@ -637,6 +650,23 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">GST Percentage (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.gst_percentage}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      gst_percentage: parseFloat(e.target.value) || 0
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Default: 0% GST</p>
+                </div>
               </div>
             </div>
 
@@ -801,7 +831,15 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                           <td className="px-3 py-2">{v.size}</td>
                           <td className="px-3 py-2">{v.color || '-'}</td>
                           <td className="px-3 py-2 text-right">₹{v.price}</td>
-                          <td className="px-3 py-2 text-right">{v.quantity}</td>
+                          <td className="px-3 py-2 text-right">
+                            <input
+                              type="number"
+                              min="0"
+                              value={v.quantity}
+                              onChange={(e) => handleVariantQuantityChange(i, e.target.value)}
+                              className="w-20 px-2 py-1 border border-gray-300 rounded text-right focus:ring-orange-500"
+                            />
+                          </td>
                           <td className="px-3 py-2 text-center">
                             <button
                               type="button"

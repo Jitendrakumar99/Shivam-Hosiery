@@ -21,6 +21,14 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    total: {
+      type: Number,
+      default: 0
+    },
+    gst: {
+      type: Number,
+      default: 0
+    },
     sku: {
       type: String,
       trim: true

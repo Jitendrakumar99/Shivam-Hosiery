@@ -1,10 +1,30 @@
 import { useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { logout } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
+import { adminService } from '../../services/adminService';
 
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [lowStockCount, setLowStockCount] = useState(0);
+
+  useEffect(() => {
+    const loadLowStockCount = async () => {
+      try {
+        const response = await adminService.getLowStockProducts();
+        const threshold = response.threshold ?? 10;
+        const count = (response.data || []).filter(
+          (product) => Number(product.totalStock ?? 0) < threshold
+        ).length;
+        setLowStockCount(response.count ?? count);
+      } catch {
+        setLowStockCount(0);
+      }
+    };
+    loadLowStockCount();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -23,6 +43,18 @@ const Header = () => {
         </div>
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
+        {lowStockCount > 0 && (
+          <Link
+            to="/dashboard"
+            className="relative px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 transition text-xs sm:text-sm whitespace-nowrap"
+            title="View low stock alerts"
+          >
+            Low Stock
+            <span className="ml-1.5 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+              {lowStockCount}
+            </span>
+          </Link>
+        )}
         <button className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-gray-700 transition text-xs sm:text-sm whitespace-nowrap">
           <span className="hidden sm:inline">View Website</span>
           <span className="sm:hidden">View</span>

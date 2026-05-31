@@ -1,9 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchProducts } from '../store/slices/productSlice';
 import { fetchOrders } from '../store/slices/orderSlice';
 import { fetchCustomers } from '../store/slices/customerSlice';
 import { fetchStats } from '../store/slices/reportSlice';
+import { adminService } from '../services/adminService';
 
 const monthLabel = (date) =>
   date.toLocaleString('en-US', { month: 'short' });
@@ -352,12 +354,32 @@ const Dashboard = () => {
   const { orders, loading: ordersLoading } = useSelector((state) => state.orders);
   const { customers, loading: customersLoading } = useSelector((state) => state.customers);
   const { metrics, revenueTrend, orderStatusDistribution, loading: statsLoading } = useSelector((state) => state.reports);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [lowStockLoading, setLowStockLoading] = useState(true);
 
   useEffect(() => {
     dispatch(fetchStats());
-    dispatch(fetchProducts());
+    dispatch(fetchProducts({ limit: 200 }));
     dispatch(fetchOrders());
     dispatch(fetchCustomers());
+
+    const loadLowStock = async () => {
+      try {
+        setLowStockLoading(true);
+        const response = await adminService.getLowStockProducts();
+        const threshold = response.threshold ?? 10;
+        const items = (response.data || []).filter(
+          (product) => Number(product.totalStock ?? 0) < threshold
+        );
+        setLowStockProducts(items);
+      } catch {
+        setLowStockProducts([]);
+      } finally {
+        setLowStockLoading(false);
+      }
+    };
+
+    loadLowStock();
   }, [dispatch]);
 
   // Calculate total revenue from orders (more accurate than backend stats which may be cached)
@@ -395,6 +417,54 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
         <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your business today.</p>
       </div>
+
+      {(lowStockLoading || lowStockProducts.length > 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg shadow p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-amber-900">Low Stock Alert</h3>
+              <p className="text-sm text-amber-800">
+                Products with fewer than 10 units in stock
+              </p>
+            </div>
+            <Link
+              to="/products"
+              className="inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition"
+            >
+              Manage Stock
+            </Link>
+          </div>
+
+          {lowStockLoading ? (
+            <p className="text-sm text-amber-800">Checking inventory...</p>
+          ) : (
+            <div className="space-y-3 max-h-72 overflow-y-auto">
+              {lowStockProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="flex items-center justify-between gap-4 bg-white rounded-lg border border-amber-100 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-800 truncate">{product.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {product.category?.name || 'Uncategorized'}
+                      {product.sku ? ` · SKU: ${product.sku}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-lg font-bold ${product.totalStock === 0 ? 'text-red-600' : 'text-amber-700'}`}>
+                      {product.totalStock} left
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {product.totalStock === 0 ? 'Out of stock' : 'Low stock'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow p-6">

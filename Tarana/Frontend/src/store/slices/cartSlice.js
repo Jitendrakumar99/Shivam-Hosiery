@@ -19,7 +19,12 @@ const initialState = {
 };
 
 const calculateTotal = (items) => {
-  return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  return parseFloat(items.reduce((total, item) => {
+    const gstPercentage = item.product?.gst_percentage || 0;
+    const gstAmount = parseFloat(((item.price * gstPercentage) / 100).toFixed(2));
+    const itemTotal = parseFloat(((item.price + gstAmount) * item.quantity).toFixed(2));
+    return total + itemTotal;
+  }, 0).toFixed(2));
 };
 
 const cartSlice = createSlice({
