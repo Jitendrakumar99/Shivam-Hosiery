@@ -7,6 +7,16 @@ import { addToCart } from '../store/slices/cartSlice';
 import { fetchProductReviews } from '../store/slices/reviewSlice';
 import ReviewForm from '../components/ReviewForm';
 import { createFlyingAnimation, triggerCartBounce, triggerWishlistAnimation } from '../utils/animations';
+import {
+  findVariantMatch,
+  getUniqueSizes,
+  getUniqueColors,
+  getColorsForSize,
+  getSizesForColor,
+  getColorStyle,
+  formatColorLabel,
+  normalizeColor,
+} from '../utils/variantUtils';
 import toast from 'react-hot-toast';
 
 const ProductDetail = () => {
@@ -29,8 +39,6 @@ const ProductDetail = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [showSizeChart, setShowSizeChart] = useState(false);
-  const [useCustomColor, setUseCustomColor] = useState(false);
-  const [customColor, setCustomColor] = useState('#ff6600');
   const productImageRef = useRef(null);
   const wishlistButtonRef = useRef(null);
 
@@ -78,25 +86,30 @@ const ProductDetail = () => {
     }
   }, [dispatch, product]);
 
-  // Handle variant selection
   const handleVariantChange = (size, color) => {
-    // Try to find exact match
-    let variant = product.variants.find(
-      v => v.size === size && (color ? v.color === color : true)
-    );
+    if (!product?.variants?.length) return;
+    const variant = findVariantMatch(product.variants, size, color);
+    if (!variant) return;
+    setSelectedVariant(variant);
+    setSelectedSize(variant.size);
+    setSelectedColor(variant.color || '');
+  };
 
-    // If no exact match (e.g. size changed but old color not available for new size),
-    // pick the first variant with the new size
-    if (!variant) {
-      variant = product.variants.find(v => v.size === size);
-    }
+  const handleSizeSelect = (size) => {
+    if (!product?.variants?.length) return;
+    const colorsForSize = getColorsForSize(product.variants, size);
+    const nextColor =
+      colorsForSize.find((c) => normalizeColor(c) === normalizeColor(selectedColor)) ||
+      colorsForSize[0] ||
+      '';
+    handleVariantChange(size, nextColor);
+  };
 
-    if (variant) {
-      setSelectedVariant(variant);
-      setSelectedSize(size);
-      // Update color to match the found variant (it might be different if fallback was used)
-      setSelectedColor(variant.color || '');
-    }
+  const handleColorSelect = (color) => {
+    if (!product?.variants?.length) return;
+    const sizesForColor = getSizesForColor(product.variants, color);
+    const nextSize = sizesForColor.includes(selectedSize) ? selectedSize : sizesForColor[0] || '';
+    handleVariantChange(nextSize, color);
   };
 
   const isInCart = (product) => {
@@ -120,20 +133,19 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product || isAdding) return;
 
-    if (product.variants && product.variants.length > 0 && !selectedVariant && !useCustomColor) {
-      toast.error('Please select a size and color');
-      return;
-    }
-
-    if (!selectedSize) {
+    if (product.variants && product.variants.length > 0) {
+      if (!selectedVariant) {
+        toast.error('Please select a size and color');
+        return;
+      }
+    } else if (!selectedSize) {
       toast.error('Please select a size');
       return;
     }
 
-    const finalColor = useCustomColor ? customColor : selectedColor;
     const finalVariant = selectedVariant
-      ? { ...selectedVariant, color: finalColor }
-      : { size: selectedSize, color: finalColor, price: product.pricing?.price || product.price, inventory: { quantity: 9999 } };
+      ? selectedVariant
+      : { size: selectedSize, color: selectedColor, price: product.pricing?.price || product.price };
 
     setIsAdding(true);
 
@@ -230,9 +242,15 @@ const ProductDetail = () => {
   const compareAtPrice = product.pricing?.compareAtPrice;
   const minOrderQuantity = product.minOrderQuantity || 1;
 
-  // Get unique sizes and colors
-  const uniqueSizes = product.variants ? [...new Set(product.variants.map(v => v.size))] : [];
-  const uniqueColors = product.variants ? [...new Set(product.variants.map(v => v.color).filter(Boolean))] : [];
+  const productVariants = product.variants || [];
+  const allSizes = getUniqueSizes(productVariants);
+  const allColors = getUniqueColors(productVariants);
+  const visibleColors = selectedSize
+    ? getColorsForSize(productVariants, selectedSize)
+    : allColors;
+  const visibleSizes = selectedColor
+    ? getSizesForColor(productVariants, selectedColor)
+    : allSizes;
 
   // Check if current user has already reviewed this product
   const hasUserReviewed = isAuthenticated && user && reviews && reviews.some(review =>
@@ -349,13 +367,25 @@ const ProductDetail = () => {
                 )}
               </div>
 
+              {/* GST Information */}
+              {(product.gst_percentage || 0) > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">GST {product.gst_percentage}% applicable:</span> ₹{(((productPrice * (product.gst_percentage || 0)) / 100).toFixed(2))} will be added to this product
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    <span className="font-semibold">Final price:</span> ₹{((productPrice + (productPrice * (product.gst_percentage || 0)) / 100).toFixed(2))} per unit
+                  </p>
+                </div>
+              )}
+
               {/* Short Description */}
               {product.shortDescription && (
                 <p className="text-gray-700 mb-4">{product.shortDescription}</p>
               )}
 
               {/* Variants - Size Selection */}
-              {uniqueSizes.length > 0 && (
+              {allSizes.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-semibold">Size</label>
@@ -370,10 +400,11 @@ const ProductDetail = () => {
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {uniqueSizes.map((size) => (
+                    {visibleSizes.map((size) => (
                       <button
                         key={size}
-                        onClick={() => handleVariantChange(size, selectedColor)}
+                        type="button"
+                        onClick={() => handleSizeSelect(size)}
                         className={`px-4 py-2 border-2 rounded-lg font-semibold transition ${selectedSize === size
                           ? 'border-trana-primary bg-trana-primary text-white'
                           : 'border-gray-300 hover:border-trana-primary'
@@ -386,61 +417,32 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Variants - Color Selection */}
+              {visibleColors.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-semibold">
-                    Color: <span className="text-gray-600 font-normal">{useCustomColor ? customColor : selectedColor}</span>
+                    Color: <span className="text-gray-600 font-normal">{formatColorLabel(selectedColor)}</span>
                   </label>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  {uniqueColors.map((color) => (
+                  {visibleColors.map((color) => (
                     <button
                       key={color}
-                      onClick={() => {
-                        setUseCustomColor(false);
-                        handleVariantChange(selectedSize, color);
-                      }}
-                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${!useCustomColor && selectedColor === color
+                      type="button"
+                      onClick={() => handleColorSelect(color)}
+                      className={`w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center ${selectedColor === color
                         ? 'border-trana-primary ring-2 ring-trana-primary ring-offset-2 scale-110'
                         : 'border-gray-300 hover:border-trana-primary hover:scale-105'
                         }`}
-                      style={{ backgroundColor: color.toLowerCase() }}
-                      title={color}
+                      style={{ backgroundColor: getColorStyle(color) }}
+                      title={formatColorLabel(color)}
+                      aria-label={formatColorLabel(color)}
                     />
                   ))}
-
-                  {/* Custom Color Bubble Picker */}
-                  <div className="relative group">
-                    <button
-                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden ${useCustomColor
-                        ? 'border-trana-primary ring-2 ring-trana-primary ring-offset-2 scale-110'
-                        : 'border-gray-300 hover:border-trana-primary hover:scale-105'
-                        }`}
-                      title="Pick Custom Color"
-                    >
-                      <input
-                        type="color"
-                        value={customColor}
-                        onChange={(e) => {
-                          setUseCustomColor(true);
-                          setCustomColor(e.target.value);
-                        }}
-                        className="absolute inset-0 w-full h-full cursor-pointer opacity-0 scale-[3]"
-                      />
-                      <div
-                        className="w-full h-full"
-                        style={{
-                          backgroundColor: useCustomColor ? customColor : 'white',
-                          backgroundImage: !useCustomColor ? 'conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red)' : 'none'
-                        }}
-                      />
-                    </button>
-                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition font-bold text-gray-500 uppercase tracking-tighter">Custom</span>
-                  </div>
                 </div>
               </div>
+              )}
 
 
 

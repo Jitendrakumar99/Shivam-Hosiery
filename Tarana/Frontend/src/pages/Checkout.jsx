@@ -657,6 +657,9 @@ const Checkout = () => {
               <div className="space-y-4 mb-6">
                 {items.map((item) => {
                   const product = item.product;
+                  const gstPercentage = product?.gst_percentage || 0;
+                  const gstAmount = parseFloat(((item.price * gstPercentage) / 100).toFixed(2));
+                  const itemTotalWithGst = parseFloat(((item.price + gstAmount) * item.quantity).toFixed(2));
                   return (
                     <div key={product._id || product.id} className="flex gap-3">
                       <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
@@ -682,8 +685,11 @@ const Checkout = () => {
                           </p>
                         )}
                         <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+                        <p className="text-xs text-gray-600">
+                          Price: ₹{item.price.toFixed(2)} {gstPercentage > 0 && `(+${gstPercentage}% GST: ₹${gstAmount.toFixed(2)})`}
+                        </p>
                         <p className="text-sm font-semibold text-trana-primary">
-                          ₹{item.price * item.quantity}
+                          ₹{itemTotalWithGst.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -693,7 +699,15 @@ const Checkout = () => {
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{total.toLocaleString()}</span>
+                  <span>₹{items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>GST</span>
+                  <span>₹{parseFloat(items.reduce((sum, item) => {
+                    const gstPercentage = item.product?.gst_percentage || 0;
+                    const gstAmount = parseFloat(((item.price * gstPercentage) / 100).toFixed(2));
+                    return sum + (gstAmount * item.quantity);
+                  }, 0).toFixed(2))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -704,7 +718,7 @@ const Checkout = () => {
                 <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span className="text-trana-primary">
-                    ₹{(total + (shippingCost || 0)).toLocaleString()}
+                    ₹{(total + (shippingCost || 0)).toFixed(2)}
                   </span>
                 </div>
                 {shippingError && (

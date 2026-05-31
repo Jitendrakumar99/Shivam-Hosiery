@@ -101,7 +101,6 @@ const Wishlist = () => {
                 );
               }
 
-              const inStock = product.availability?.inStock !== false;
               const hasVariants = product.variants && product.variants.length > 0;
 
               return (
@@ -117,19 +116,13 @@ const Wishlist = () => {
                   </div>
                   <div className="p-6">
                     <h3 className="text-xl font-bold mb-2">{product.name || product.title}</h3>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="mb-4">
                       <span className="text-2xl font-bold text-trana-primary">₹{product.pricing?.price || product.price || 0}</span>
-                      {inStock ? (
-                        <span className="text-sm text-trana-primary font-semibold">In Stock</span>
-                      ) : (
-                        <span className="text-sm text-red-600 font-semibold">Out of Stock</span>
-                      )}
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleAddToCart(product)}
-                        disabled={!inStock}
-                        className={`flex-1 ${hasVariants ? 'bg-[#1a1a2e] hover:bg-[#16213e]' : 'bg-trana-primary hover:bg-trana-dark'} text-white py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`flex-1 ${hasVariants ? 'bg-[#1a1a2e] hover:bg-[#16213e]' : 'bg-trana-primary hover:bg-trana-dark'} text-white py-2 rounded-lg transition`}
                       >
                         {hasVariants ? 'View Options' : 'Add to Cart'}
                       </button>

@@ -68,7 +68,11 @@ const InvoiceTemplate = ({ order, templateId = 'standard', isPreview = false }) 
                 <div className="w-48 space-y-2">
                     <div className="flex justify-between text-[11px] text-gray-400">
                         <span>Subtotal</span>
-                        <span className="font-bold text-gray-800">₹{totalAmount.toLocaleString()}</span>
+                        <span className="font-bold text-gray-800">₹{items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-gray-400">
+                        <span>GST</span>
+                        <span className="font-bold text-gray-800">₹{items.reduce((sum, item) => sum + (item.gst || 0), 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-[11px] text-gray-400">
                         <span>Delivery</span>

@@ -43,6 +43,36 @@ exports.protect = async (req, res, next) => {
   }
 };
 
+// Attach user when a valid token is present; continue without user otherwise
+exports.optionalProtect = async (req, res, next) => {
+  try {
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      return next();
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-password');
+
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    } catch {
+      // Ignore invalid tokens on public routes
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {

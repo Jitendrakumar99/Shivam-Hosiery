@@ -475,15 +475,27 @@ const Reports = () => {
   };
 
   const exportInventoryReport = () => {
-    const reportData = (products || []).map(product => ({
-      'Product Title': product.title || product.name || 'N/A',
-      'SKU ID': product.sku || 'N/A',
-      'Main Category': product.category?.name || product.category || 'N/A',
-      'Current Price (₹)': product.price || 0,
-      'Stock Quantity': product.stock || 0,
-      'Availability': product.stock > 10 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock'),
-      'Description': product.description?.replace(/<[^>]*>?/gm, '').slice(0, 100) || 'N/A'
-    }));
+    const getTotalStock = (product) => {
+      if (typeof product.totalStock === 'number') return product.totalStock;
+      if (!product.variants?.length) return 0;
+      return product.variants.reduce(
+        (sum, v) => sum + (v.inventory?.quantity ?? v.quantity ?? 0),
+        0
+      );
+    };
+
+    const reportData = (products || []).map(product => {
+      const stock = getTotalStock(product);
+      return {
+        'Product Title': product.title || product.name || 'N/A',
+        'SKU ID': product.sku || 'N/A',
+        'Main Category': product.category?.name || product.category || 'N/A',
+        'Current Price (₹)': product.pricing?.price || product.price || 0,
+        'Stock Quantity': stock,
+        'Availability': stock > 10 ? 'In Stock' : (stock > 0 ? 'Low Stock' : 'Out of Stock'),
+        'Description': product.description?.replace(/<[^>]*>?/gm, '').slice(0, 100) || 'N/A'
+      };
+    });
     exportToExcel(reportData, 'Full_Inventory_Status');
   };
 

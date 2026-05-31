@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const DeliveryZone = require('../models/DeliveryZone');
 const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
+const { findVariant } = require('../utils/inventory');
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -26,7 +27,7 @@ exports.getOrders = async (req, res, next) => {
 
     const orders = await Order.find(query)
       .populate('user', 'name email')
-      .populate('items.product', 'title pricing.price images featuredImage sku')
+      .populate('items.product', 'title pricing.price images featuredImage sku gst_percentage')
       .skip(startIndex)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -65,7 +66,7 @@ exports.getOrder = async (req, res, next) => {
 
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email phone')
-      .populate('items.product', 'title pricing.price images featuredImage sku')
+      .populate('items.product', 'title pricing.price images featuredImage sku gst_percentage')
       .lean(); // Use lean() to get plain JavaScript object instead of Mongoose document
 
     if (!order) {
@@ -180,18 +181,14 @@ exports.createOrder = async (req, res, next) => {
       // Handle variants
       if (item.customization && product.variants && product.variants.length > 0) {
         const size = item.customization.Size || item.customization.size;
-        const color = item.customization.Color || item.customization.color;
+        const color = item.customization.Color || item.customization.color || '';
 
-        variant = product.variants.find(v =>
-          v.size === size && (color ? v.color === color : true)
-        );
+        variant = findVariant(product, size, color);
 
         if (variant) {
           price = variant.price;
         }
       }
-
-      // No stock check needed as we are manufacture
 
       if (price === undefined || price === null) {
         return res.status(500).json({
@@ -200,14 +197,32 @@ exports.createOrder = async (req, res, next) => {
         });
       }
 
-      totalAmount += price * item.quantity;
+      // Calculate GST and final price
+      const gstPercentage = product.gst_percentage || 0;
+      const gstAmount = parseFloat(((price * gstPercentage) / 100).toFixed(2));
+      const finalPrice = parseFloat((price + gstAmount).toFixed(2));
 
-      validatedItems.push({
-        ...item,
-        price: price, // Ensure correct price is saved
-        sku: item.sku || product.sku || '', // Product SKU
-        variantSKU: variant?.sku || item.variantSKU || '', // Variant SKU
-      });
+      // Calculate item total
+      const itemTotal = parseFloat((finalPrice * item.quantity).toFixed(2));
+
+      totalAmount += itemTotal;
+
+      const orderItem = {
+        product: product._id,
+        quantity: item.quantity,
+        price: finalPrice,
+        total: itemTotal,
+        gst: gstAmount,
+      };
+
+      if (item.customization) {
+        orderItem.customization = item.customization;
+      }
+      if (variant?.sku) {
+        orderItem.variantSKU = variant.sku;
+      }
+
+      validatedItems.push(orderItem);
     }
 
     const order = await Order.create({
@@ -220,7 +235,6 @@ exports.createOrder = async (req, res, next) => {
       deliveryZone: deliveryZone._id,
     });
 
-    // Clear products list cache
     clearCache('/api/products');
 
     // Create notification
@@ -386,9 +400,6 @@ exports.cancelOrder = async (req, res, next) => {
         message: 'Cannot cancel shipped or delivered orders'
       });
     }
-
-    // Clear cache
-    clearCache('/api/products');
 
     order.status = 'cancelled';
     await order.save();

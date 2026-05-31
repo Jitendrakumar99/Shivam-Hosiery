@@ -1,7 +1,54 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
 const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
+const {
+  sanitizeProductForPublic,
+  getTotalStock,
+  isLowStock,
+  LOW_STOCK_THRESHOLD,
+} = require('../utils/inventory');
+
+const notifyAdminsLowStockIfNeeded = async (product, previousTotal = null) => {
+  const currentTotal = getTotalStock(product);
+  if (currentTotal >= LOW_STOCK_THRESHOLD) return;
+  if (previousTotal !== null && previousTotal < LOW_STOCK_THRESHOLD) return;
+
+  try {
+    const admins = await User.find({ role: 'admin', isActive: { $ne: false } }).select('_id');
+    await Promise.all(
+      admins.map((admin) =>
+        Notification.create({
+          user: admin._id,
+          type: 'system',
+          title: 'Low Stock Alert',
+          message: `"${product.title}" has ${currentTotal} unit(s) left (below ${LOW_STOCK_THRESHOLD}).`,
+          link: '/products',
+        })
+      )
+    );
+  } catch (error) {
+    console.error('Failed to send low stock notifications:', error);
+  }
+};
+
+const isAdminRequest = (req) => req.user?.role === 'admin';
+
+const formatProductResponse = (product, req) => {
+  const withStockMeta = (doc) => ({
+    ...doc,
+    totalStock: getTotalStock(doc),
+    lowStock: isLowStock(doc),
+  });
+
+  if (isAdminRequest(req)) {
+    const doc = product.toObject ? product.toObject() : product;
+    return withStockMeta(doc);
+  }
+  return sanitizeProductForPublic(product);
+};
 
 // Helper function to normalize category name
 const normalizeCategory = (category) => {
@@ -48,11 +95,36 @@ const normalizeCategory = (category) => {
 // @access  Public
 exports.getProducts = async (req, res, next) => {
   try {
-    const { category, categoryId, categorySlug, parentId, parentSlug, parent, search, status = 'active' } = req.query;
-    const { startIndex, limit } = req.pagination || { startIndex: 0, limit: 10 };
+    const {
+      category,
+      categoryId,
+      categorySlug,
+      parentId,
+      parentSlug,
+      parent,
+      search,
+      status,
+    } = req.query;
+    const isAdmin = isAdminRequest(req);
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const maxLimit = isAdmin ? 500 : 100;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(
+      Math.max(requestedLimit || (isAdmin ? 100 : 12), 1),
+      maxLimit
+    );
+    const startIndex = (page - 1) * limit;
 
-    // Base product match (product status)
-    const baseMatch = { status };
+    // Product status filter (admin can list all / inactive)
+    let baseMatch;
+    const statusParam = status || (isAdmin ? 'all' : 'active');
+    if (isAdmin && statusParam === 'all') {
+      baseMatch = { status: { $in: ['active', 'inactive'] } };
+    } else if (statusParam === 'inactive') {
+      baseMatch = { status: 'inactive' };
+    } else {
+      baseMatch = { status: 'active' };
+    }
 
     // We'll apply search after category lookups so we can search by subcategory + parent category too.
     const escapedSearch = search ? search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
@@ -111,11 +183,18 @@ exports.getProducts = async (req, res, next) => {
         }
       },
       { $unwind: { path: '$parentDoc', preserveNullAndEmptyArrays: true } },
-      // Exclude products with missing category or inactive category
-      { $match: { 'categoryDoc.status': 'active' } },
     ];
 
-    // Search by product title + subcategory name + parent category name
+    // Storefront: hide products tied to inactive categories (allow missing category)
+    if (!isAdmin) {
+      pipeline.push({
+        $match: {
+          $or: [{ 'categoryDoc.status': 'active' }, { categoryDoc: null }],
+        },
+      });
+    }
+
+    // Search across title, description, SKU, category, and variants
     if (escapedSearch) {
       pipeline.push({
         $match: {
@@ -123,10 +202,15 @@ exports.getProducts = async (req, res, next) => {
             { title: { $regex: escapedSearch, $options: 'i' } },
             { description: { $regex: escapedSearch, $options: 'i' } },
             { shortDescription: { $regex: escapedSearch, $options: 'i' } },
+            { sku: { $regex: escapedSearch, $options: 'i' } },
+            { 'category.name': { $regex: escapedSearch, $options: 'i' } },
             { 'categoryDoc.name': { $regex: escapedSearch, $options: 'i' } },
             { 'parentDoc.name': { $regex: escapedSearch, $options: 'i' } },
-          ]
-        }
+            { 'variants.size': { $regex: escapedSearch, $options: 'i' } },
+            { 'variants.color': { $regex: escapedSearch, $options: 'i' } },
+            { 'variants.sku': { $regex: escapedSearch, $options: 'i' } },
+          ],
+        },
       });
     }
 
@@ -141,28 +225,28 @@ exports.getProducts = async (req, res, next) => {
     pipeline.push({ $sort: { createdAt: -1 } });
     const countPipeline = pipeline.map(stage => ({ ...stage }));
 
-    if (!search) {
-      pipeline.push({ $skip: startIndex });
-      pipeline.push({ $limit: limit });
-    }
+    pipeline.push({ $skip: startIndex });
+    pipeline.push({ $limit: limit });
 
     const [products, totalAgg] = await Promise.all([
       Product.aggregate(pipeline),
-      Product.aggregate([...countPipeline, { $count: 'total' }])
+      Product.aggregate([...countPipeline, { $count: 'total' }]),
     ]);
 
     const total = totalAgg[0]?.total || 0;
 
+    const formattedProducts = products.map((p) => formatProductResponse(p, req));
+
     res.json({
       success: true,
-      count: products.length,
-      pagination: search ? null : {
-        currentPage: Math.floor(startIndex / limit) + 1,
-        totalPages: Math.ceil(total / limit),
+      count: formattedProducts.length,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
         totalItems: total,
-        itemsPerPage: limit
+        itemsPerPage: limit,
       },
-      data: products
+      data: formattedProducts,
     });
   } catch (error) {
     next(error);
@@ -202,21 +286,36 @@ exports.getProduct = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: product
+      data: formatProductResponse(product, req)
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create product
+// @desc    Create new product
 // @route   POST /api/products
 // @access  Private/Admin
 exports.createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.body);
+    const { gst_percentage } = req.body;
 
+    // Validate GST percentage if provided
+    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
+      return res.status(400).json({
+        success: false,
+        message: 'GST percentage must be a non-negative number.'
+      });
+    }
+
+    const product = new Product(req.body);
+
+    await product.save();
     clearCache('/api/products');
+
+    if (isLowStock(product)) {
+      await notifyAdminsLowStockIfNeeded(product);
+    }
 
     res.status(201).json({
       success: true,
@@ -232,24 +331,38 @@ exports.createProduct = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateProduct = async (req, res, next) => {
   try {
-    let product = await Product.findById(req.params.id);
+    const { gst_percentage } = req.body;
 
-    if (!product) {
-      return res.status(404).json({
+    // Validate GST percentage if provided
+    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
+      return res.status(400).json({
         success: false,
-        message: 'Product not found'
+        message: 'GST percentage must be a non-negative number.'
       });
     }
 
-    product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const existingProduct = await Product.findById(req.params.id);
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found.'
+      });
+    }
+
+    const previousTotal = getTotalStock(existingProduct);
+
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     });
 
     clearCache('/api/products');
-    clearCache(`/api/products/${req.params.id}`);
 
-    res.json({
+    if (isLowStock(product)) {
+      await notifyAdminsLowStockIfNeeded(product, previousTotal);
+    }
+
+    res.status(200).json({
       success: true,
       data: product
     });

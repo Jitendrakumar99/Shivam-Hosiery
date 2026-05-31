@@ -8,6 +8,8 @@ import { fetchCategories } from '../store/slices/categorySlice';
 import { createFlyingAnimation, triggerCartBounce, triggerWishlistAnimation } from '../utils/animations';
 import toast from 'react-hot-toast';
 
+const ITEMS_PER_PAGE = 12;
+
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,12 +53,10 @@ const Products = () => {
     } else if (parentSlug) {
       params.parentSlug = parentSlug;
     }
+    params.limit = ITEMS_PER_PAGE;
+    params.page = currentPage;
     if (searchQuery && searchQuery.trim()) {
       params.search = searchQuery.trim();
-      // When searching, show all results without pagination
-    } else {
-      // Only apply pagination when not searching
-      params.page = currentPage;
     }
     dispatch(fetchProducts(params));
   }, [dispatch, selectedCategory, searchQuery, currentPage, parentSlug]);
@@ -373,8 +373,19 @@ const Products = () => {
                   Filters
                 </button>
 
-                <div className="hidden lg:block text-slate-500 text-sm">
-                  Showing {filteredProducts.length} products
+                <div className="text-slate-500 text-sm">
+                  {pagination?.totalItems != null ? (
+                    <>
+                      Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+                      {Math.min(currentPage * ITEMS_PER_PAGE, pagination.totalItems)} of{' '}
+                      {pagination.totalItems} products
+                      {pagination.totalPages > 1 && (
+                        <span className="text-slate-400"> · Page {currentPage} of {pagination.totalPages}</span>
+                      )}
+                    </>
+                  ) : (
+                    <>Showing {filteredProducts.length} products</>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -605,7 +616,7 @@ const Products = () => {
                       </div>
                     ))}
                   </div>
-                  {!searchQuery && pagination && pagination.totalPages > 1 && (
+                  {pagination && pagination.totalPages > 1 && (
                     <div className="mt-8 flex justify-center gap-2">
                       <button
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}

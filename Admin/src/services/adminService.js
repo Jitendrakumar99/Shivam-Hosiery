@@ -7,6 +7,12 @@ export const adminService = {
     return response.data;
   },
 
+  // Get products with low stock (admin only)
+  getLowStockProducts: async () => {
+    const response = await api.get('/admin/low-stock');
+    return response.data;
+  },
+
   // Get all users
   getUsers: async (params = {}) => {
     const response = await api.get('/admin/users', { params });

@@ -169,6 +169,15 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive'],
     default: 'active'
+  },
+  gst_percentage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    validate: {
+      validator: Number.isFinite,
+      message: 'GST percentage must be a valid number.'
+    }
   }
 }, {
   timestamps: true
@@ -188,8 +197,14 @@ productSchema.pre('save', function (next) {
     this.featuredImage = this.images[0];
   }
 
-  // Always in stock for manufacturer
-  this.availability.inStock = true;
+  const totalStock = (this.variants || []).reduce(
+    (sum, v) => sum + (v.inventory?.quantity ?? 0),
+    0
+  );
+  if (!this.availability) {
+    this.availability = {};
+  }
+  this.availability.inStock = totalStock > 0;
 
   next();
 });
