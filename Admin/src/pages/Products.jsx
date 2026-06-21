@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
 import { fetchProducts, deleteProduct } from '../store/slices/productSlice';
 import ProductModal from '../components/Modal/ProductModal';
+import * as XLSX from 'xlsx';
 
 const ITEMS_PER_PAGE = 500;
 
@@ -60,6 +61,77 @@ const Products = () => {
     setIsModalOpen(true);
   };
 
+  // Handle Excel file upload (images will be added later)
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const wsname = workbook.SheetNames[0];
+      const ws = workbook.Sheets[wsname];
+      const json = XLSX.utils.sheet_to_json(ws);
+      console.log('Excel data parsed:', json);
+      
+      try {
+        const formattedProducts = json.map((row) => {
+          const price = parseFloat(row.price || row.Price || 0);
+          const compareAtPrice = parseFloat(row.compareAtPrice || row['Compare At Price'] || 0);
+          const moq = parseInt(row.minOrderQuantity || row['Min Order Quantity'] || row.moq || row.MOQ || 0);
+
+          return {
+            title: row.title || row.Title || row.name || row.Name || 'Unnamed Product',
+            description: row.description || row.Description || 'No description provided.',
+            shortDescription: row.shortDescription || row['Short Description'] || '',
+            pricing: {
+              price: isNaN(price) ? 0 : price,
+              compareAtPrice: isNaN(compareAtPrice) ? 0 : compareAtPrice,
+              currency: row.currency || row.Currency || 'INR',
+            },
+            sku: (row.sku || row.SKU || '').toString().toUpperCase(),
+            category: {
+              name: row.category || row.Category || 'Uncategorized'
+            },
+            attributes: {
+              gender: row.gender || row.Gender || 'Unisex',
+              fabric: row.fabric || row.Fabric || '',
+              length: row.length || row.Length || '',
+              sleeve: row.sleeve || row.Sleeve || ''
+            },
+            seo: {
+              title: row.seoTitle || row['SEO Title'] || row.title || '',
+              description: row.seoDescription || row['SEO Description'] || row.description || '',
+              keywords: (row.seoKeywords || row['SEO Keywords'] || '').toString().split(',').map(k => k.trim()).filter(Boolean)
+            },
+            minOrderQuantity: isNaN(moq) ? 0 : moq,
+            status: (row.status || row.Status || 'active').toString().toLowerCase()
+          };
+        });
+
+        if (formattedProducts.length > 0) {
+          dispatch(createProductsBulk(formattedProducts))
+            .unwrap()
+            .then(() => {
+              alert(`Successfully imported ${formattedProducts.length} products!`);
+              // Reset file input
+              document.getElementById('excelUpload').value = '';
+            })
+            .catch((err) => {
+              alert(`Failed to import products: ${err}`);
+              document.getElementById('excelUpload').value = '';
+            });
+        }
+      } catch (error) {
+        console.error("Error formatting products:", error);
+        alert("Failed to parse Excel file. Please ensure columns match the required format.");
+        document.getElementById('excelUpload').value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+
   const handleEditProduct = (product) => {
     setSelectedProduct(product);
     setModalMode('edit');
@@ -70,6 +142,8 @@ const Products = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
   };
+
+  const IMAGE_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -90,6 +164,14 @@ const Products = () => {
           <span className="hidden sm:inline">Add Product</span>
           <span className="sm:hidden">Add</span>
         </button>
+        <input type="file" accept=".xlsx,.xls" id="excelUpload" style={{ display: 'none' }} onChange={handleExcelUpload} />
+        <label htmlFor="excelUpload" className="bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span className="hidden sm:inline">Upload Excel</span>
+          <span className="sm:hidden">Upload</span>
+        </label>  
       </div>
 
       <div className="bg-white rounded-lg shadow border border-gray-200 p-4 space-y-4">
@@ -172,8 +254,12 @@ const Products = () => {
             <div className="p-3 sm:p-4 flex gap-3 sm:gap-4">
               <div className="w-20 h-20 sm:w-24 sm:h-24 min-w-20 sm:min-w-24 shrink-0">
                 <img
-                  src={product.images?.[0] || product.image || 'https://via.placeholder.com/150'}
-                  alt={product.title || product.name}
+                  src={
+                    product.images?.[0]?.startsWith('/') 
+                      ? `${IMAGE_BASE_URL}${product.images[0]}` 
+                      : (product.images?.[0] || product.image || 'https://via.placeholder.com/150')
+                  }
+                  alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
@@ -249,6 +335,46 @@ const Products = () => {
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-800">{(pagination.currentPage - 1) * 50 + 1}</span> to <span className="font-semibold text-gray-800">{Math.min(pagination.currentPage * 50, pagination.totalItems)}</span> of <span className="font-semibold text-gray-800">{pagination.totalItems}</span> products
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {[...Array(pagination.totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                    pagination.currentPage === i + 1
+                      ? 'bg-orange-500 text-white'
+                      : 'text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={pagination.currentPage === pagination.totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       <ProductModal
         isOpen={isModalOpen}

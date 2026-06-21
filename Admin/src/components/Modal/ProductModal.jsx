@@ -43,6 +43,10 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
   // Helper for variant management
   const [variantColor, setVariantColor] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
+
+  const IMAGE_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
 
   useEffect(() => {
     dispatch(fetchCategories({ populateChildren: 'true' }));
@@ -201,6 +205,9 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
         minOrderQuantity: 0,
       });
       setHasInitialized(true);
+      // Reset files when product changes
+      setSelectedFiles([]);
+      setPreviews([]);
     }
   }, [product, mode, isOpen, categories, hasInitialized]);
 
@@ -343,22 +350,66 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
     };
 
     try {
-      if (mode === 'edit' && product) {
-        await dispatch(updateProduct({
-          id: product._id || product.id,
-          productData: payload,
-        })).unwrap();
+      let response;
+      if (selectedFiles.length > 0) {
+        const data = new FormData();
+        data.append('data', JSON.stringify(payload));
+        selectedFiles.forEach(file => {
+          data.append('images', file);
+        });
+
+        if (mode === 'edit' && product) {
+          response = await dispatch(updateProduct({
+            id: product._id || product.id,
+            productData: data,
+          })).unwrap();
+        } else {
+          response = await dispatch(createProduct(data)).unwrap();
+        }
       } else {
-        await dispatch(createProduct(payload)).unwrap();
+        if (mode === 'edit' && product) {
+          response = await dispatch(updateProduct({
+            id: product._id || product.id,
+            productData: payload,
+          })).unwrap();
+        } else {
+          response = await dispatch(createProduct(payload)).unwrap();
+        }
       }
+
       if (onSuccess) {
-        onSuccess(payload); // Passing payload back can help generic refresh
+        onSuccess(response);
       } else {
         onClose();
       }
     } catch (error) {
       alert(error || 'Failed to save product');
     }
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + formData.images.length > 5) {
+      alert('You can only have up to 5 images per product.');
+      return;
+    }
+
+    setSelectedFiles(prev => [...prev, ...files]);
+
+    // Create previews
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeSelectedFile = (index) => {
+    const newFiles = [...selectedFiles];
+    newFiles.splice(index, 1);
+    setSelectedFiles(newFiles);
+
+    const newPreviews = [...previews];
+    URL.revokeObjectURL(newPreviews[index]);
+    newPreviews.splice(index, 1);
+    setPreviews(newPreviews);
   };
 
   const tabs = [
@@ -501,36 +552,67 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Images</label>
-              {formData.images.map((img, idx) => (
-                <div key={idx} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    value={img}
-                    onChange={(e) => {
-                      const newImages = [...formData.images];
-                      newImages[idx] = e.target.value;
-                      setFormData({ ...formData, images: newImages });
-                    }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-orange-500"
-                    placeholder="Image URL"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== idx) })}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, images: [...formData.images, ''] })}
-                className="text-sm text-orange-600 hover:text-orange-700 font-semibold"
-              >
-                + Add Image
-              </button>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Images</label>
+              
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mb-4">
+                {/* Existing Images */}
+                {formData.images.filter(img => img && img.trim()).map((img, idx) => (
+                  <div key={`existing-${idx}`} className="relative aspect-square border rounded-lg overflow-hidden bg-gray-50">
+                    <img 
+                      src={img.startsWith('/') ? `${IMAGE_BASE_URL}${img}` : img} 
+                      alt="Product" 
+                      className="w-full h-full object-cover" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== idx) })}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1 py-0.5 text-center">
+                      Existing
+                    </div>
+                  </div>
+                ))}
+
+                {/* New Previews */}
+                {previews.map((preview, idx) => (
+                  <div key={`new-${idx}`} className="relative aspect-square border rounded-lg overflow-hidden bg-orange-50 ring-2 ring-orange-200">
+                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeSelectedFile(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-orange-500 text-white text-[10px] px-1 py-0.5 text-center">
+                      New
+                    </div>
+                  </div>
+                ))}
+
+                {/* Upload Button */}
+                {(formData.images.length + selectedFiles.length) < 5 && (
+                  <label className="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span className="text-[10px] font-semibold text-gray-500 mt-1 uppercase">Upload</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500">
+                * You can upload up to 5 images. Images will be converted to WebP and optimized for speed.
+              </p>
             </div>
           </div>
         )}

@@ -4,7 +4,7 @@ const Notification = require('../models/Notification');
 const DeliveryZone = require('../models/DeliveryZone');
 const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
-const { findVariant } = require('../utils/inventory');
+const { generateInvoicePdf } = require('../services/invoiceService');
 
 // Helper function to reduce stock when order is placed
 const reduceInventory = async (items) => {
@@ -509,3 +509,84 @@ exports.cancelOrder = async (req, res, next) => {
   }
 };
 
+// @desc    Get order invoice PDF
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+exports.getOrderInvoice = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email phone')
+      .populate('items.product', 'title pricing.price sku hsn')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Check authorization
+    const orderUserId = order.user?._id?.toString() || order.user?.toString();
+    if (req.user.role !== 'admin' && orderUserId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    // Map Order to Invoice Data
+    const invoiceData = {
+      invoiceNo: `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
+      date: new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }),
+      supplier: {
+        name: "SUMAN INTERNATIONAL",
+        address: "SAGAR ESTATE, 2, NARENDRA CH. DUTTA SARANI, 12T FLOOR, KOLKATA- 700001",
+        gstin: "19ACQPJ5066M1ZU",
+        state: "West Bengal",
+        stateCode: "19",
+        pan: "ACQPJ5066M"
+      },
+      buyer: {
+        name: order.shippingAddress.name,
+        address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state}-${order.shippingAddress.pincode}`,
+        phone: order.shippingAddress.phone,
+        state: order.shippingAddress.state,
+        // Defaulting these for now, can be expanded if stored in user profile
+        gstin: "URP (Unregistered Person)", 
+        stateCode: "22" 
+      },
+      items: order.items.map(item => ({
+        description: item.product?.title || 'Product',
+        hsn: item.product?.hsn || '39219099',
+        quantity: `${item.quantity}.000`,
+        rate: item.price.toFixed(2),
+        unit: 'PCS',
+        amount: (item.price * item.quantity).toFixed(2),
+        subDetails: item.variantSKU ? [`SKU: ${item.variantSKU}`] : []
+      })),
+      taxDetails: {
+        breakdown: [
+          { 
+            hsn: "39219099", 
+            taxableValue: order.totalAmount.toFixed(2), 
+            rate: "18%", 
+            amount: (order.totalAmount * 0.18).toFixed(2) 
+          }
+        ]
+      },
+      bankDetails: {
+        name: "HDFC - O/D A/C",
+        accNo: "50200038864999",
+        ifsc: "P/34, INDIA EXCHANGE PLACE, KOLKATA-1 & HDFC0001242"
+      },
+      totalQty: order.items.reduce((acc, item) => acc + item.quantity, 0) + '.000',
+      // The generateInvoicePdf will use numberToWords if we pass it, 
+      // or we can calculate it here.
+      amountInWords: "", // Service handles this or we can add it
+      qrUrl: `https://shivamhosiery.com/verify/${order._id}`
+    };
+
+    const pdfBuffer = await generateInvoicePdf(invoiceData);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice-${order._id}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    next(error);
+  }
+};

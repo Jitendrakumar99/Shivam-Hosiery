@@ -183,6 +183,16 @@ exports.getProducts = async (req, res, next) => {
         }
       },
       { $unwind: { path: '$parentDoc', preserveNullAndEmptyArrays: true } },
+      // Allow products with no category or with active category
+      { 
+        $match: { 
+          $or: [
+            { 'categoryDoc.status': 'active' },
+            { 'categoryDoc': { $exists: false } },
+            { 'categoryDoc': null }
+          ]
+        } 
+      },
     ];
 
     // Storefront: hide products tied to inactive categories (allow missing category)
@@ -298,17 +308,26 @@ exports.getProduct = async (req, res, next) => {
 // @access  Private/Admin
 exports.createProduct = async (req, res, next) => {
   try {
-    const { gst_percentage } = req.body;
+    console.log('Create Product Request Received');
+    console.log('req.body:', JSON.stringify(req.body, null, 2));
+    
+    let productData = req.body;
 
-    // Validate GST percentage if provided
-    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
-      return res.status(400).json({
-        success: false,
-        message: 'GST percentage must be a non-negative number.'
-      });
+    // If data is sent as a string (common with FormData), parse it
+    if (typeof req.body.data === 'string') {
+      console.log('Parsing product data from req.body.data');
+      productData = JSON.parse(req.body.data);
     }
 
-    const product = new Product(req.body);
+    // If images were uploaded and processed by middleware
+    if (req.body.images && req.body.images.length > 0) {
+      console.log('Adding uploaded images to product data:', req.body.images);
+      // Merge with existing images if any (e.g. from a copied product or URL)
+      productData.images = [...(productData.images || []), ...req.body.images];
+    }
+
+    const product = await Product.create(productData);
+    console.log('Product created successfully:', product._id);
 
     await product.save();
     clearCache('/api/products');
@@ -322,6 +341,36 @@ exports.createProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
+    console.error('Error in createProduct:', error);
+    next(error);
+  }
+};
+
+// @desc    Create products in bulk
+// @route   POST /api/products/bulk
+// @access  Private/Admin
+exports.createProductsBulk = async (req, res, next) => {
+  try {
+    const products = req.body;
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide an array of products'
+      });
+    }
+
+    // Use Product.create instead of insertMany to trigger pre-save hooks (like handle generation)
+    const createdProducts = await Product.create(products);
+
+    clearCache('/api/products');
+
+    res.status(201).json({
+      success: true,
+      count: createdProducts.length,
+      data: createdProducts
+    });
+  } catch (error) {
     next(error);
   }
 };
@@ -331,7 +380,9 @@ exports.createProduct = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateProduct = async (req, res, next) => {
   try {
-    const { gst_percentage } = req.body;
+    console.log('Update Product Request Received for ID:', req.params.id);
+    
+    let product = await Product.findById(req.params.id);
 
     // Validate GST percentage if provided
     if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
@@ -349,12 +400,26 @@ exports.updateProduct = async (req, res, next) => {
       });
     }
 
-    const previousTotal = getTotalStock(existingProduct);
+    let productData = req.body;
 
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    // If data is sent as a string (common with FormData), parse it
+    if (typeof req.body.data === 'string') {
+      console.log('Parsing product data from req.body.data');
+      productData = JSON.parse(req.body.data);
+    }
+
+    // If images were uploaded and processed by middleware
+    if (req.body.images && req.body.images.length > 0) {
+      console.log('Adding uploaded images to product data:', req.body.images);
+      // Merge with existing images (the ones user kept in the form)
+      productData.images = [...(productData.images || []), ...req.body.images];
+    }
+
+    product = await Product.findByIdAndUpdate(req.params.id, productData, {
       new: true,
       runValidators: true
     });
+    console.log('Product updated successfully:', product._id);
 
     clearCache('/api/products');
 
@@ -367,6 +432,7 @@ exports.updateProduct = async (req, res, next) => {
       data: product
     });
   } catch (error) {
+    console.error('Error in updateProduct:', error);
     next(error);
   }
 };
