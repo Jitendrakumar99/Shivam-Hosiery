@@ -109,10 +109,9 @@ exports.getProducts = async (req, res, next) => {
     const requestedLimit = parseInt(req.query.limit, 10);
     const maxLimit = isAdmin ? 500 : 100;
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(
-      Math.max(requestedLimit || (isAdmin ? 100 : 12), 1),
-      maxLimit
-    );
+    const limit = !isNaN(requestedLimit) && requestedLimit > 0 
+      ? Math.min(requestedLimit, maxLimit)
+      : (isAdmin ? 100 : 20);
     const startIndex = (page - 1) * limit;
 
     // Product status filter (admin can list all / inactive)
@@ -382,16 +381,6 @@ exports.updateProduct = async (req, res, next) => {
   try {
     console.log('Update Product Request Received for ID:', req.params.id);
     
-    let product = await Product.findById(req.params.id);
-
-    // Validate GST percentage if provided
-    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
-      return res.status(400).json({
-        success: false,
-        message: 'GST percentage must be a non-negative number.'
-      });
-    }
-
     const existingProduct = await Product.findById(req.params.id);
     if (!existingProduct) {
       return res.status(404).json({
@@ -408,6 +397,19 @@ exports.updateProduct = async (req, res, next) => {
       productData = JSON.parse(req.body.data);
     }
 
+    const { gst_percentage } = productData;
+
+    // Validate GST percentage if provided
+    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
+      return res.status(400).json({
+        success: false,
+        message: 'GST percentage must be a non-negative number.'
+      });
+    }
+
+    // Capture previous total stock for low stock notification
+    const previousTotal = getTotalStock(existingProduct);
+
     // If images were uploaded and processed by middleware
     if (req.body.images && req.body.images.length > 0) {
       console.log('Adding uploaded images to product data:', req.body.images);
@@ -415,7 +417,7 @@ exports.updateProduct = async (req, res, next) => {
       productData.images = [...(productData.images || []), ...req.body.images];
     }
 
-    product = await Product.findByIdAndUpdate(req.params.id, productData, {
+    const product = await Product.findByIdAndUpdate(req.params.id, productData, {
       new: true,
       runValidators: true
     });

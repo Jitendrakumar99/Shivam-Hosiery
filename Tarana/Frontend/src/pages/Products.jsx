@@ -69,16 +69,27 @@ const Products = () => {
   // Sync URL with selected category on mount/URL change
   useEffect(() => {
     const urlCategory = searchParams.get('category');
+    const urlParentSlug = searchParams.get('parentSlug');
+    const urlSearch = searchParams.get('search');
+
     if (urlCategory) {
       const normalizedURL = normalizeCategoryFromURL(urlCategory);
       if (normalizedURL !== selectedCategory) {
         setSelectedCategory(normalizedURL);
       }
-    } else if (selectedCategory !== 'all') {
-      // If no category in URL but we have one selected, reset to all
-      setSelectedCategory('all');
+    } else if (!urlParentSlug) {
+      // If no category and no parentSlug in URL, reset to 'all'
+      if (selectedCategory !== 'all') {
+        setSelectedCategory('all');
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // If URL is empty (no category, no parentSlug, no search), reset all filters
+    if (!urlCategory && !urlParentSlug && !urlSearch) {
+      setSearchQuery('');
+      setPriceRange(10000);
+      setCurrentPage(1);
+    }
   }, [searchParams]);
 
   // Fetch categories on mount
@@ -334,14 +345,14 @@ const Products = () => {
                     type="range"
                     min="0"
                     max="10000"
-                    step="500"
+                    step="100"
                     value={priceRange}
                     onChange={(e) => setPriceRange(parseInt(e.target.value))}
                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-trana-primary mb-2"
                   />
                   <div className="flex justify-between text-sm text-slate-500 font-medium">
                     <span>₹0</span>
-                    <span>Up to ₹{priceRange}</span>
+                    <span>Up to ₹{priceRange.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -440,14 +451,14 @@ const Products = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                     {filteredProducts.map((product) => (
                       <div
                         key={product._id || product.id}
                         ref={el => productRefs.current[product._id || product.id] = el}
-                        className="bg-card-bg border border-gray-200 rounded-lg shadow-md overflow-hidden product-card"
+                        className="bg-card-bg border border-gray-100 rounded-lg shadow-sm overflow-hidden product-card hover:shadow-md transition-shadow"
                       >
-                        <div className="h-56 bg-gray-50 flex items-center justify-center relative group">
+                        <div className="h-40 md:h-56 bg-gray-50 flex items-center justify-center relative group">
                           <Link to={`/products/${product._id || product.id}`} className="absolute inset-0 z-0 ">
                             {product.images && product.images.length > 0 ? (
                               <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain product-image-zoom transition-transform duration-500" />
@@ -470,10 +481,10 @@ const Products = () => {
                             </svg>
                           </button>
                         </div>
-                        <div className="p-4">
-                          <p className="text-sm text-gray-500 mb-1">{product.category?.name || product.category}</p>
+                        <div className="p-3 md:p-4">
+                          <p className="text-[10px] md:text-sm text-gray-500 mb-1">{product.category?.name || product.category}</p>
                           <Link to={`/products/${product._id || product.id}`}>
-                            <h3 className="text-lg font-bold mb-1 hover:text-trana-primary transition-colors duration-300 cursor-pointer">{product.title || product.name}</h3>
+                            <h3 className="text-sm md:text-lg font-bold mb-1 hover:text-trana-primary transition-colors duration-300 cursor-pointer line-clamp-2 md:line-clamp-none h-10 md:h-auto">{product.title || product.name}</h3>
                           </Link>
 
                           {/* Rating */}
@@ -499,19 +510,19 @@ const Products = () => {
 
                           <p className="text-gray-500 mb-3 text-xs line-clamp-1">{product.shortDescription || product.description}</p>
 
-                          <div className="flex justify-between items-center mb-0 transition-all duration-300">
+                          <div className="flex justify-between items-center mb-0 mt-2 transition-all duration-300">
                             <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-lg font-bold text-trana-primary">
+                              <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                                <p className="text-base md:text-lg font-bold text-trana-primary">
                                   ₹{product.pricing?.price || product.price}
                                 </p>
                                 {product.pricing?.compareAtPrice > 0 && product.pricing.compareAtPrice > product.pricing.price && (
                                   <>
-                                    <p className="text-sm text-gray-500 line-through">
+                                    <p className="text-[10px] md:text-sm text-gray-500 line-through">
                                       ₹{product.pricing.compareAtPrice}
                                     </p>
-                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">
-                                      {Math.round(((product.pricing.compareAtPrice - product.pricing.price) / product.pricing.compareAtPrice) * 100)}% OFF
+                                    <span className="bg-red-500 text-white text-[9px] md:text-xs font-bold px-1.5 py-0.5 rounded">
+                                      {Math.round(((product.pricing.compareAtPrice - product.pricing.price) / product.pricing.compareAtPrice) * 100)}%
                                     </span>
                                   </>
                                 )}
@@ -530,7 +541,7 @@ const Products = () => {
                               product.variants && product.variants.length > 0 ? (
                                 <Link
                                   to={`/products/${product._id || product.id}`}
-                                  className="flex-1 bg-trana-dark text-white py-2 rounded hover:opacity-90 transition text-center"
+                                  className="flex-1 bg-trana-dark text-white py-1.5 md:py-2 rounded-full hover:opacity-90 transition text-center text-xs md:text-sm font-semibold"
                                 >
                                   View Options
                                 </Link>
@@ -555,7 +566,7 @@ const Products = () => {
                                       position: 'bottom-right',
                                     });
                                   }}
-                                  className="flex-1 bg-trana-primary text-white py-2 rounded-full font-semibold hover:bg-trana-dark transition shadow-md hover:shadow-lg active:scale-95"
+                                  className="flex-1 bg-trana-primary text-white py-1.5 md:py-2 rounded-full font-semibold hover:bg-trana-dark transition shadow-sm hover:shadow-md active:scale-95 text-xs md:text-base"
                                 >
                                   Add to Cart
                                 </button>
@@ -780,14 +791,14 @@ const Products = () => {
                   type="range"
                   min="0"
                   max="10000"
-                  step="500"
+                  step="100"
                   value={priceRange}
                   onChange={(e) => setPriceRange(parseInt(e.target.value))}
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-trana-primary mb-2"
                 />
                 <div className="flex justify-between text-sm text-slate-500 font-medium font-outfit">
                   <span>₹0</span>
-                  <span>Up to ₹{priceRange}</span>
+                  <span>Up to ₹{priceRange.toLocaleString()}</span>
                 </div>
               </div>
             </div>

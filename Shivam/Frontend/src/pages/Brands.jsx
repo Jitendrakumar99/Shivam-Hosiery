@@ -78,7 +78,7 @@ const Brands = () => {
             (() => {
               // Find Trana brand or use first brand
               const tranBrand = brands.find(b => b.name?.toLowerCase().includes('trana')) || brands[0];
-              const brandImage = tranBrand.image || '/traan.png';
+              const brandImage = '/Traan.png';
               
               return (
                 <div className="max-w-7xl mx-auto">

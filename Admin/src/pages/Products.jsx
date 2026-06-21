@@ -4,11 +4,12 @@ import { fetchProducts, deleteProduct } from '../store/slices/productSlice';
 import ProductModal from '../components/Modal/ProductModal';
 import * as XLSX from 'xlsx';
 
-const ITEMS_PER_PAGE = 500;
+const ITEMS_PER_PAGE = 20;
 
 const Products = () => {
   const { products, loading, pagination } = useSelector((state) => state.products);
   const dispatch = useDispatch();
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalMode, setModalMode] = useState('add');
@@ -21,17 +22,22 @@ const Products = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const loadProducts = useCallback(() => {
+  const loadProducts = useCallback((page = currentPage) => {
     const params = {
       limit: ITEMS_PER_PAGE,
-      page: 1,
+      page: page,
       status: statusFilter,
     };
     if (searchQuery) {
       params.search = searchQuery;
     }
     dispatch(fetchProducts(params));
-  }, [dispatch, searchQuery, statusFilter]);
+  }, [dispatch, searchQuery, statusFilter, currentPage]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    loadProducts(page);
+  };
 
   useEffect(() => {
     loadProducts();
@@ -340,7 +346,7 @@ const Products = () => {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-800">{(pagination.currentPage - 1) * 50 + 1}</span> to <span className="font-semibold text-gray-800">{Math.min(pagination.currentPage * 50, pagination.totalItems)}</span> of <span className="font-semibold text-gray-800">{pagination.totalItems}</span> products
+            Showing <span className="font-semibold text-gray-800">{(pagination.currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-semibold text-gray-800">{Math.min(pagination.currentPage * ITEMS_PER_PAGE, pagination.totalItems)}</span> of <span className="font-semibold text-gray-800">{pagination.totalItems}</span> products
           </div>
           <div className="flex items-center gap-2">
             <button

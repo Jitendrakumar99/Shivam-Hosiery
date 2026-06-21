@@ -163,7 +163,7 @@ const Home = () => {
           ) : brands.length > 0 ? (
             (() => {
               const featured = brands.find(b => (b.name || '').toLowerCase().includes('trana')) || brands[0];
-              const imageUrl = featured?.image || '/traan.png';
+              const imageUrl = '/Traan.png';
               const categoryLabel = featured?.category || 'Safety Garments';
               const slogan = featured?.slogan || 'सुरक्षा, हमारी प्राथमिकता';
 
