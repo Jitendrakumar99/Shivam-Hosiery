@@ -78,7 +78,7 @@ const Brands = () => {
             (() => {
               // Find Trana brand or use first brand
               const tranBrand = brands.find(b => b.name?.toLowerCase().includes('trana')) || brands[0];
-              const brandImage = tranBrand.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1600&auto=format&fit=crop';
+              const brandImage = tranBrand.image || '/traan.png';
               
               return (
                 <div className="max-w-7xl mx-auto">
@@ -87,7 +87,7 @@ const Brands = () => {
                     <div className="relative h-[500px] lg:h-auto overflow-hidden">
                       <img 
                         src={brandImage} 
-                        alt={tranBrand.name || 'Trana Safety'} 
+                        alt={tranBrand.name || 'Traan Safety'} 
                         className="w-full h-full object-cover"
                       />
                       {/* Overlay with Text */}
@@ -389,7 +389,7 @@ const Brands = () => {
                 to="/trana"
                 className="bg-slate-900 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-slate-800 transition-colors"
               >
-                Explore Trana Products
+                Explore Traan Products
               </Link>
             </div>
           </div>

@@ -8,7 +8,7 @@ import { fetchCategories } from '../store/slices/categorySlice';
 import { createFlyingAnimation, triggerCartBounce, triggerWishlistAnimation } from '../utils/animations';
 import toast from 'react-hot-toast';
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 20;
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();

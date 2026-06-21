@@ -64,7 +64,7 @@ const Home = () => {
                 to="/trana"
                 className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-gray-700 transition-colors text-center shadow-lg"
               >
-                Visit Trana Safety
+                Visit Traan Safety
               </Link>
             </div>
           </div>
@@ -108,7 +108,7 @@ const Home = () => {
                 With over 25 years of experience in garment manufacturing, Shivam Hosiery has established itself as a trusted name in the industry. Our journey began with a vision to provide high-quality garments that meet international standards while maintaining competitive pricing.
               </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Today, we operate from a state-of-the-art facility spanning over 50,000 square feet, equipped with modern machinery and a skilled workforce. We specialize in manufacturing various types of garments, including our flagship brand "Trana" for safety garments, which has become synonymous with quality and reliability in industrial protection.
+                Today, we operate from a state-of-the-art facility spanning over 50,000 square feet, equipped with modern machinery and a skilled workforce. We specialize in manufacturing various types of garments, including our flagship brand "Traan" for safety garments, which has become synonymous with quality and reliability in industrial protection.
               </p>
               <Link
                 to="/about"
@@ -153,7 +153,7 @@ const Home = () => {
             Our Flagship Brand
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Introducing Trana - our premier safety garments brand trusted by industries across the nation.
+            Introducing Traan - our premier safety garments brand trusted by industries across the nation.
           </p>
 
           {loading ? (
@@ -163,7 +163,7 @@ const Home = () => {
           ) : brands.length > 0 ? (
             (() => {
               const featured = brands.find(b => (b.name || '').toLowerCase().includes('trana')) || brands[0];
-              const imageUrl = featured?.image || 'https://images.unsplash.com/photo-1542223616-4c0a9f3f7b3b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080';
+              const imageUrl = featured?.image || '/traan.png';
               const categoryLabel = featured?.category || 'Safety Garments';
               const slogan = featured?.slogan || 'सुरक्षा, हमारी प्राथमिकता';
 
@@ -174,7 +174,7 @@ const Home = () => {
                     <div className="lg:w-1/2 relative min-h-[260px]">
                       <img src={imageUrl} alt={featured.name} className="w-full h-full object-cover" />
                       <div className="absolute left-6 bottom-6 text-white">
-                        <h3 className="text-3xl font-bold leading-tight">{featured.name || 'Trana'}</h3>
+                        <h3 className="text-3xl font-bold leading-tight">{featured.name || 'Traan'}</h3>
                         <p className="text-sm mt-1">{slogan}</p>
                       </div>
                     </div>
@@ -183,7 +183,7 @@ const Home = () => {
                     <div className="lg:w-1/2 bg-linear-to-br from-slate-900 to-slate-800 text-white p-8 md:p-12 flex flex-col justify-center">
                       <h4 className="text-xl font-semibold mb-4">Premium Industrial Safety Solutions</h4>
                       <p className="text-gray-200 mb-6 leading-relaxed">
-                        Trana specializes in high-visibility safety garments that meet international standards. Our products ensure worker safety across construction, manufacturing, energy, and infrastructure sectors.
+                        Traan specializes in high-visibility safety garments that meet international standards. Our products ensure worker safety across construction, manufacturing, energy, and infrastructure sectors.
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">

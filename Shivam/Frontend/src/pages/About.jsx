@@ -24,7 +24,7 @@ const About = () => {
                 Over the years, we have expanded our operations, invested in state-of-the-art infrastructure, and built a team of skilled professionals dedicated to excellence. Our growth has been driven by innovation, quality assurance, and a deep understanding of our clients' needs.
               </p>
               <p className="text-gray-600 leading-relaxed">
-                Today, we specialize in manufacturing a wide range of garments, with a particular focus on safety garments under our flagship brand "Trana." Our products are trusted by industries across construction, manufacturing, energy, and infrastructure sectors.
+                Today, we specialize in manufacturing a wide range of garments, with a particular focus on safety garments under our flagship brand "Traan." Our products are trusted by industries across construction, manufacturing, energy, and infrastructure sectors.
               </p>
             </div>
             <img 

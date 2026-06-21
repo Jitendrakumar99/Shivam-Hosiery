@@ -267,7 +267,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
       size,
       color,
       price: price,
-      quantity: 100 // Default quantity
+      quantity: 50 // Default quantity
     }));
 
     setFormData({
