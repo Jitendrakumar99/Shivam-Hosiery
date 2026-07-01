@@ -10,7 +10,7 @@ const sendEmail = async (options) => {
     });
 
     const message = {
-        from: `${process.env.FROM_NAME || 'Trana Safety'} <${process.env.EMAIL}>`,
+        from: `${process.env.FROM_NAME || 'Traan Safety'} <${process.env.EMAIL}>`,
         to: options.email,
         subject: options.subject,
         text: options.message,

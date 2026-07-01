@@ -6,6 +6,69 @@ const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
 const { generateInvoicePdf } = require('../services/invoiceService');
 
+// Helper function to reduce stock when order is placed
+const reduceInventory = async (items) => {
+  for (const item of items) {
+    const product = await Product.findById(item.product);
+    if (!product) {
+      throw new Error(`Product not found: ${item.product}`);
+    }
+
+    // If order has customization with size/color, reduce specific variant
+    if (item.customization && product.variants && product.variants.length > 0) {
+      const size = item.customization.Size || item.customization.size;
+      const color = item.customization.Color || item.customization.color || '';
+      const variant = findVariant(product, size, color);
+
+      if (variant && variant.inventory) {
+        if (variant.inventory.quantity < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.title} (${size}, ${color})`);
+        }
+        variant.inventory.quantity -= item.quantity;
+      }
+    } else if (product.variants && product.variants.length > 0) {
+      // If no customization, reduce from first available variant
+      for (let i = 0; i < product.variants.length; i++) {
+        if (product.variants[i].inventory.quantity >= item.quantity) {
+          product.variants[i].inventory.quantity -= item.quantity;
+          break;
+        }
+      }
+    }
+
+    await product.save();
+  }
+};
+
+// Helper function to restore stock when order is cancelled or returned
+const restoreInventory = async (items) => {
+  for (const item of items) {
+    const product = await Product.findById(item.product);
+    if (!product) {
+      throw new Error(`Product not found: ${item.product}`);
+    }
+
+    // If order has customization with size/color, restore specific variant
+    if (item.customization && product.variants && product.variants.length > 0) {
+      const size = item.customization.Size || item.customization.size;
+      const color = item.customization.Color || item.customization.color || '';
+      const variant = findVariant(product, size, color);
+
+      if (variant && variant.inventory) {
+        variant.inventory.quantity += item.quantity;
+      }
+    } else if (product.variants && product.variants.length > 0) {
+      // If no customization, restore to first variant
+      for (let i = 0; i < product.variants.length; i++) {
+        product.variants[i].inventory.quantity += item.quantity;
+        break;
+      }
+    }
+
+    await product.save();
+  }
+};
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private
@@ -235,6 +298,14 @@ exports.createOrder = async (req, res, next) => {
       deliveryZone: deliveryZone._id,
     });
 
+    // Reduce inventory for each product variant
+    try {
+      await reduceInventory(validatedItems);
+    } catch (inventoryError) {
+      // If inventory reduction fails, still allow order but log error
+      console.error('Error reducing inventory:', inventoryError);
+    }
+
     clearCache('/api/products');
 
     // Create notification
@@ -285,7 +356,7 @@ exports.updateOrderStatus = async (req, res, next) => {
     // Update status if provided
     if (status !== undefined && status !== null) {
       // Validate order status
-      const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      const validStatuses = ['pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
@@ -317,9 +388,18 @@ exports.updateOrderStatus = async (req, res, next) => {
     
     await order.save();
 
+    // Restore inventory if order is cancelled
+    const statusChanged = status !== undefined && status !== prevStatus;
+    if (statusChanged && status === 'cancelled' && prevStatus !== 'cancelled') {
+      try {
+        await restoreInventory(order.items);
+      } catch (inventoryError) {
+        console.error('Error restoring inventory on cancellation:', inventoryError);
+      }
+    }
+
     // Create notification for status or payment status changes
     // Wrap in try-catch so notification failures don't break the update
-    const statusChanged = status !== undefined && status !== prevStatus;
     const paymentStatusChanged = paymentStatus !== undefined && paymentStatus !== prevPaymentStatus;
     
     if (statusChanged) {
@@ -355,6 +435,11 @@ exports.updateOrderStatus = async (req, res, next) => {
     // Clear all relevant caches
     clearCache('/api/orders');
     clearCache(`/api/orders/${req.params.id}`);
+    
+    // Clear product cache when inventory is restored due to cancellation
+    if (statusChanged && status === 'cancelled') {
+      clearCache('/api/products');
+    }
     
     // Clear stats cache when payment status or order status changes (affects revenue calculations)
     if (paymentStatusChanged || (statusChanged && (status === 'delivered' || status === 'shipped' || prevStatus === 'delivered' || prevStatus === 'shipped'))) {
@@ -404,8 +489,16 @@ exports.cancelOrder = async (req, res, next) => {
     order.status = 'cancelled';
     await order.save();
 
+    // Restore inventory when order is cancelled
+    try {
+      await restoreInventory(order.items);
+    } catch (inventoryError) {
+      console.error('Error restoring inventory:', inventoryError);
+    }
+
     clearCache('/api/orders');
     clearCache(`/api/orders/${req.params.id}`);
+    clearCache('/api/products');
 
     res.json({
       success: true,

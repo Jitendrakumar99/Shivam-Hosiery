@@ -458,7 +458,7 @@ const Home = () => {
       {/* Why Choose Trana Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl md:text-5xl font-extrabold text-center mb-16 text-text-primary">Why Choose Trana?</h2>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-center mb-16 text-text-primary">Why Choose Traan?</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="group border border-slate-100 rounded-2xl p-8 hover:bg-slate-50 transition-all duration-300">
               <div className="w-12 h-12 bg-amber-50 text-trana-dark rounded-xl flex items-center justify-center mb-6 group-hover:bg-trana-primary group-hover:text-slate-900 transition-colors duration-300">

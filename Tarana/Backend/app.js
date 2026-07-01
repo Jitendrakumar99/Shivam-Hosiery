@@ -117,7 +117,7 @@ app.post("/api/upload", (req, res, next) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Trana Safety API is running",
+    message: "Traan Safety API is running",
     version: "1.0.0"
   });
 });

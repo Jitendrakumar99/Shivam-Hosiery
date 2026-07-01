@@ -79,7 +79,7 @@ const Contact = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Call Us</h3>
-              <p className="text-gray-600 mb-1">+91 XXXX-XXXXXX</p>
+              <p className="text-gray-600 mb-1">+91 88271 04318</p>
               <p className="text-sm text-gray-500">Mon-Sat, 9:00 AM - 6:00 PM</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
