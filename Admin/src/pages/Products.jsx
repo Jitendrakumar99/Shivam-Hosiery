@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
-import { fetchProducts, deleteProduct } from '../store/slices/productSlice';
+import { fetchProducts, deleteProduct, createProductsBulk } from '../store/slices/productSlice';
 import ProductModal from '../components/Modal/ProductModal';
 import * as XLSX from 'xlsx';
 
@@ -85,6 +85,7 @@ const Products = () => {
           const price = parseFloat(row.price || row.Price || 0);
           const compareAtPrice = parseFloat(row.compareAtPrice || row['Compare At Price'] || 0);
           const moq = parseInt(row.minOrderQuantity || row['Min Order Quantity'] || row.moq || row.MOQ || 0);
+          const gst = parseFloat(row.gst_percentage || row['GST Percentage'] || row.gst || row.GST || row['GST %'] || 0);
 
           return {
             title: row.title || row.Title || row.name || row.Name || 'Unnamed Product',
@@ -111,7 +112,8 @@ const Products = () => {
               keywords: (row.seoKeywords || row['SEO Keywords'] || '').toString().split(',').map(k => k.trim()).filter(Boolean)
             },
             minOrderQuantity: isNaN(moq) ? 0 : moq,
-            status: (row.status || row.Status || 'active').toString().toLowerCase()
+            status: (row.status || row.Status || 'active').toString().toLowerCase(),
+            gst_percentage: isNaN(gst) ? 0 : gst
           };
         });
 
@@ -170,14 +172,14 @@ const Products = () => {
           <span className="hidden sm:inline">Add Product</span>
           <span className="sm:hidden">Add</span>
         </button>
-        <input type="file" accept=".xlsx,.xls" id="excelUpload" style={{ display: 'none' }} onChange={handleExcelUpload} />
+        {/* <input type="file" accept=".xlsx,.xls" id="excelUpload" style={{ display: 'none' }} onChange={handleExcelUpload} />
         <label htmlFor="excelUpload" className="bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer">
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
           <span className="hidden sm:inline">Upload Excel</span>
           <span className="sm:hidden">Upload</span>
-        </label>  
+        </label>   */}
       </div>
 
       <div className="bg-white rounded-lg shadow border border-gray-200 p-4 space-y-4">
