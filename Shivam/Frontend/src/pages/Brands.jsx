@@ -76,8 +76,8 @@ const Brands = () => {
             </div>
           ) : brands.length > 0 ? (
             (() => {
-              // Find Trana brand or use first brand
-              const tranBrand = brands.find(b => b.name?.toLowerCase().includes('trana')) || brands[0];
+              // Find Traan brand or use first brand
+              const tranBrand = brands.find(b => b.name?.toLowerCase().includes('traan')) || brands[0];
               const brandImage = '/Traan.png';
               
               return (
@@ -98,7 +98,7 @@ const Brands = () => {
                           </span>
                         </div>
                         <h3 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
-                          {tranBrand.name || 'Trana'}
+                          {tranBrand.name || 'Traan'}
                         </h3>
                         <p className="text-white text-lg md:text-xl">
                           सुरक्षा, हमारी प्राथमिकता
@@ -113,7 +113,7 @@ const Brands = () => {
                       </h3>
                       
                       <p className="text-gray-700 mb-4 leading-relaxed">
-                        {tranBrand.name || 'Trana'} is our flagship brand dedicated to manufacturing premium safety garments for industrial and workplace protection. With a focus on high-visibility clothing, {tranBrand.name || 'Trana'} ensures that workers remain safe and visible in hazardous environments.
+                        {tranBrand.name || 'Traan'} is our flagship brand dedicated to manufacturing premium safety garments for industrial and workplace protection. With a focus on high-visibility clothing, {tranBrand.name || 'Traan'} ensures that workers remain safe and visible in hazardous environments.
                       </p>
                       
                       <p className="text-gray-700 mb-6 leading-relaxed">
@@ -141,10 +141,10 @@ const Brands = () => {
                       {/* Call-to-Action Buttons */}
                       <div className="flex flex-col sm:flex-row gap-4">
                         <Link
-                          to="/trana"
+                          to="/traan"
                           className="inline-flex items-center justify-center bg-[#f54a00] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e04400] transition-colors"
                         >
-                          Explore {tranBrand.name || 'Trana'} Products
+                          Explore {tranBrand.name || 'Traan'} Products
                           <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
@@ -386,7 +386,7 @@ const Brands = () => {
                 Get in Touch
               </Link>
               <Link
-                to="/trana"
+                to="/traan"
                 className="bg-slate-900 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-slate-800 transition-colors"
               >
                 Explore Traan Products

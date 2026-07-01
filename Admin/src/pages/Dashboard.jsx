@@ -567,7 +567,7 @@ const Dashboard = () => {
               Shivam Website
             </button>
             <button className="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-              Trana Website
+              Traan Website
             </button>
           </div>
         </div>

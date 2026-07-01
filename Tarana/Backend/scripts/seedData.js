@@ -40,7 +40,7 @@ const seedData = async () => {
       email: 'admin@trana.com',
       password: hashedPassword,
       phone: '+91 98765 43210',
-      company: 'Trana Safety',
+      company: 'Traan Safety',
       address: 'Raipur, Chhattisgarh, India',
       role: 'admin'
     });

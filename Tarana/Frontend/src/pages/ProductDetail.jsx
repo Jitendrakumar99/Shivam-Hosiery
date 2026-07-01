@@ -675,7 +675,7 @@ const ProductDetail = () => {
 
                       {review.adminReply && review.adminReply.message && (
                         <div className="bg-gray-50 border-l-4 border-trana-primary p-4 mt-4">
-                          <p className="text-sm font-semibold mb-1">Response from Trana Safety:</p>
+                          <p className="text-sm font-semibold mb-1">Response from Traan Safety:</p>
                           <p className="text-sm text-gray-700">{review.adminReply.message}</p>
                         </div>
                       )}

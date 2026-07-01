@@ -61,7 +61,7 @@ const Home = () => {
                 Learn More
               </Link>
               <Link
-                to="/trana"
+                to="/traan"
                 className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold border-2 border-white hover:bg-gray-700 transition-colors text-center shadow-lg"
               >
                 Visit Traan Safety
@@ -162,7 +162,7 @@ const Home = () => {
             </div>
           ) : brands.length > 0 ? (
             (() => {
-              const featured = brands.find(b => (b.name || '').toLowerCase().includes('trana')) || brands[0];
+              const featured = brands.find(b => (b.name || '').toLowerCase().includes('traan')) || brands[0];
               const imageUrl = '/Traan.png';
               const categoryLabel = featured?.category || 'Safety Garments';
               const slogan = featured?.slogan || 'सुरक्षा, हमारी प्राथमिकता';
@@ -222,7 +222,7 @@ const Home = () => {
                       </div>
 
                       <div className="flex gap-4">
-                        <Link to="/trana" className="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                        <Link to="/traan" className="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
                           Explore Products
                           <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />

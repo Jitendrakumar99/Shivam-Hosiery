@@ -57,10 +57,10 @@ const Header = () => {
               Contact
             </Link>
             <Link 
-              to="/trana" 
+              to="/traan" 
               className="px-4 py-2 border border-white rounded hover:bg-white hover:text-blue-900 transition-colors"
             >
-              Visit Trana
+              Visit Traan
             </Link>
           </div>
 
@@ -131,11 +131,11 @@ const Header = () => {
               Contact
             </Link>
             <Link 
-              to="/trana" 
+              to="/traan" 
               onClick={() => setMobileMenuOpen(false)}
               className="block px-4 py-2 border border-white rounded hover:bg-white hover:text-blue-900 transition-colors"
             >
-              Visit Trana
+              Visit Traan
             </Link>
           </div>
         )}

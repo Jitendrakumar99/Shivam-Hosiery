@@ -67,7 +67,7 @@ const Login = () => {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Panel</h1>
-          <p className="text-gray-500">Shivam Hosiery & Trana Management</p>
+          <p className="text-gray-500">Shivam Hosiery & Traan Management</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,7 +112,7 @@ const Login = () => {
 
         <div className="mt-6 p-4 bg-gray-100 rounded-lg">
           <p className="text-sm font-medium text-gray-700 mb-2">Admin Login:</p>
-          <p className="text-sm text-gray-600">Use the same email and password as Trana website</p>
+          <p className="text-sm text-gray-600">Use the same email and password as Traan website</p>
           <p className="text-xs text-gray-500 mt-1">Only users with admin role can access this panel</p>
           <p className="text-xs text-gray-400 mt-2 italic">
             Make sure the backend server is running on http://localhost:3000
