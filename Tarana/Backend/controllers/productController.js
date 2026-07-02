@@ -409,19 +409,6 @@ exports.updateProduct = async (req, res, next) => {
 
     const previousTotal = getTotalStock(existingProduct);
 
-    const { gst_percentage } = productData;
-
-    // Validate GST percentage if provided
-    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
-      return res.status(400).json({
-        success: false,
-        message: 'GST percentage must be a non-negative number.'
-      });
-    }
-
-    // Capture previous total stock for low stock notification
-    const previousTotal = getTotalStock(existingProduct);
-
     // If images were uploaded and processed by middleware
     if (req.body.images && req.body.images.length > 0) {
       console.log('Adding uploaded images to product data:', req.body.images);
