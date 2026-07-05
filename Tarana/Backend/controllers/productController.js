@@ -416,10 +416,12 @@ exports.updateProduct = async (req, res, next) => {
       productData.images = [...(productData.images || []), ...req.body.images];
     }
 
-    const product = await Product.findByIdAndUpdate(req.params.id, productData, {
-      new: true,
-      runValidators: true
+    // Update fields on existing document to ensure 'save' hook runs
+    Object.keys(productData).forEach(key => {
+      existingProduct[key] = productData[key];
     });
+
+    const product = await existingProduct.save();
     console.log('Product updated successfully:', product._id);
 
     clearCache('/api/products');
