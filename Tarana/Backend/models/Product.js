@@ -212,7 +212,6 @@ productSchema.pre('save', function (next) {
 // Index for search
 productSchema.index({ title: 'text', description: 'text', shortDescription: 'text' });
 productSchema.index({ 'category.name': 1, status: 1 });
-productSchema.index({ handle: 1 });
 productSchema.index({ 'rating.average': -1 });
 
 module.exports = mongoose.model('Product', productSchema);
