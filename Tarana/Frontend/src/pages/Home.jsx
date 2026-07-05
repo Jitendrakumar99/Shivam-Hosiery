@@ -154,9 +154,6 @@ const Home = () => {
     }
   };
 
-  // Default fallback image for categories without images
-  const defaultCategoryImage = 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop';
-
   return (
     <div className="home-page bg-page-bg">
       {/* Hero Section */}
@@ -295,11 +292,11 @@ const Home = () => {
                             <div className="category-image-container">
                               <div className="category-image-wrapper">
                                 <img
-                                  src={category.image || defaultCategoryImage}
+                                  src={category.image}
                                   alt={category.name}
                                   className="category-image"
                                   onError={(e) => {
-                                    e.target.src = defaultCategoryImage;
+                                    e.target.outerHTML = "Image not available"
                                   }}
                                 />
                                 <div className="category-image-overlay"></div>
