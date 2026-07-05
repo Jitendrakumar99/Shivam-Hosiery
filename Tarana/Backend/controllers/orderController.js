@@ -5,6 +5,7 @@ const DeliveryZone = require('../models/DeliveryZone');
 const mongoose = require('mongoose');
 const { clearCache } = require('../middlewares/cache');
 const { generateInvoicePdf } = require('../services/invoiceService');
+const { findVariant } = require('../utils/inventory');
 
 // Helper function to reduce stock when order is placed
 const reduceInventory = async (items) => {
@@ -550,24 +551,41 @@ exports.getOrderInvoice = async (req, res, next) => {
         gstin: "URP (Unregistered Person)", 
         stateCode: "22" 
       },
-      items: order.items.map(item => ({
-        description: item.product?.title || 'Product',
-        hsn: item.product?.hsn || '39219099',
-        quantity: `${item.quantity}.000`,
-        rate: item.price.toFixed(2),
-        unit: 'PCS',
-        amount: (item.price * item.quantity).toFixed(2),
-        subDetails: item.variantSKU ? [`SKU: ${item.variantSKU}`] : []
-      })),
+      items: order.items.map(item => {
+        const taxableAmountSingle = item.price - (item.gst || 0);
+        return {
+          description: item.product?.title || 'Product',
+          hsn: item.product?.hsn || '39219099',
+          quantity: `${item.quantity}.000`,
+          rate: taxableAmountSingle.toFixed(2),
+          unit: 'PCS',
+          amount: (taxableAmountSingle * item.quantity).toFixed(2),
+          subDetails: item.variantSKU ? [`SKU: ${item.variantSKU}`] : [],
+          gstRate: item.product?.gst_percentage || 18,
+          gstAmount: (item.gst * item.quantity).toFixed(2)
+        };
+      }),
       taxDetails: {
-        breakdown: [
-          { 
-            hsn: "39219099", 
-            taxableValue: order.totalAmount.toFixed(2), 
-            rate: "18%", 
-            amount: (order.totalAmount * 0.18).toFixed(2) 
+        breakdown: order.items.reduce((acc, item) => {
+          const hsn = item.product?.hsn || '39219099';
+          const taxableValue = (item.price - (item.gst || 0)) * item.quantity;
+          const gstAmount = (item.gst || 0) * item.quantity;
+          const rate = item.product?.gst_percentage || 18;
+          
+          const existing = acc.find(row => row.hsn === hsn && row.rate === `${rate}%`);
+          if (existing) {
+            existing.taxableValue = (parseFloat(existing.taxableValue) + taxableValue).toFixed(2);
+            existing.amount = (parseFloat(existing.amount) + gstAmount).toFixed(2);
+          } else {
+            acc.push({
+              hsn,
+              taxableValue: taxableValue.toFixed(2),
+              rate: `${rate}%`,
+              amount: gstAmount.toFixed(2)
+            });
           }
-        ]
+          return acc;
+        }, [])
       },
       bankDetails: {
         name: "HDFC - O/D A/C",
@@ -575,9 +593,7 @@ exports.getOrderInvoice = async (req, res, next) => {
         ifsc: "P/34, INDIA EXCHANGE PLACE, KOLKATA-1 & HDFC0001242"
       },
       totalQty: order.items.reduce((acc, item) => acc + item.quantity, 0) + '.000',
-      // The generateInvoicePdf will use numberToWords if we pass it, 
-      // or we can calculate it here.
-      amountInWords: "", // Service handles this or we can add it
+      amountInWords: "",
       qrUrl: `https://shivamhosiery.com/verify/${order._id}`
     };
 

@@ -307,26 +307,18 @@ exports.getProduct = async (req, res, next) => {
 // @access  Private/Admin
 exports.createProduct = async (req, res, next) => {
   try {
-    console.log('Create Product Request Received');
-    console.log('req.body:', JSON.stringify(req.body, null, 2));
-    
     let productData = req.body;
 
     // If data is sent as a string (common with FormData), parse it
     if (typeof req.body.data === 'string') {
-      console.log('Parsing product data from req.body.data');
       productData = JSON.parse(req.body.data);
     }
-
-    // If images were uploaded and processed by middleware
     if (req.body.images && req.body.images.length > 0) {
-      console.log('Adding uploaded images to product data:', req.body.images);
       // Merge with existing images if any (e.g. from a copied product or URL)
       productData.images = [...(productData.images || []), ...req.body.images];
     }
 
     const product = await Product.create(productData);
-    console.log('Product created successfully:', product._id);
 
     await product.save();
     clearCache('/api/products');
@@ -379,13 +371,10 @@ exports.createProductsBulk = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateProduct = async (req, res, next) => {
   try {
-    console.log('Update Product Request Received for ID:', req.params.id);
-    
     let productData = req.body;
 
     // If data is sent as a string (common with FormData), parse it
     if (typeof req.body.data === 'string') {
-      console.log('Parsing product data from req.body.data');
       productData = JSON.parse(req.body.data);
     }
 
@@ -411,16 +400,16 @@ exports.updateProduct = async (req, res, next) => {
 
     // If images were uploaded and processed by middleware
     if (req.body.images && req.body.images.length > 0) {
-      console.log('Adding uploaded images to product data:', req.body.images);
       // Merge with existing images (the ones user kept in the form)
       productData.images = [...(productData.images || []), ...req.body.images];
     }
 
-    const product = await Product.findByIdAndUpdate(req.params.id, productData, {
-      new: true,
-      runValidators: true
+    // Update fields on existing document to ensure 'save' hook runs
+    Object.keys(productData).forEach(key => {
+      existingProduct[key] = productData[key];
     });
-    console.log('Product updated successfully:', product._id);
+
+    const product = await existingProduct.save();
 
     clearCache('/api/products');
 

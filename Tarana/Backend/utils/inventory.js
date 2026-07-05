@@ -17,8 +17,12 @@ const findVariant = (product, size, color) => {
 };
 
 const sanitizeVariantForPublic = (variant) => {
-  const { inventory, quantity, ...rest } = variant.toObject?.() ?? variant;
-  return rest;
+  const doc = variant.toObject?.() ?? variant;
+  const { inventory, quantity, ...rest } = doc;
+  return {
+    ...rest,
+    inStock: (inventory?.quantity ?? quantity ?? 0) > 0
+  };
 };
 
 const sanitizeProductForPublic = (product) => {
@@ -30,7 +34,12 @@ const sanitizeProductForPublic = (product) => {
     doc.variants = doc.variants.map(sanitizeVariantForPublic);
   }
 
-  delete doc.availability;
+  // Keep availability but sanitize it to only show inStock boolean
+  if (doc.availability) {
+    doc.availability = {
+      inStock: doc.availability.inStock
+    };
+  }
 
   return doc;
 };
