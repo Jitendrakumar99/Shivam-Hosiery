@@ -23,9 +23,37 @@ api.interceptors.request.use(
   }
 );
 
+const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+
+const normalizeUrls = (obj) => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') {
+    if (obj.startsWith('/uploads/')) {
+      return `${baseUrl}${obj}`;
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(normalizeUrls);
+  }
+  if (typeof obj === 'object') {
+    const newObj = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newObj[key] = normalizeUrls(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+};
+
 // Response interceptor - Handle errors and token refresh
 api.interceptors.response.use(
   (response) => {
+    if (response.data) {
+      response.data = normalizeUrls(response.data);
+    }
     return response;
   },
   async (error) => {

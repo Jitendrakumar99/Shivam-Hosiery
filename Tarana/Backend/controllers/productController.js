@@ -381,6 +381,24 @@ exports.updateProduct = async (req, res, next) => {
   try {
     console.log('Update Product Request Received for ID:', req.params.id);
     
+    let productData = req.body;
+
+    // If data is sent as a string (common with FormData), parse it
+    if (typeof req.body.data === 'string') {
+      console.log('Parsing product data from req.body.data');
+      productData = JSON.parse(req.body.data);
+    }
+
+    const gst_percentage = productData.gst_percentage;
+
+    // Validate GST percentage if provided
+    if (gst_percentage !== undefined && (gst_percentage < 0 || isNaN(gst_percentage))) {
+      return res.status(400).json({
+        success: false,
+        message: 'GST percentage must be a non-negative number.'
+      });
+    }
+
     const existingProduct = await Product.findById(req.params.id);
     if (!existingProduct) {
       return res.status(404).json({
@@ -389,13 +407,7 @@ exports.updateProduct = async (req, res, next) => {
       });
     }
 
-    let productData = req.body;
-
-    // If data is sent as a string (common with FormData), parse it
-    if (typeof req.body.data === 'string') {
-      console.log('Parsing product data from req.body.data');
-      productData = JSON.parse(req.body.data);
-    }
+    const previousTotal = getTotalStock(existingProduct);
 
     const { gst_percentage } = productData;
 
