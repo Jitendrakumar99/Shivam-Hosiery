@@ -16,12 +16,14 @@ export const clientService = {
 
   // Create client
   createClient: async (clientData) => {
+    // clientData can be FormData or Object
     const response = await api.post('/clients', clientData);
     return response.data;
   },
 
   // Update client
   updateClient: async (id, clientData) => {
+    // clientData can be FormData or Object
     const response = await api.put(`/clients/${id}`, clientData);
     return response.data;
   },

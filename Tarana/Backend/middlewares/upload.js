@@ -4,10 +4,14 @@ const path = require('path');
 const fs = require('fs');
 
 // Use absolute path for upload directory
-const uploadDir = path.join(__dirname, '..', 'uploads', 'products');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const productUploadDir = path.join(__dirname, '..', 'uploads', 'products');
+const clientUploadDir = path.join(__dirname, '..', 'uploads', 'clients');
+
+[productUploadDir, clientUploadDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 // Multer storage in memory
 const storage = multer.memoryStorage();
@@ -70,7 +74,43 @@ const processImages = async (req, res, next) => {
   }
 };
 
+// Middleware to process single client logo
+const processClientLogo = async (req, res, next) => {
+  if (!req.file) {
+    console.log('No logo file to process');
+    return next();
+  }
+
+  try {
+    const filename = `client-${Date.now()}.webp`;
+    const filepath = path.join(clientUploadDir, filename);
+
+    console.log(`Optimizing client logo: ${req.file.originalname} -> ${filename}`);
+
+    // Process with Sharp
+    await sharp(req.file.buffer)
+      .resize(400, 400, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .toFormat('webp')
+      .webp({ quality: 80 })
+      .toFile(filepath);
+
+    // Set the path in req.body.logo (relative to server root)
+    req.body.logo = `/uploads/clients/${filename}`;
+    
+    console.log('Client logo processing completed successfully');
+    next();
+  } catch (error) {
+    console.error('Error processing client logo:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   uploadProducts: upload.array('images', 5), // Up to 5 images
+  uploadClientLogo: upload.single('logo'),
   processImages,
+  processClientLogo,
 };
