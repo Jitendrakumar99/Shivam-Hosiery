@@ -62,6 +62,8 @@ const Clients = () => {
     setSelectedClient(null);
   };
 
+  const IMAGE_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -123,9 +125,13 @@ const Clients = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {pageClients.map((client) => (
           <div key={client._id || client.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-            <div className="h-40 sm:h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="h-40 sm:h-48 bg-gray-100 flex items-center justify-center overflow-hidden p-4">
               {client.logo ? (
-                <img src={client.logo} alt={client.name} className="w-full h-full max-w-full max-h-full object-contain object-center" />
+                <img 
+                  src={client.logo.startsWith('/') ? `${IMAGE_BASE_URL}${client.logo}` : client.logo} 
+                  alt={client.name} 
+                  className="w-full h-full max-w-full max-h-full object-contain object-center" 
+                />
               ) : (
                 <svg className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />

@@ -1,5 +1,22 @@
 const Client = require('../models/Client');
 const { paginate } = require('../middlewares/pagination');
+const fs = require('fs');
+const path = require('path');
+
+// Helper to delete logo file
+const deleteLogoFile = (logoPath) => {
+  if (logoPath && logoPath.startsWith('/uploads/')) {
+    const fullPath = path.join(__dirname, '..', logoPath);
+    if (fs.existsSync(fullPath)) {
+      try {
+        fs.unlinkSync(fullPath);
+        console.log(`Deleted logo file: ${fullPath}`);
+      } catch (err) {
+        console.error(`Error deleting logo file: ${err.message}`);
+      }
+    }
+  }
+};
 
 // @desc    Get all clients
 // @route   GET /api/clients
@@ -87,6 +104,14 @@ exports.updateClient = async (req, res, next) => {
       });
     }
 
+    // Handle logo replacement or removal
+    if (client.logo && req.body.logo !== client.logo) {
+      // If req.body.logo is provided (even if empty string) and it's different from old one
+      if (req.body.logo !== undefined) {
+        deleteLogoFile(client.logo);
+      }
+    }
+
     client = await Client.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -117,6 +142,11 @@ exports.deleteClient = async (req, res, next) => {
         success: false,
         message: 'Client not found'
       });
+    }
+
+    // Delete logo file if exists
+    if (client.logo) {
+      deleteLogoFile(client.logo);
     }
 
     await client.deleteOne();

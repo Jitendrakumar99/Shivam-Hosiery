@@ -292,7 +292,7 @@ const Brands = () => {
                         <div className="absolute inset-0 overflow-hidden rounded-lg">
                           {client.logo ? (
                             <img
-                              src={client.logo}
+                              src={client.logo.startsWith('/') ? `${(import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '')}${client.logo}` : client.logo}
                               alt={client.name}
                               className="w-full h-full object-contain rounded-lg"
                             />

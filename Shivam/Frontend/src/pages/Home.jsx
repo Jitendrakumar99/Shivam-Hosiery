@@ -289,6 +289,8 @@ const ClientMarquee = ({ items, speed = 60 }) => {
 
   const list = items || [];
 
+  const IMAGE_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+
   return (
     <div className="overflow-hidden w-full">
       <div ref={trackRef} className="flex items-center will-change-transform select-none">
@@ -299,7 +301,11 @@ const ClientMarquee = ({ items, speed = 60 }) => {
             title={client.name}
           >
             <a href={client.websiteUrl} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
-              <img src={client.logo} alt={client.name} className="h-full w-full object-contain" />
+              <img 
+                src={client.logo?.startsWith('/') ? `${IMAGE_BASE_URL}${client.logo}` : client.logo} 
+                alt={client.name} 
+                className="h-full w-full object-contain" 
+              />
             </a>
           </div>
         ))}
@@ -310,7 +316,11 @@ const ClientMarquee = ({ items, speed = 60 }) => {
             title={client.name}
           >
             <a href={client.websiteUrl} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
-              <img src={client.logo} alt={client.name} className="h-full w-full object-contain" />
+              <img 
+                src={client.logo?.startsWith('/') ? `${IMAGE_BASE_URL}${client.logo}` : client.logo} 
+                alt={client.name} 
+                className="h-full w-full object-contain" 
+              />
             </a>
           </div>
         ))}

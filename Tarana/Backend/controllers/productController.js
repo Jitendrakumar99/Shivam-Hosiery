@@ -109,7 +109,7 @@ exports.getProducts = async (req, res, next) => {
     const requestedLimit = parseInt(req.query.limit, 10);
     const maxLimit = isAdmin ? 500 : 100;
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = !isNaN(requestedLimit) && requestedLimit > 0 
+    const limit = !isNaN(requestedLimit) && requestedLimit > 0
       ? Math.min(requestedLimit, maxLimit)
       : (isAdmin ? 100 : 20);
     const startIndex = (page - 1) * limit;
@@ -183,14 +183,14 @@ exports.getProducts = async (req, res, next) => {
       },
       { $unwind: { path: '$parentDoc', preserveNullAndEmptyArrays: true } },
       // Allow products with no category or with active category
-      { 
-        $match: { 
+      {
+        $match: {
           $or: [
             { 'categoryDoc.status': 'active' },
             { 'categoryDoc': { $exists: false } },
             { 'categoryDoc': null }
           ]
-        } 
+        }
       },
     ];
 
