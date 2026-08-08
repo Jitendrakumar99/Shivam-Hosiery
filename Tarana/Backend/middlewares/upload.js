@@ -47,7 +47,7 @@ const processImages = async (req, res, next) => {
     await Promise.all(
       req.files.map(async (file, i) => {
         const filename = `product-${Date.now()}-${i}.webp`;
-        const filepath = path.join(uploadDir, filename);
+        const filepath = path.join(productUploadDir, filename);
 
         console.log(`Optimizing image: ${file.originalname} -> ${filename}`);
 
