@@ -3,15 +3,20 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
-// Use absolute path for upload directory
-const productUploadDir = path.join(__dirname, '..', 'uploads', 'products');
-const clientUploadDir = path.join(__dirname, '..', 'uploads', 'clients');
+// Use absolute path for upload directory (use /tmp on Vercel because root filesystem is read-only)
+const baseUploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, '..', 'uploads');
+const productUploadDir = path.join(baseUploadDir, 'products');
+const clientUploadDir = path.join(baseUploadDir, 'clients');
 
-[productUploadDir, clientUploadDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+const ensureDirsExist = () => {
+  [productUploadDir, clientUploadDir].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
+};
+
+ensureDirsExist();
 
 // Multer storage in memory
 const storage = multer.memoryStorage();
@@ -44,6 +49,7 @@ const processImages = async (req, res, next) => {
   req.body.images = [];
 
   try {
+    ensureDirsExist();
     await Promise.all(
       req.files.map(async (file, i) => {
         const filename = `product-${Date.now()}-${i}.webp`;
@@ -82,6 +88,7 @@ const processClientLogo = async (req, res, next) => {
   }
 
   try {
+    ensureDirsExist();
     const filename = `client-${Date.now()}.webp`;
     const filepath = path.join(clientUploadDir, filename);
 
