@@ -6,6 +6,15 @@ exports.errorHandler = (err, req, res, next) => {
   // Log error
   console.error(err);
 
+  // Multer upload errors
+  if (err.name === 'MulterError' || err.code === 'LIMIT_FILE_SIZE') {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'File too large. Maximum size is 15MB.'
+        : err.message || 'File upload error';
+    error = { message, statusCode: 400 };
+  }
+
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
     if (err.path === '_id') {
@@ -27,6 +36,11 @@ exports.errorHandler = (err, req, res, next) => {
   if (err.name === 'ValidationError') {
     const message = Object.values(err.errors).map(val => val.message).join(', ');
     error = { message, statusCode: 400 };
+  }
+
+  // Non-image upload rejection from fileFilter
+  if (err.message && err.message.includes('Not an image')) {
+    error = { message: err.message, statusCode: 400 };
   }
 
   const statusCode = error.statusCode || err.statusCode || 500;

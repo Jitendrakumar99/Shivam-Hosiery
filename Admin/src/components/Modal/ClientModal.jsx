@@ -49,8 +49,8 @@ const ClientModal = ({ isOpen, onClose, client = null, mode = 'add', onSuccess }
         alert('Please upload an image file');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size should be less than 5MB');
+      if (file.size > 15 * 1024 * 1024) {
+        alert('File size should be less than 15MB');
         return;
       }
       setSelectedFile(file);
@@ -187,7 +187,7 @@ const ClientModal = ({ isOpen, onClose, client = null, mode = 'add', onSuccess }
             
             <div className="flex-1 text-xs text-gray-500">
               <p className="font-medium text-gray-700 mb-1">Upload company logo</p>
-              <p>Recommended: Square image, WebP or PNG format. Max size: 5MB.</p>
+              <p>Recommended: Square image, WebP or PNG format. Max size: 15MB.</p>
               {selectedFile && (
                 <p className="mt-1 text-[#1a1a2e] font-semibold flex items-center gap-1">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

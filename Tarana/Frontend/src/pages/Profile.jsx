@@ -84,6 +84,18 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Image must be 15MB or smaller');
+      e.target.value = '';
+      return;
+    }
+
     // Preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -97,11 +109,7 @@ const Profile = () => {
 
     try {
       setUploading(true);
-      const response = await api.post('/upload', formDataUpload, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/upload', formDataUpload);
       const data = response.data;
 
       if (data.success) {
