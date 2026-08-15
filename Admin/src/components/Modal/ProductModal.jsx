@@ -389,16 +389,33 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + formData.images.length > 5) {
+    const existingCount = formData.images.filter((img) => img && String(img).trim()).length;
+    const remainingSlots = 5 - existingCount - selectedFiles.length;
+
+    if (remainingSlots <= 0) {
       alert('You can only have up to 5 images per product.');
+      e.target.value = '';
       return;
     }
 
-    setSelectedFiles(prev => [...prev, ...files]);
+    const oversized = files.find((file) => file.size > 15 * 1024 * 1024);
+    if (oversized) {
+      alert(`"${oversized.name}" is larger than 15MB. Please choose a smaller image.`);
+      e.target.value = '';
+      return;
+    }
+
+    const accepted = files.slice(0, remainingSlots);
+    if (accepted.length < files.length) {
+      alert('You can only have up to 5 images per product. Extra files were ignored.');
+    }
+
+    setSelectedFiles((prev) => [...prev, ...accepted]);
 
     // Create previews
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setPreviews(prev => [...prev, ...newPreviews]);
+    const newPreviews = accepted.map((file) => URL.createObjectURL(file));
+    setPreviews((prev) => [...prev, ...newPreviews]);
+    e.target.value = '';
   };
 
   const removeSelectedFile = (index) => {
@@ -594,7 +611,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                 ))}
 
                 {/* Upload Button */}
-                {(formData.images.length + selectedFiles.length) < 5 && (
+                {(formData.images.filter((img) => img && String(img).trim()).length + selectedFiles.length) < 5 && (
                   <label className="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
                     <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -611,7 +628,7 @@ const ProductModal = ({ isOpen, onClose, product = null, mode = 'add', onSuccess
                 )}
               </div>
               <p className="text-[11px] text-gray-500">
-                * You can upload up to 5 images. Images will be converted to WebP and optimized for speed.
+                * You can upload up to 5 images (max 15MB each). Images will be converted to WebP and optimized for speed.
               </p>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { fetchStats } from '../store/slices/reportSlice';
 import InvoiceTemplate from './Invoice/InvoiceTemplate';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || API_URL.replace('/api', '/uploads');
+const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || API_URL.replace(/\/api\/?$/, '');
 //order page 
 const OrderCard = ({ order }) => {
     const dispatch = useDispatch();
@@ -216,8 +216,9 @@ const OrderCard = ({ order }) => {
                             }
 
                             if (imagePath && !imagePath.startsWith('http')) {
-                                if (imagePath.startsWith('/')) imagePath = imagePath.substring(1);
-                                imagePath = `${UPLOAD_URL.endsWith('/') ? UPLOAD_URL : UPLOAD_URL + '/'}${imagePath.replace(/\\/g, '/')}`;
+                                const normalized = imagePath.replace(/\\/g, '/');
+                                const withSlash = normalized.startsWith('/') ? normalized : `/${normalized}`;
+                                imagePath = `${UPLOAD_URL.replace(/\/$/, '')}${withSlash}`;
                             } else if (!imagePath) {
                                 imagePath = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f3f4f6" width="80" height="80"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="12" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
                             }

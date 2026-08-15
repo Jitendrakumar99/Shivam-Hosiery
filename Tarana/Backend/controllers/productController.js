@@ -268,29 +268,38 @@ exports.getProducts = async (req, res, next) => {
 exports.getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
+    const isAdmin = isAdminRequest(req);
 
-    if (!product || product.status !== 'active') {
+    if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
 
-    // Ensure product's category is active
-    if (product.category?.id) {
-      const cat = await Category.findById(product.category.id).select('status');
-      if (!cat || cat.status !== 'active') {
+    // Public users only see active products in active categories
+    if (!isAdmin) {
+      if (product.status !== 'active') {
         return res.status(404).json({
           success: false,
           message: 'Product not found'
         });
       }
-    } else {
-      // No category id -> hide product
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found'
-      });
+
+      if (product.category?.id) {
+        const cat = await Category.findById(product.category.id).select('status');
+        if (!cat || cat.status !== 'active') {
+          return res.status(404).json({
+            success: false,
+            message: 'Product not found'
+          });
+        }
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+      }
     }
 
     res.json({

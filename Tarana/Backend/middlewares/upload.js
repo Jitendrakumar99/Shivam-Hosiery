@@ -25,11 +25,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for original upload
+    fileSize: MAX_FILE_SIZE,
   },
 });
 
@@ -47,7 +49,7 @@ const processImages = async (req, res, next) => {
     await Promise.all(
       req.files.map(async (file, i) => {
         const filename = `product-${Date.now()}-${i}.webp`;
-        const filepath = path.join(uploadDir, filename);
+        const filepath = path.join(productUploadDir, filename);
 
         console.log(`Optimizing image: ${file.originalname} -> ${filename}`);
 

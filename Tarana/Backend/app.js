@@ -57,20 +57,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/test', testRoutes);
 
-// File upload configuration
-const uploadPath = process.env.VERCEL ? '/tmp/uploads' : 'uploads/';
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage: storage });
-
-// Ensure uploads directory exists
+// File upload configuration (use same absolute dir as static serving)
+const uploadPath = uploadDir;
 const fs = require('fs');
 if (!fs.existsSync(uploadPath)) {
   try {
@@ -80,18 +68,45 @@ if (!fs.existsSync(uploadPath)) {
   }
 }
 
+const MAX_UPLOAD_SIZE = 15 * 1024 * 1024; // 15MB
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: MAX_UPLOAD_SIZE },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+});
+
 // File upload route
-app.post("/api/upload", (req, res, next) => {
+app.post("/api/upload", (req, res) => {
   upload.single("file")(req, res, (err) => {
     if (err instanceof multer.MulterError) {
+      const message =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? 'File too large. Maximum size is 15MB.'
+          : `Upload error: ${err.message}`;
       return res.status(400).json({
         success: false,
-        message: `Multer upload error: ${err.message}`
+        message,
       });
     } else if (err) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
-        message: `Unknown upload error: ${err.message}`
+        message: err.message || 'Upload failed',
       });
     }
 
