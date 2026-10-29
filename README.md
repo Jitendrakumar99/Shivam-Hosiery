@@ -1,299 +1,836 @@
-# Shivam Hosiery Monorepo
+# 🛡️ Shivam Hosiery - E-Commerce Platform
 
-Comprehensive documentation for the Shivam Hosiery monorepo, containing the Tarana backend API, storefront frontend, and an Admin frontend. This document consolidates architecture, environments, setup, runtime, APIs, data models, and conventions used across the project.
+> A comprehensive monorepo containing a complete e-commerce platform for safety apparel (vests, jackets, coveralls) with customer storefront, admin dashboard, and corporate website.
 
-- Repo root: g:/New_HC/Shivam-Hosiery
-- Subprojects:
-  - Tarana/Backend — Node.js/Express REST API with MongoDB (Mongoose)
-  - Tarana/Frontend — React + Vite storefront (Redux Toolkit)
-  - Admin — React + Vite admin dashboard (Redux Toolkit)
-  - Shivam/Frontend — React + Vite site (lightweight)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green)](https://www.mongodb.com/)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-Latest-purple)](https://vitejs.dev/)
 
-# Architecture Overview
+---
 
-- Backend (Tarana/Backend)
-  - Express app entry at app.js
-  - MongoDB via Mongoose; connection in config/database.js
-  - REST resources: Auth, Products, Orders, Wishlist, Notifications, Contact, Customizations, Admin, Brands, Clients, Delivery Zones, File Uploads
-  - Controllers implement business logic; Routes apply middlewares (auth, pagination, caching)
-  - Caching via node-cache (middlewares/cache)
-  - Pagination via middlewares/pagination
-  - JWT Authentication (middlewares/auth, utils/generateToken.js)
-  - Multer-based file uploads served from /uploads
+## 📋 Table of Contents
 
-- Frontends (React + Vite)
-  - Admin: Admin dashboard using React 19, Redux Toolkit, React Router
-  - Tarana Frontend: Storefront app using React 19, Redux Toolkit, Tailwind CSS
-  - Shared: Axios with interceptors, JWT in localStorage, protected routes
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Project Structure](#project-structure)
+- [Architecture](#architecture)
+- [Database Schema](#database-schema)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Running the Applications](#running-the-applications)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
-# Repository Structure
+---
 
-- Admin/
-  - package.json, src/
-  - src/services/api.js (Axios base, interceptors)
-  - src/store/store.js (Redux slices wiring)
-- Tarana/
-  - Backend/
-    - app.js (server setup and routes)
-    - config/database.js (Mongoose connection)
-    - routes/*.js (resource routing)
-    - controllers/*.js (business logic)
-    - models/*.js (Mongoose schemas)
-    - middlewares/*.js (auth, cache, pagination, error handler)
-    - utils/generateToken.js
-    - scripts/seedData.js
-  - Frontend/
-    - package.json, vite.config.js, tailwind config, src/
-- Shivam/
-  - Frontend/
-    - package.json, vite.config.js, src/
+## 🎯 Overview
 
-# Environments & Configuration
+**Shivam Hosiery** is a full-stack e-commerce solution designed specifically for safety apparel businesses. The platform enables:
 
-- Global Requirements
-  - Node.js LTS (18+ recommended)
-  - MongoDB (local or remote)
+- **Customers**: Browse products, manage carts, place orders, track shipments, and review products
+- **Administrators**: Manage inventory, process orders, handle customer relations, and view analytics
+- **Site Visitors**: Access corporate information via the Shivam Frontend
 
-- Tarana/Backend .env
-  - PORT=3000
-  - NODE_ENV=development
-  - MONGO_URI=mongodb://localhost:27017/trana-safety
-  - JWT_SECRET=your-secret-key
-  - JWT_EXPIRE=30d
-  - EMAIL=your-email@gmail.com
-  - EMAIL_PASSWORD=your-app-password
+### Technology Stack
 
-- Frontend .env (Admin, Tarana/Frontend, Shivam/Frontend)
-  - VITE_API_URL=http://localhost:3000/api
+| Layer | Technology |
+|-------|-----------|
+| **Backend API** | Node.js + Express + MongoDB |
+| **Admin Dashboard** | React 19 + Vite + Redux Toolkit |
+| **Customer Storefront** | React 19 + Vite + Redux Toolkit + Tailwind CSS |
+| **Corporate Website** | React 19 + Vite + Tailwind v4 |
+| **Deployment** | Vercel (frontends), Self-hosted (backend) |
 
-# Install & Run
+---
 
-- Tarana Backend
-  - cd Tarana/Backend
-  - npm install
-  - npm run dev (development, nodemon)
-  - npm start (production)
+## ✨ Key Features
 
-- Tarana Frontend (Storefront)
-  - cd Tarana/Frontend
-  - npm install
-  - npm run dev (default Vite port)
+### 🛍️ Customer Storefront (Tarana/Frontend)
+- ✅ Product browsing with category filtering and search
+- ✅ Shopping cart with persistent state
+- ✅ Secure checkout with delivery zone-based shipping
+- ✅ User authentication (register/login)
+- ✅ Order history and real-time tracking
+- ✅ Wishlist management
+- ✅ Product reviews and ratings
+- ✅ Push notifications for order updates
+- ✅ Custom product request system
 
-- Admin Frontend
-  - cd Admin
-  - npm install
-  - npm run dev
+### 🎛️ Admin Dashboard (Admin/)
+- ✅ Complete product catalog management (CRUD)
+- ✅ Order processing and status management
+- ✅ Customer relationship management
+- ✅ Delivery zone configuration
+- ✅ Brand and client portfolio management
+- ✅ Invoice generation and payment tracking
+- ✅ Reports and analytics
+- ✅ Admin user management
 
-- Shivam Frontend
-  - cd Shivam/Frontend
-  - npm install
-  - npm run dev
+### 🏢 Corporate Website (Shivam/Frontend)
+- ✅ Company information and branding
+- ✅ Portfolio showcase
+- ✅ Responsive design across all devices
 
-# Backend Services
+---
 
-- Server entry: app.js
-  - Loads env via dotenv
-  - Connects Mongo via connectDB()
-  - Parses JSON and urlencoded bodies
-  - Sets CORS
-  - Serves static /uploads
-  - Registers routes under /api/*
-  - File upload endpoint POST /api/upload (multer)
-  - Health check GET /
-  - Centralized error handler
+## 📁 Project Structure
 
-- Middlewares
-  - middlewares/auth.js — protect (JWT), authorize(role)
-  - middlewares/pagination.js — injects pagination (page, limit) to req.pagination
-  - middlewares/cache.js — node-cache with cache(ttlSec), clearCache(key)
-  - middlewares/errorHandler.js — uniform error responses
+```
+Shivam-Hosiery/
+├── Admin/                              # Admin Dashboard (React + Vite)
+│   ├── src/
+│   │   ├── components/                # UI components & modals
+│   │   ├── pages/                     # Page components
+│   │   ├── services/                  # API service layer
+│   │   ├── store/                     # Redux slices
+│   │   └── main.jsx                   # Entry point
+│   ├── package.json
+│   ├── vite.config.js
+│   └── vercel.json
+│
+├── Tarana/                             # Main product directory
+│   ├── Backend/                        # Node.js/Express API
+│   │   ├── app.js                     # Express server setup
+│   │   ├── config/
+│   │   │   └── database.js            # MongoDB connection
+│   │   ├── models/                    # Mongoose schemas
+│   │   ├── controllers/               # Business logic
+│   │   ├── routes/                    # API endpoints
+│   │   ├── middlewares/               # Auth, cache, error handling
+│   │   ├── services/                  # Helper services
+│   │   ├── utils/                     # Utility functions
+│   │   ├── uploads/                   # File storage
+│   │   └── package.json
+│   │
+│   └── Frontend/                       # Customer Storefront (React + Vite)
+│       ├── src/
+│       │   ├── components/            # Reusable components
+│       │   ├── pages/                 # Page components
+│       │   ├── services/              # API service layer
+│       │   ├── store/                 # Redux slices
+│       │   └── main.jsx               # Entry point
+│       ├── package.json
+│       ├── vite.config.js
+│       └── vercel.json
+│
+├── Shivam/                             # Corporate website
+│   └── Frontend/                       # React + Vite
+│       ├── src/
+│       ├── package.json
+│       └── vite.config.js
+│
+└── README.md                           # This file
+```
 
-# Data Models (Mongoose)
+---
 
-- Product (models/Product.js)
-  - name, category ['Safety Vests','Safety Jackets','Coveralls'], description, features[], price, stock, images[], status ['active','inactive'], specifications(Map)
-  - Indexes: text(name, description), category+status
+## 🏗️ Architecture
 
-- Order (models/Order.js)
-  - user(ref User), items[{product(ref Product), quantity, price, customization(Map)}], totalAmount, status ['pending','processing','shipped','delivered','cancelled'], shippingAddress{name,phone,address,city,state,pincode}, trackingNumber, deliveryAgent, shippingCost, deliveryZone(ref DeliveryZone), paymentStatus ['pending','paid','failed'], paymentMethod
-  - Indexes: user+createdAt, status
+### System Overview
 
-- Brand (models/Brand.js)
-  - name(unique), category, slogan, description, image, websiteUrl, status
-  - Indexes: text(name, description), status
+The platform follows a **client-server architecture** with multiple frontend applications consuming a shared backend API.
 
-- Client (models/Client.js)
-  - name, category, logo, websiteUrl, status
-  - Indexes: text(name), status+category
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Clients (Browsers)                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────┐ │
+│  │ Storefront       │  │ Admin Dashboard  │  │  Corporate │ │
+│  │ (Tarana/Frontend)│  │ (Admin/)         │  │  (Shivam/) │ │
+│  └──────────────────┘  └──────────────────┘  └────────────┘ │
+│  (React 19 + Vite)     (React 19 + Vite)  (React 19 + Vite)  │
+│  (Redux Toolkit)       (Redux Toolkit)                        │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+                        JWT Authentication
+                        (Axios Interceptors)
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    Backend API (Express)                     │
+│                    (Tarana/Backend)                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─────────────────┐  ┌──────────────┐  ┌────────────────┐ │
+│  │ REST Routes     │  │ Controllers  │  │  Middlewares   │ │
+│  │ • Auth          │  │ • Auth       │  │  • JWT Auth    │ │
+│  │ • Products      │  │ • Products   │  │  • Caching     │ │
+│  │ • Orders        │  │ • Orders     │  │  • Pagination  │ │
+│  │ • Users         │  │ • Users      │  │  • Error       │ │
+│  │ • Wishlist      │  │ • Wishlist   │  │    Handler     │ │
+│  │ • Notifications │  │ • Reviews    │  │  • Multer      │ │
+│  │ • Admin         │  │ • Brands     │  │    Upload      │ │
+│  │ • Brands        │  │ • Clients    │  │                │ │
+│  │ • Delivery      │  │ • Delivery   │  │                │ │
+│  │   Zones         │  │   Zones      │  │                │ │
+│  │ • File Upload   │  │ • Notif      │  │                │ │
+│  └─────────────────┘  └──────────────┘  └────────────────┘ │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │           Services & Utils                           │  │
+│  │  • Invoice Generation                               │  │
+│  │  • Email Notifications                              │  │
+│  │  • Image Generation (Stability AI)                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+                              ↕
+                    Node-Cache (in-memory)
+                              ↕
+┌─────────────────────────────────────────────────────────────┐
+│                     MongoDB Database                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌────────────┐  │
+│  │  Users   │ │ Products │ │ Orders     │ │ Wishlist   │  │
+│  │  Brands  │ │ Reviews  │ │ Notif      │ │ Contact    │  │
+│  │ Clients  │ │Delivery  │ │ Custom     │ │ Categories │  │
+│  │          │ │ Zones    │ │ Requests   │ │            │  │
+│  └──────────┘ └──────────┘ └────────────┘ └────────────┘  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-- Wishlist (models/Wishlist.js) — referenced by wishlistController.js
-  - user(ref User), items[{ product(ref Product) }]
+### Backend Components
 
-- DeliveryZone (models/DeliveryZone.js) — referenced by orderController.js
-  - status, pincodes[], deliveryCharge
+#### Express Server (`Tarana/Backend/app.js`)
+- **Configuration**: Environment variables via `dotenv`
+- **Database**: MongoDB connection via Mongoose
+- **Middleware Stack**:
+  - JSON/URL-encoded body parser
+  - CORS configuration
+  - Static file serving (`/uploads`)
+  - Error handling centralization
+- **Routes**: Registered under `/api/*` namespace
 
-- Notification (models/Notification.js) — referenced by orderController.js
-  - user(ref User), type, title, message, link, read
+#### Authentication & Authorization
+- **Type**: JWT (JSON Web Tokens)
+- **Location**: `Tarana/Backend/middlewares/auth.js`
+- **Flow**: 
+  - User registers/logs in → JWT token generated
+  - Token stored in client localStorage
+  - Axios interceptors automatically inject token in request headers
+  - Protected routes validate token and user role
+- **Roles**: `user` (customer), `admin` (administrator)
 
-- User (models/User.js) — referenced by auth routes
-  - JWT-based auth, roles: 'user','admin'
+#### Caching Layer
+- **Tool**: `node-cache`
+- **Implementation**: `Tarana/Backend/middlewares/cache.js`
+- **Strategy**:
+  - Read endpoints cached with TTL (e.g., 300 seconds)
+  - Mutations automatically clear related cache keys
+  - Example: Product list cached, creating/updating clears cache
 
-# API Surface (Selected)
+#### File Upload
+- **Tool**: Multer
+- **Location**: `Tarana/Backend/middlewares/upload.js`
+- **Endpoint**: `POST /api/upload`
+- **Storage**: `/uploads` directory with timestamp-based naming
 
-Base URL: http://localhost:3000/api
-Auth: Authorization: Bearer <token>
-Response format: { success: boolean, data?: any, message?: string, pagination?: {...} }
+#### Pagination
+- **Middleware**: `Tarana/Backend/middlewares/pagination.js`
+- **Default**: page=1, limit=10
+- **Response**: Includes total count and current page in metadata
 
-- Auth
-  - POST /auth/register
-  - POST /auth/login
-  - GET /auth/me
-  - PUT /auth/profile
+---
 
-- Products (routes/productRoutes.js; controller/productController.js)
-  - GET /products?category=&search=&status=&page=&limit=
-  - GET /products/:id
-  - POST /products (admin)
-  - PUT /products/:id (admin)
-  - DELETE /products/:id (admin)
+## 🗄️ Database Schema
 
-- Orders (routes/orderRoutes.js; controller/orderController.js)
-  - GET /orders?status=&page=&limit= (user sees own orders, admin sees all)
-  - GET /orders/:id (owner or admin)
-  - POST /orders
-    - Validates items[], shippingAddress (name, phone, address, pincode)
-    - Resolves DeliveryZone by pincode; computes shippingCost
-    - Decrements product stock; creates Notification
-  - PUT /orders/:id/status (admin)
-    - Adjusts stock on transitions to/from cancelled
-    - Optional: trackingNumber, deliveryAgent, paymentStatus
-  - PUT /orders/:id/cancel (owner)
-    - Blocks when shipped/delivered; restores stock
+### Models Overview
 
-- Wishlist (routes/wishlistRoutes.js; controller/wishlistController.js)
-  - All require auth
-  - GET /wishlist (auto-creates empty wishlist)
-  - POST /wishlist { productId }
-  - DELETE /wishlist/:productId
+| Model | Purpose | Key Fields |
+|-------|---------|-----------|
+| **User** | Authentication & profiles | email, password, role, address, phone |
+| **Product** | Catalog items | name, category, price, stock, images, specifications |
+| **Order** | Customer purchases | user, items, status, shippingAddress, trackingNumber |
+| **OrderItem** | Line items in orders | product, quantity, price, customization |
+| **Wishlist** | Saved products | user, items[] |
+| **Review** | Product ratings | product, user, rating, comment |
+| **Brand** | Brand portfolio | name, logo, category, description |
+| **Client** | Client portfolio | name, logo, websiteUrl |
+| **DeliveryZone** | Shipping areas | pincodes[], deliveryCharge, status |
+| **Notification** | User alerts | user, type, title, message, read |
+| **Contact** | Contact form submissions | name, email, message, status |
+| **Customization** | Custom requests | user, description, status |
+| **Category** | Product categories | name, description |
 
-- Notifications
-  - GET /notifications (pagination)
-  - PUT /notifications/:id/read
-  - PUT /notifications/read-all
-  - DELETE /notifications/:id
+### Key Relationships
 
-- Contact
-  - POST /contact (public)
-  - GET /contact (admin)
-  - PUT /contact/:id/status (admin)
+```
+User (1) ──── (Many) Order
+User (1) ──── (Many) Wishlist
+User (1) ──── (Many) Review
+User (1) ──── (Many) Notification
+User (1) ──── (Many) Contact
 
-- Customizations
-  - POST /customizations
-  - GET /customizations
-  - GET /customizations/:id
-  - PUT /customizations/:id/status (admin)
+Product (1) ──── (Many) Order (via OrderItem)
+Product (1) ──── (Many) Review
+Product (1) ──── (Many) Wishlist
 
-- Brands, Clients, Delivery Zones
-  - CRUD endpoints; common patterns with pagination, caching where safe
+Order (1) ──── (Many) Notification
+Order (Many) ──── (1) DeliveryZone
 
-- File Upload
-  - POST /upload (field: file) → { file: { filename, path: /uploads/<file> } }
+Product (Many) ──── (1) Category
+Product (Many) ──── (1) Brand
+```
 
-# Query & Pagination
+### Indexes for Performance
 
-- Pagination params: page (default 1), limit (default 10)
-- Product filters: category, search, status (default active)
-- Order filters: status
-- Notification filters: type, read
+| Model | Indexes |
+|-------|---------|
+| Product | `{ name, description }` (text), `{ category, status }` (compound) |
+| Order | `{ user, createdAt }`, `{ status }` |
+| Brand | `{ name, description }` (text), `{ status }` |
+| Client | `{ name }` (text), `{ status, category }` |
 
-# Caching Strategy
+---
 
-- Read endpoints like GET /products and GET /products/:id cached (e.g., 300s)
-- Mutations clear relevant keys via clearCache()
-- Orders are not cached to avoid stale personal data
+## 🚀 Getting Started
 
-# Security Model
+### Prerequisites
 
-- JWT-based auth; Bearer token in Authorization header
-- Role-based authorization for admin-only actions
-- Sensitive mutations protected by middlewares/auth
-- Frontend stores token in localStorage; Axios interceptors inject token and redirect to /login on 401
+- **Node.js**: v18 or higher
+- **npm**: v9 or higher
+- **MongoDB**: Local instance or cloud URI (MongoDB Atlas)
+- **Git**: For version control
 
-# Frontend Conventions
+### Quick Setup
 
-- State Management: Redux Toolkit slices (Admin and Tarana Frontend)
-- API Layer: src/services/api.js (Axios instance, interceptors)
-- Routing: react-router-dom v7
-- Styling: Tailwind CSS (Tarana Frontend) and Tailwind v4 in Admin/Shivam
-- Notifications: react-hot-toast (Tarana Frontend)
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Jitendrakumar99/Shivam-Hosiery.git
+   cd Shivam-Hosiery
+   ```
 
-# Scripts
+2. **Verify structure**
+   ```bash
+   ls -la  # Should show Admin/, Tarana/, Shivam/, README.md
+   ```
 
-- Tarana/Backend/package.json
-  - start: node app.js
-  - dev: nodemon app.js
-  - seed: node scripts/seedData.js
+---
 
-- Frontend (Admin, Tarana/Frontend, Shivam/Frontend)
-  - dev, build, preview, lint (Vite-based)
+## ⚙️ Environment Configuration
 
-# Error Handling & Responses
+### Backend Configuration (`Tarana/Backend/.env`)
 
-- Central error handler returns { success: false, message }
-- Controllers return { success: true, data, pagination? }
-- Controllers validate inputs and IDs; return 400/404/403 appropriately
+```env
+# Server
+PORT=3000
+NODE_ENV=development
 
-# Deployment Notes
+# Database
+MONGO_URI=mongodb://localhost:27017/shivam-hosiery
+# OR for MongoDB Atlas:
+# MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/shivam-hosiery
 
-- Backend
-  - Provide environment variables
-  - Serve uploads directory (ensure persistence on host)
-  - Scale: Node process manager (PM2), reverse proxy (NGINX), HTTPS termination
+# Authentication
+JWT_SECRET=your-super-secret-key-change-in-production
+JWT_EXPIRE=30d
 
-- Frontends
-  - Build with npm run build
-  - Configure VITE_API_URL to backend URL
-  - Host static build on any CDN or static host
+# Email Notifications
+EMAIL=your-email@gmail.com
+EMAIL_PASSWORD=your-app-specific-password
 
-# Troubleshooting
+# File Upload
+UPLOAD_DIR=uploads
 
-- 401 from API on frontends
-  - Ensure valid token in localStorage
-  - Check VITE_API_URL and CORS
+# Optional: Image Generation
+STABILITY_AI_KEY=your-stability-ai-key (optional)
+```
 
-- MongoDB connection errors
-  - Verify MONGO_URI and server availability
+### Frontend Configuration
 
-- File upload 400 "No file uploaded"
-  - Ensure multipart/form-data with field name file
+Create `.env` files in `Admin/`, `Tarana/Frontend/`, and `Shivam/Frontend/`:
 
-- Stale product data
-  - Caching is enabled — mutations clear cache; if running behind proxy, disable extra caches for dynamic endpoints
+```env
+VITE_API_URL=http://localhost:3000/api
+# OR for production:
+# VITE_API_URL=https://api.shivamhosiery.com/api
+```
 
-# Future Enhancements
+---
 
-- Add comprehensive tests for controllers and models
-- CI pipeline for lint/test/build across packages
-- Shared UI/components library for frontends
-- Role-based feature flagging in UI
+## 🏃 Running the Applications
 
-# Licensing & Ownership
+### 1. Backend Server
+
+```bash
+cd Tarana/Backend
+
+# Install dependencies
+npm install
+
+# Development mode (with auto-reload via nodemon)
+npm run dev
+
+# Production mode
+npm start
+
+# Seed database (optional - populate with sample data)
+npm run seed
+```
+
+**Expected Output**:
+```
+Connected to MongoDB
+Server running on http://localhost:3000
+```
+
+### 2. Customer Storefront
+
+```bash
+cd Tarana/Frontend
+
+# Install dependencies
+npm install
+
+# Start development server (default: http://localhost:5173)
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### 3. Admin Dashboard
+
+```bash
+cd Admin
+
+# Install dependencies
+npm install
+
+# Start development server (default: http://localhost:5174)
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### 4. Corporate Website
+
+```bash
+cd Shivam/Frontend
+
+# Install dependencies
+npm install
+
+# Start development server (default: http://localhost:5175)
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Running All Applications (Terminal Multiplexing)
+
+Use `tmux` or multiple terminal windows:
+
+```bash
+# Terminal 1: Backend
+cd Tarana/Backend && npm run dev
+
+# Terminal 2: Storefront
+cd Tarana/Frontend && npm run dev
+
+# Terminal 3: Admin
+cd Admin && npm run dev
+
+# Terminal 4: Corporate Site
+cd Shivam/Frontend && npm run dev
+```
+
+---
+
+## 📡 API Documentation
+
+### Base URL
+
+```
+http://localhost:3000/api
+```
+
+### Authentication
+
+All protected endpoints require a Bearer token in the `Authorization` header:
+
+```http
+Authorization: Bearer <jwt_token>
+```
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "data": { /* response data */ },
+  "message": "Operation successful",
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 100,
+    "pages": 10
+  }
+}
+```
+
+### Core Endpoints
+
+#### Authentication
+```
+POST   /auth/register          # Create new account
+POST   /auth/login             # Login and get JWT token
+GET    /auth/me                # Get current user profile
+PUT    /auth/profile           # Update user profile
+```
+
+#### Products
+```
+GET    /products               # Get all products (paginated, filterable)
+  ?category=Safety%20Vests&search=vest&status=active&page=1&limit=10
+GET    /products/:id           # Get product details
+POST   /products               # Create product (admin only)
+PUT    /products/:id           # Update product (admin only)
+DELETE /products/:id           # Delete product (admin only)
+```
+
+#### Orders
+```
+GET    /orders                 # Get user's orders or all (admin)
+GET    /orders/:id             # Get order details
+POST   /orders                 # Create new order
+  Body: { items: [{ productId, quantity }], shippingAddress, paymentMethod }
+PUT    /orders/:id/status      # Update order status (admin only)
+PUT    /orders/:id/cancel      # Cancel order (if eligible)
+```
+
+#### Wishlist
+```
+GET    /wishlist               # Get user's wishlist
+POST   /wishlist               # Add product to wishlist
+  Body: { productId }
+DELETE /wishlist/:productId    # Remove from wishlist
+```
+
+#### Reviews
+```
+GET    /reviews                # Get product reviews
+POST   /reviews                # Create review
+  Body: { productId, rating, comment }
+PUT    /reviews/:id            # Update review
+DELETE /reviews/:id            # Delete review
+```
+
+#### Notifications
+```
+GET    /notifications          # Get user notifications
+PUT    /notifications/:id/read # Mark as read
+PUT    /notifications/read-all # Mark all as read
+DELETE /notifications/:id      # Delete notification
+```
+
+#### Admin - Orders Management
+```
+GET    /admin/orders           # Get all orders
+PUT    /admin/orders/:id/status # Update status + tracking info
+GET    /admin/orders/:id       # Get order details
+```
+
+#### Admin - Products
+```
+POST   /admin/products         # Create product
+PUT    /admin/products/:id     # Update product
+DELETE /admin/products/:id     # Delete product
+```
+
+#### File Upload
+```
+POST   /upload                 # Upload image
+  Headers: Content-Type: multipart/form-data
+  Field: file (binary)
+  Response: { file: { filename, path: "/uploads/..." } }
+```
+
+---
+
+## 🌍 Deployment
+
+### Frontend Deployment (Vercel)
+
+All three frontends use **Vercel** for hosting with automatic deployments on git push.
+
+#### Vercel Configuration Files
+
+Each frontend has a `vercel.json` for SPA routing:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+#### Deployment Steps
+
+1. **Connect Vercel to GitHub**
+   - Go to [vercel.com](https://vercel.com)
+   - Import the repository
+   - Vercel auto-detects Vite config
+
+2. **Set Environment Variables**
+   ```
+   VITE_API_URL=https://api.shivamhosiery.com/api
+   ```
+
+3. **Deploy**
+   ```bash
+   git push origin main  # Auto-triggers Vercel deployment
+   ```
+
+### Backend Deployment
+
+#### Option 1: Self-hosted with PM2
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Start the app
+cd Tarana/Backend
+npm install --production
+pm2 start app.js --name "shivam-api"
+
+# Auto-restart on reboot
+pm2 startup
+pm2 save
+
+# View logs
+pm2 logs shivam-api
+```
+
+#### Option 2: Docker
+
+Create `Tarana/Backend/Dockerfile`:
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production
+COPY . .
+EXPOSE 3000
+CMD ["node", "app.js"]
+```
+
+Build and run:
+
+```bash
+docker build -t shivam-api .
+docker run -e MONGO_URI=mongodb://mongo:27017/shivam -p 3000:3000 shivam-api
+```
+
+#### Option 3: Heroku/Railway
+
+```bash
+# Configure environment variables via dashboard
+heroku config:set JWT_SECRET=xxx MONGO_URI=xxx
+
+# Deploy
+git push heroku main
+```
+
+### Database Setup
+
+#### MongoDB Atlas (Cloud)
+
+1. Create account at [mongodb.com/cloud](https://www.mongodb.com/cloud/atlas)
+2. Create cluster
+3. Whitelist IP and create database user
+4. Get connection URI
+5. Set `MONGO_URI` in `.env`
+
+#### Local MongoDB
+
+```bash
+# Install MongoDB Community Edition
+# macOS:
+brew tap mongodb/brew && brew install mongodb-community
+
+# Start the service
+brew services start mongodb-community
+
+# Verify connection
+mongosh  # Open MongoDB shell
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue: Backend won't start - MongoDB connection error
+
+**Solution**:
+- Verify MongoDB is running: `mongosh` or `mongo`
+- Check `MONGO_URI` in `.env`
+- For MongoDB Atlas, ensure IP is whitelisted
+
+### Issue: Frontend shows 401 Unauthorized on API calls
+
+**Solution**:
+- Verify token is stored in localStorage after login
+- Check `VITE_API_URL` environment variable
+- Verify backend is running and CORS is enabled
+- Check browser console for token value
+
+### Issue: File upload returns 400 "No file uploaded"
+
+**Solution**:
+- Ensure `Content-Type: multipart/form-data` in request
+- Verify field name is `file` (not `files` or other)
+- Check upload directory permissions: `chmod 755 Tarana/Backend/uploads`
+
+### Issue: Stale product data showing in storefront
+
+**Solution**:
+- Cache TTL is 300 seconds by default
+- Force refresh: Admin updates clear cache automatically
+- Hard browser refresh: Ctrl+Shift+R (Chrome/Firefox)
+
+### Issue: Build fails with "command not found: npm"
+
+**Solution**:
+- Install Node.js v18+: [nodejs.org](https://nodejs.org/)
+- Verify: `node --version` and `npm --version`
+
+---
+
+## 🤝 Contributing
+
+### Development Workflow
+
+1. **Create a feature branch**
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make changes**
+   - Follow existing code style
+   - Add comments for complex logic
+   - Test locally before committing
+
+3. **Commit with conventional format**
+   ```bash
+   git add .
+   git commit -m "feat: add user authentication flow"
+   # or
+   git commit -m "fix: resolve order status update bug"
+   git commit -m "docs: update API documentation"
+   ```
+
+4. **Push and create Pull Request**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+5. **Merge when approved**
+   ```bash
+   git checkout main
+   git pull origin main
+   git merge feature/your-feature-name
+   git push origin main
+   ```
+
+### Code Style
+
+- **Backend**: ESLint with Node.js rules
+- **Frontend**: ESLint + Prettier
+- **Database**: Mongoose schema validation
+
+### Testing
+
+```bash
+# Backend tests (if available)
+cd Tarana/Backend && npm test
+
+# Frontend tests (if available)
+cd Tarana/Frontend && npm test
+cd Admin && npm test
+```
+
+---
+
+## 📚 Documentation
+
+- **Backend Details**: See `Tarana/Backend/README.md`
+- **Database Schema**: Full details in `Tarana/Backend/models/`
+- **API Routes**: Reference `Tarana/Backend/routes/`
+- **Controllers**: Business logic in `Tarana/Backend/controllers/`
+
+---
+
+## 📄 License
 
 Internal project for Shivam Hosiery. All rights reserved.
 
+---
 
-step:-1 (first time)
-git clone https://github.com/Jitendrakumar99/Shivam-Hosiery.git
-cd Shivam-Hosiery
-git checkout main
-git pull origin main
-git checkout -b <your_name>
-step:-2 (when some changes done)
-git add .
-git commit -m "Added login page UI"
-git push origin <your_name>
-step:-3(when your previous code merge in main branch the pull the changes from there)
-git checkout main
-git pull origin main
-git checkout <your_name>
-git merge main
+## 📞 Support
+
+For questions or issues:
+1. Check existing documentation
+2. Review recent commits: `git log --oneline`
+3. Contact the development team
+
+---
+
+## 🎉 Quick Reference
+
+### Install Everything
+```bash
+cd Tarana/Backend && npm install
+cd ../Frontend && npm install
+cd ../../Admin && npm install
+cd ../Shivam/Frontend && npm install
+```
+
+### Run All Services
+```bash
+# Terminal 1
+cd Tarana/Backend && npm run dev
+
+# Terminal 2
+cd Tarana/Frontend && npm run dev
+
+# Terminal 3
+cd Admin && npm run dev
+
+# Terminal 4
+cd Shivam/Frontend && npm run dev
+```
+
+### Useful Commands
+```bash
+# Seed database
+cd Tarana/Backend && npm run seed
+
+# Build all frontends
+cd Admin && npm run build
+cd ../Tarana/Frontend && npm run build
+cd ../Shivam/Frontend && npm run build
+
+# Check git status
+git status
+
+# View recent changes
+git diff
+```
+
+---
+
+**Last Updated**: 2024
+**Maintained by**: Shivam Hosiery Development Team
